@@ -40,7 +40,9 @@ import {
   Store,
   TrendingUp,
   Zap,
+  Info,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { DealGauge } from "./components/DealGauge";
 import {
@@ -63,10 +65,18 @@ type NumericInputKey = Exclude<
 >;
 
 function numericValueFromRaw(raw: string): number {
-  const t = raw.trim().replace(",", ".");
-  if (t === "" || t === "-" || t === "." || t === "-.") return 0;
-  const n = parseFloat(t);
-  return Number.isFinite(n) ? n : 0;
+  const value = raw.trim().replace(/\s/g, "");
+  if (value === "" || value === "-" || value === "." || value === "-.") return 0;
+  const comma = value.lastIndexOf(",");
+  const dot = value.lastIndexOf(".");
+  // If both separators exist, treat the last one as the decimal separator.
+  const decimal = comma > dot ? "," : ".";
+  const normalized = decimal === ","
+    ? value.replace(/\./g, "").replace(",", ".")
+    : value.replace(/,/g, "");
+  if (!/^-?\d*(?:\.\d*)?$/.test(normalized)) return NaN;
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : NaN;
 }
 
 function HmlFieldLabel({ children }: { children: ReactNode }) {
@@ -161,14 +171,14 @@ export default function FixFlipCalculatorPage() {
             intTypeHint: "Tipo de cálculo de interés.",
             intMonthly: "Mensual",
             intAnnual: "Anual",
-            fees: "Fees administrativos HML",
+            fees: "Gastos administrativos HML",
             feesHint: "Honorarios administrativos del prestamista.",
             ltv: "LTV HML (ARV)",
             ltvHint: "Préstamo HML ÷ ARV × 100.",
             calc: "Costos calculados",
             intTot: "Interés HML total",
             intTotHint: "Interés total estimado del préstamo.",
-            feesTot: "Fees HML total",
+            feesTot: "Costos financieros HML",
             feesTotHint: "Puntos + interés + administrativos.",
           }
         : {
@@ -244,24 +254,24 @@ export default function FixFlipCalculatorPage() {
       lang === "es"
         ? {
             title: "Resumen ejecutivo",
-            score: "Score",
+            score: "Puntuación",
             estado: "Estado",
             confianza: "Confianza",
             tpc: "TPC + financiamiento",
             net: "Ganancia neta",
             roi: "ROI",
-            coc: "Cash on cash",
+            coc: "Rentabilidad sobre efectivo",
             step1: "Paso 1 · Inviertes",
             step1Hint: "Precio de compra inicial.",
             step2: "Paso 2 · Arreglas",
-            step2Hint: "Presupuesto de renovación (rehab).",
+            step2Hint: "Presupuesto de remodelación.",
             step3: "Paso 3 · Vendes",
             step3Hint: "Venta neta después de costos.",
             step4: "Paso 4 · Resultado",
             signal: "Señal rápida",
-            minRoi: "Min ROI",
-            minProfit: "Min ganancia",
-            kpiBe: "Break-even ARV",
+            minRoi: "ROI mínimo",
+            minProfit: "Ganancia mínima",
+            kpiBe: "ARV de equilibrio",
             kpiBeHint: "ARV mínimo para no perder.",
             kpiMargin: "Margen de seguridad",
             kpiMarginHint: "Cuánto puede bajar el ARV.",
@@ -494,7 +504,25 @@ export default function FixFlipCalculatorPage() {
     helper?: ReactNode,
   ) => (
     <div className="space-y-1.5">
-      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        {label}
+        {/ARV|ROI|HML|LTV|LTC/i.test(label) && (
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger type="button" className="inline-flex rounded-full text-muted-foreground hover:text-primary" aria-label={lang === "es" ? "Información del campo" : "Field information"}>
+              <Info className="h-3.5 w-3.5" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+              {/ARV/i.test(label)
+                ? (lang === "es" ? "Valor estimado de venta después de remodelar." : "Estimated resale value after renovations.")
+                : /ROI/i.test(label)
+                  ? (lang === "es" ? "Rentabilidad sobre el costo total del proyecto." : "Return relative to total project costs.")
+                  : /LTV|LTC/i.test(label)
+                    ? (lang === "es" ? "Porcentaje del préstamo respecto al valor o costo." : "Loan percentage relative to property value or cost.")
+                    : (lang === "es" ? "Préstamo privado para financiar la operación." : "Private loan used to finance the investment.")}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </Label>
       <Input
         {...numInputProps(key)}
         onFocus={() => setLastField(String(key))}
@@ -1100,7 +1128,7 @@ export default function FixFlipCalculatorPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">ROI scenarios</CardTitle>
+              <CardTitle className="text-base">{lang === "es" ? "Escenarios de rentabilidad" : "ROI scenarios"}</CardTitle>
             </CardHeader>
             <CardContent>
               {scenarios.length === 0 ? (
@@ -1210,17 +1238,22 @@ export default function FixFlipCalculatorPage() {
             onClick={handleSave}
           >
             <Save className="h-4 w-4 mr-1" />
-            {lang === "es" ? "Guardar deal" : "Save deal"}
+            {lang === "es" ? "Guardar inversión" : "Save deal"}
           </Button>
           <Button
             variant="outline"
             className="w-full"
             onClick={() => navigate("/deals")}
           >
-            {lang === "es" ? "Ir a mis deals" : "Go to my deals"}
+            {lang === "es" ? "Ver mis inversiones" : "Go to my deals"}
           </Button>
         </div>
       </div>
+      <p className="border-t border-border/60 pt-4 text-[11px] leading-relaxed text-muted-foreground">
+        {lang === "es"
+          ? "Aviso: Calculadora educativa. Las proyecciones dependen de los datos ingresados, no garantizan resultados ni constituyen asesoramiento de inversión. Verifica los supuestos y consulta a profesionales antes de invertir. Adelayne Global Corp no toma decisiones de inversión por el usuario."
+          : "Notice: Educational calculator. Estimates depend on user-provided data, do not guarantee outcomes, and are not investment advice. Verify assumptions and consult qualified professionals before investing. Adelayne Global Corp does not make investment decisions for users."}
+      </p>
     </div>
   );
 }
