@@ -216,6 +216,8 @@ function PmAddItemDialog({
   onSaved: (next: ProjectManagerData) => void;
   editItemId: string | null;
 }) {
+  const { i18n } = useTranslation();
+  const pm = (spanish: string, english: string) => i18n.resolvedLanguage === "es" ? spanish : english;
   const [working, setWorking] = useState<ProjectManagerData>(() => clonePmData(baseData));
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedSubs, setSelectedSubs] = useState<PMSubcategorySelection[]>([]);
@@ -344,10 +346,10 @@ function PmAddItemDialog({
   const preview = computePmItemTotals(materials, labor, other, quantity, markup);
 
   const addCustomArea = () => {
-    const name = window.prompt("Nombre del área (ej. Garaje)")?.trim();
+    const name = window.prompt(pm("Nombre del área (p. ej., garaje)", "Area name (e.g., garage)"))?.trim();
     if (!name) return;
     if (db[name]) {
-      toast.error("Esa área ya existe");
+      toast.error(pm("Esa área ya existe", "This area already exists"));
       return;
     }
     setWorking((w) => {
@@ -358,20 +360,20 @@ function PmAddItemDialog({
     });
     setSelectedArea(name);
     setSelectedSubs([]);
-    toast.success(`Área "${name}" creada`);
+    toast.success(pm(`Área "${name}" creada`, `Area "${name}" created`));
   };
 
   const addCustomSubcategory = () => {
     if (!selectedArea || !db[selectedArea]) {
-      toast.message("Primero elige un área");
+      toast.message(pm("Primero selecciona un área", "Select an area first"));
       return;
     }
-    const name = window.prompt("Nombre de la subcategoría")?.trim();
+    const name = window.prompt(pm("Nombre de la subcategoría", "Subcategory name"))?.trim();
     if (!name) return;
-    const ms = parseFloat(window.prompt("Costo materiales ($)", "0") || "0") || 0;
-    const lb = parseFloat(window.prompt("Costo mano de obra ($)", "0") || "0") || 0;
+    const ms = parseFloat(window.prompt(pm("Costo de materiales ($)", "Materials cost ($)"), "0") || "0") || 0;
+    const lb = parseFloat(window.prompt(pm("Costo de mano de obra ($)", "Labor cost ($)"), "0") || "0") || 0;
     if (db[selectedArea][name]) {
-      toast.error("Esa subcategoría ya existe en el área");
+      toast.error(pm("Esa subcategoría ya existe en el área", "This subcategory already exists in this area"));
       return;
     }
     setWorking((w) => {
@@ -383,13 +385,13 @@ function PmAddItemDialog({
       };
       return next;
     });
-    toast.success("Subcategoría agregada");
+    toast.success(pm("Subcategoría agregada", "Subcategory added"));
   };
 
   const saveItem = () => {
     if (!editItemId && status === "COMPLETED") {
       toast.error(
-        "No puedes crear un ítem ya como Completado. Créalo en otro estado y actualízalo después.",
+        pm("No puedes crear una tarea con estado completado. Créala con otro estado y actualízala después.", "You cannot create an item as completed. Create it with another status and update it afterward."),
       );
       return;
     }
@@ -410,12 +412,12 @@ function PmAddItemDialog({
     if (editItemId) {
       const prev = working.items.find((i) => i.id === editItemId);
       if (!prev) {
-        toast.error("No se encontró el ítem a editar");
+        toast.error(pm("No se encontró la tarea que deseas editar", "The item could not be found"));
         return;
       }
       if (status === "COMPLETED" && !(Number(totalActual) > 0)) {
         toast.error(
-          "El costo real debe ser mayor que 0 para marcar como completado (como en la app anterior).",
+          pm("El costo real debe ser mayor que cero para marcar la tarea como completada.", "Actual cost must be greater than zero to mark the item complete."),
         );
         return;
       }
@@ -442,7 +444,7 @@ function PmAddItemDialog({
       next.items = next.items.map((i) => (i.id === editItemId ? item : i));
       onSaved(next);
       onOpenChange(false);
-      toast.success("Ítem actualizado");
+      toast.success(pm("Tarea actualizada", "Item updated"));
       return;
     }
 
@@ -471,7 +473,7 @@ function PmAddItemDialog({
     next.items = [...(next.items || []), item];
     onSaved(next);
     onOpenChange(false);
-    toast.success("Ítem agregado");
+    toast.success(pm("Tarea agregada", "Item added"));
   };
 
   return (
@@ -804,7 +806,7 @@ export default function FixFlipProjectManagerPage() {
       return;
     }
     if (!deal) {
-      toast.error("Deal no encontrado");
+      toast.error(pm("Inversión no encontrada", "Investment not found"));
       navigate("/project-manager", { replace: true });
       return;
     }
@@ -878,7 +880,7 @@ export default function FixFlipProjectManagerPage() {
       ...data,
       items: data.items.filter((i) => i.id !== id),
     });
-    toast.success("Ítem eliminado");
+    toast.success(pm("Tarea eliminada", "Item deleted"));
   };
 
   if (!data || !deal) {
