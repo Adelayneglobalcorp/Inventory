@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+// The project URL and publishable key are public browser-side configuration.
+// Netlify environment variables may override them when provided.
+const ADELAYNE_SUPABASE_URL = 'https://tfvlgelxqsfyjigteagy.supabase.co';
+const ADELAYNE_PUBLISHABLE_KEY = 'sb_publishable_RseH9XY6qAeEwSugDk66KQ_BlILymIz';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim() || ADELAYNE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim() || ADELAYNE_PUBLISHABLE_KEY;
 
 const ADELAYNE_SUPABASE_ORIGIN = 'https://tfvlgelxqsfyjigteagy.supabase.co';
 
