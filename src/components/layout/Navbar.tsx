@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const WHATSAPP_E164 = '19549070540';
 const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_E164}`;
@@ -59,20 +60,26 @@ const Navbar = () => {
         {/* Fixed-width icon navigation prevents ES/EN labels from shifting the layout. */}
         <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" aria-label="Modules">
           {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              title={link.label}
-              aria-label={link.label}
-              aria-current={isActive(link.to) ? 'page' : undefined}
-              className={`group flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive(link.to)
-                ? 'border-gold-500/40 bg-gold-500/15 text-gold-400 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.08)]'
-                : 'border-transparent text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <link.icon className="h-5 w-5 shrink-0 transition-transform group-hover:scale-105" aria-hidden="true" />
-              <span className="sr-only">{link.label}</span>
-            </Link>
+            <Tooltip key={link.to} delayDuration={100}>
+              <TooltipTrigger asChild>
+                <Link
+                  to={link.to}
+                  aria-label={link.label}
+                  aria-current={isActive(link.to) ? 'page' : undefined}
+                  className={`group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive(link.to)
+                    ? 'border-gold-500/35 bg-gold-500/15 text-gold-400 shadow-[0_8px_24px_rgba(0,0,0,0.16)]'
+                    : 'border-transparent text-muted-foreground hover:-translate-y-0.5 hover:border-border/80 hover:bg-muted/80 hover:text-foreground'
+                  }`}
+                >
+                  <link.icon className="h-[21px] w-[21px] shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
+                  {isActive(link.to) && <span className="absolute -bottom-1 h-1 w-5 rounded-full bg-gold-400" />}
+                  <span className="sr-only">{link.label}</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" sideOffset={12} className="max-w-[230px] rounded-xl border-gold-500/25 bg-[#1a2743] px-4 py-2.5 text-sm font-semibold text-white shadow-2xl">
+                {link.label}
+              </TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
