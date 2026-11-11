@@ -1126,6 +1126,9 @@ function ItemsTable({
   onDelete: (id: string) => void;
   onEdit: (item: PMItem) => void;
 }) {
+  const { i18n } = useTranslation();
+  const pm = (spanish: string, english: string) =>
+    i18n.resolvedLanguage?.startsWith("es") ? spanish : english;
   const showBreakdown = items.some(
     (i) =>
       i.materialsCost != null ||
@@ -1135,7 +1138,7 @@ function ItemsTable({
   if (items.length === 0) {
     return (
       <p className="rounded-lg border border-dashed py-8 text-center text-muted-foreground">
-        Sin ítems. Agrega el primero con el botón superior.
+        {pm("Sin tareas. Agrega la primera con el botón superior.", "No tasks yet. Add the first one using the button above.")}
       </p>
     );
   }
@@ -1193,7 +1196,7 @@ function ItemsTable({
                 variant="ghost"
                 className="h-8 w-8 text-amber-500 hover:text-amber-400"
                 onClick={() => onEdit(item)}
-                aria-label="Editar ítem"
+                aria-label={pm("Editar tarea", "Edit task")}
                 type="button"
               >
                 <Pencil className="h-3.5 w-3.5" />
@@ -1203,7 +1206,7 @@ function ItemsTable({
                 variant="ghost"
                 className="h-8 w-8 text-destructive"
                 onClick={() => onDelete(item.id)}
-                aria-label="Eliminar ítem"
+                aria-label={pm("Eliminar tarea", "Delete task")}
                 type="button"
               >
                 <Trash2 className="h-3.5 w-3.5" />
