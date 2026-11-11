@@ -351,7 +351,7 @@ export function evaluateDeal(
   let levelText: string;
   let recommendation: string;
   let icon: string;
-  const meetsAllMinimums = calculation.dealDecision;
+
   if (score >= 80) {
     level = "excellent";
     levelText = t("evaluateExcellent");
@@ -371,14 +371,6 @@ export function evaluateDeal(
     level = "poor";
     levelText = t("evaluatePoor");
     recommendation = t("evaluatePoorRec");
-    icon = "❌";
-  }
-
-  if (!meetsAllMinimums) {
-    // A favorable qualitative score cannot override an investor's hard thresholds.
-    level = "poor";
-    levelText = t("dealStatusRejected");
-    recommendation = t("evaluateBelowMinimumRec");
     icon = "❌";
   }
 
@@ -412,12 +404,12 @@ export function getDealStatusPresentation(
   if (!evaluation || evaluation.levelText === t("evaluateNoData")) {
     return { text: t("evaluateNoData"), color: "#9e9e9e" };
   }
-  // The investor's mandatory minimums determine acceptance; the risk score is advisory.
-  // Never approve 14.95% against a 15% target based on rounded display values.
-  if (!dealDecision) {
+  // Display objective fulfillment separately from the qualitative risk score.
+  // Comparisons use the raw values: 14.95 never rounds up to 15.
+  if (!dealDecision && evaluation.profit <= 0) {
     return { text: t("dealStatusRejected"), color: "#ef4444" };
   }
-  const minSuffix = "";
+  const minSuffix = !dealDecision ? t("dealStatusMinNotMet") : "";
   switch (evaluation.level) {
     case "excellent":
       return {
@@ -491,37 +483,37 @@ export function buildStudentAnalysis(
     const meetsRoi = roi >= minRoi;
     const meetsProfit = profit >= minProfit;
     if (meetsRoi && meetsProfit) {
-      confidenceText = "Cumple minimos";
+      confidenceText = "Cumple los objetivos";
       confidenceClass = "bg-emerald-500/20 text-emerald-400";
       if (roi >= 20 && investVsArvPct <= 75) {
         signalText = "Cumple y se ve fuerte";
         signalClass = "bg-emerald-500/20 text-emerald-400";
         signalNote =
-          "Cumple tus minimos y ademas muestra buen margen.";
+          "Cumple tus objetivos y además muestra buen margen.";
       } else {
-        signalText = "Cumple minimos";
+        signalText = "Cumple los objetivos";
         signalClass = "bg-emerald-500/20 text-emerald-400";
         signalNote =
           "Cumple ROI y ganancia minima definidos por ti.";
       }
     } else if (!meetsRoi && !meetsProfit) {
-      confidenceText = "No cumple minimos";
+      confidenceText = "No cumple los objetivos";
       confidenceClass = "bg-red-500/20 text-red-400";
-      signalText = "No cumple minimos";
+      signalText = "No cumple los objetivos";
       signalClass = "bg-red-500/20 text-red-400";
-      signalNote = `No alcanza ROI minimo (${formatPercentage(minRoi, 2)}) ni ganancia minima (${formatCurrency(minProfit)}).`;
+      signalNote = `No alcanza ROI mínimo (${formatPercentage(minRoi, 2)}) ni ganancia minima (${formatCurrency(minProfit)}).`;
     } else if (!meetsRoi) {
-      confidenceText = "ROI bajo minimo";
+      confidenceText = "ROI inferior al objetivo";
       confidenceClass = "bg-amber-500/20 text-amber-400";
-      signalText = "ROI por debajo";
+      signalText = "ROI inferior al objetivo";
       signalClass = "bg-amber-500/20 text-amber-400";
-      signalNote = `ROI actual ${formatPercentage(roi, 2)} vs minimo ${formatPercentage(minRoi, 2)}.`;
+      signalNote = `ROI actual ${formatPercentage(roi, 2)} frente al mínimo ${formatPercentage(minRoi, 2)}.`;
     } else if (!meetsProfit) {
-      confidenceText = "Profit bajo minimo";
+      confidenceText = "Ganancia inferior al objetivo";
       confidenceClass = "bg-amber-500/20 text-amber-400";
       signalText = "Ganancia por debajo";
       signalClass = "bg-amber-500/20 text-amber-400";
-      signalNote = `Ganancia actual ${formatCurrency(profit)} vs minimo ${formatCurrency(minProfit)}.`;
+      signalNote = `Ganancia actual ${formatCurrency(profit)} frente al mínimo ${formatCurrency(minProfit)}.`;
     }
   }
 
