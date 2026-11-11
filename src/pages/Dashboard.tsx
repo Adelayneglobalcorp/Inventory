@@ -160,7 +160,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div>
         <h1 className="font-[Montserrat] text-2xl font-bold">{t('dashboard.title')}</h1>
         <p className="text-sm text-muted-foreground">
@@ -171,12 +171,12 @@ const Dashboard = () => {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="transition-shadow hover:shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
+          <Card key={stat.title} className="min-w-0 rounded-2xl border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-500/25 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-start justify-between gap-2 px-4 pb-2 pt-4">
+              <CardTitle className="min-w-0 text-xs font-medium leading-snug text-muted-foreground">{stat.title}</CardTitle>
+              <stat.icon className={`h-5 w-5 shrink-0 ${stat.color}`} />
             </CardHeader>
             <CardContent>
               <p className="text-2xl font-bold">{stat.value}</p>
@@ -202,8 +202,8 @@ const Dashboard = () => {
                 const imageUrl = primaryImage?.url || p.image_url;
 
                 return (
-                  <div key={p.id} className="flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-3">
+                  <div key={p.id} className="flex flex-col gap-3 rounded-xl border border-border/70 bg-background/25 p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
                       {imageUrl && (
                         <img src={imageUrl} alt={p.title} className="h-12 w-12 rounded-lg object-cover" />
                       )}
