@@ -1,27 +1,40 @@
 # Inventory — Adelayne Global Corp
 
-Repositorio del cliente para la plataforma inmobiliaria **Inventory / Admin 360**, incluyendo las funcionalidades existentes de listados, calculadora Fix & Flip, Deals y Project Manager.
+Código fuente de **Inventory / Admin 360**, con listados de propiedades, autenticación, calculadora Fix & Flip, Deals y Project Manager.
 
-> **Estado al 11 de noviembre de 2026:** repositorio en preparación. La rama `main` contiene un paquete ZIP histórico de Fix & Flip; **todavía no contiene el código fuente desplegable completo** de Inventory Admin 360. No configurar Netlify para construir directamente desde esta rama hasta incorporar y verificar el proyecto completo.
+## Estado actual
 
-## Archivos actuales
+- El código productivo fue migrado desde `NOVOeia/git-sync-project-cb8f73b7` y está en la rama `codex/migrate-production-source`.
+- La incorporación a `main` se revisa en el PR #1 de `Adelayneglobalcorp/Inventory`.
+- El ZIP histórico `CalculatorFix-flip-main.zip` y la documentación anterior se conservaron.
+- Supabase productivo pertenece a la organización de Adelayne y conserva el identificador `tfvlgelxqsfyjigteagy`.
+- Netlify quedó aplazado; no se ha realizado un nuevo despliegue.
 
-- `CalculatorFix-flip-main.zip` — ZIP legado, conservado sin alteraciones.
-- `docs/README_FIX_FLIP_HISTORICO.md` — documentación original de la calculadora.
-- `docs/ESTADO_Y_PLAN.md` — auditoría de contenido, alcance aprobado y siguientes pasos.
+## Preparación local
 
-## Desarrollo aprobado
+1. Instalar dependencias con `npm ci`.
+2. Copiar `.env.example` como `.env.local`.
+3. Completar únicamente la URL y la clave pública de Supabase. Nunca usar `service_role` en el frontend.
+4. Ejecutar `npm run validate` para correr pruebas y compilación.
+5. Iniciar el proyecto con `npm run dev`.
 
-- Migración y configuración GitHub / Netlify / Supabase.
-- Reactivación de Inventory, Calculator, Deals y Project Manager.
-- Corrección integral de textos ES/EN del alcance existente.
-- Registro general de inversionistas sin aprobación administrativa.
-- Módulo de solicitudes de financiamiento integrado con Supabase y GoHighLevel.
+## Variables requeridas
 
-La importación automática desde Dropbox/Google Drive **no está aprobada**. La actualización por instrucciones del estado de propiedades está **pendiente**.
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SITE_URL`
 
-## Próximo paso
+Los webhooks heredados para integraciones externas permanecen desactivados y fuera del alcance actual. Su conexión será responsabilidad de otro equipo.
 
-Confirmar el código fuente de producción, incorporarlo como archivos de proyecto y validar build/deploy sin afectar datos ni usuarios existentes. Ver [estado y plan](docs/ESTADO_Y_PLAN.md).
+## Documentación vigente
 
-**Nota de seguridad:** no incorporar credenciales privadas, claves de servicio, contraseñas ni tokens en el repositorio público.
+- [Estado y próximos pasos](docs/ESTADO_Y_PLAN.md)
+- [Base verificada de Supabase](docs/SUPABASE_BASELINE.md)
+- [Informe de migración](docs/MIGRATION_REPORT.md)
+- [Guía de despliegue aplazado](DEPLOYMENT_GUIDE.md)
+
+## Seguridad de la base de datos
+
+Los archivos SQL de la raíz provienen del proyecto histórico. **No deben ejecutarse en el Supabase productivo como un paquete ni considerarse migraciones vigentes.** Algunos son diagnósticos o correcciones incompatibles entre sí. Toda modificación futura debe partir del esquema real, usar una migración revisada y probarse sin borrar datos.
+
+No guardar contraseñas, tokens, claves privadas, `service_role` ni archivos `.env` en Git.
