@@ -603,7 +603,7 @@ const resources = {
                             "roi": "ROI (%)",
                             "rehab": "Costo de Reparación ($)",
                             "rent": "Renta Mensual ($)",
-                            "otherCosts": "Otros Costos (Cierre + Holding) ($)",
+                            "otherCosts": "Otros costos (cierre y mantenimiento) ($)",
                             "operatingExpenses": "Gastos Operativos Mensuales ($)",
                             "totalInvestment": "Inversión Total",
                             "netProfit": "Ganancia Neta",
