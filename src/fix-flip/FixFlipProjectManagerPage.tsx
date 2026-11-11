@@ -78,6 +78,15 @@ const statusLabel: Record<PMItem["status"], string> = {
   ON_HOLD: "En espera",
 };
 
+const statusLabelEn: Record<PMItem["status"], string> = {
+  PLANNING: "Planning", IN_PROGRESS: "In Progress", COMPLETED: "Completed", ON_HOLD: "On Hold",
+};
+const optionLabelsEn: Record<string, string> = {
+  EACH: "Each", SQFT: "Square Feet", LINEAR_FT: "Linear Feet", HOUR: "Hour",
+  HIGH: "High", MEDIUM: "Medium", LOW: "Low",
+  REPAIR: "Repair", REPLACE: "Replace", NEW: "New", UPGRADE: "Upgrade",
+};
+
 const UNITS: { value: string; label: string }[] = [
   { value: "EACH", label: "Cada uno" },
   { value: "SQFT", label: "Pie²" },
@@ -216,6 +225,8 @@ function PmAddItemDialog({
   onSaved: (next: ProjectManagerData) => void;
   editItemId: string | null;
 }) {
+  const { i18n } = useTranslation();
+  const pm = (spanish: string, english: string) => i18n.resolvedLanguage === "es" ? spanish : english;
   const [working, setWorking] = useState<ProjectManagerData>(() => clonePmData(baseData));
   const [selectedArea, setSelectedArea] = useState("");
   const [selectedSubs, setSelectedSubs] = useState<PMSubcategorySelection[]>([]);
@@ -344,10 +355,10 @@ function PmAddItemDialog({
   const preview = computePmItemTotals(materials, labor, other, quantity, markup);
 
   const addCustomArea = () => {
-    const name = window.prompt("Nombre del área (ej. Garaje)")?.trim();
+    const name = window.prompt(pm("Nombre del área (p. ej., garaje)", "Area name (e.g., garage)"))?.trim();
     if (!name) return;
     if (db[name]) {
-      toast.error("Esa área ya existe");
+      toast.error(pm("Esa área ya existe", "This area already exists"));
       return;
     }
     setWorking((w) => {
@@ -358,20 +369,20 @@ function PmAddItemDialog({
     });
     setSelectedArea(name);
     setSelectedSubs([]);
-    toast.success(`Área "${name}" creada`);
+    toast.success(pm(`Área "${name}" creada`, `Area "${name}" created`));
   };
 
   const addCustomSubcategory = () => {
     if (!selectedArea || !db[selectedArea]) {
-      toast.message("Primero elige un área");
+      toast.message(pm("Primero selecciona un área", "Select an area first"));
       return;
     }
-    const name = window.prompt("Nombre de la subcategoría")?.trim();
+    const name = window.prompt(pm("Nombre de la subcategoría", "Subcategory name"))?.trim();
     if (!name) return;
-    const ms = parseFloat(window.prompt("Costo materiales ($)", "0") || "0") || 0;
-    const lb = parseFloat(window.prompt("Costo mano de obra ($)", "0") || "0") || 0;
+    const ms = parseFloat(window.prompt(pm("Costo de materiales ($)", "Materials cost ($)"), "0") || "0") || 0;
+    const lb = parseFloat(window.prompt(pm("Costo de mano de obra ($)", "Labor cost ($)"), "0") || "0") || 0;
     if (db[selectedArea][name]) {
-      toast.error("Esa subcategoría ya existe en el área");
+      toast.error(pm("Esa subcategoría ya existe en el área", "This subcategory already exists in this area"));
       return;
     }
     setWorking((w) => {
@@ -383,13 +394,13 @@ function PmAddItemDialog({
       };
       return next;
     });
-    toast.success("Subcategoría agregada");
+    toast.success(pm("Subcategoría agregada", "Subcategory added"));
   };
 
   const saveItem = () => {
     if (!editItemId && status === "COMPLETED") {
       toast.error(
-        "No puedes crear un ítem ya como Completado. Créalo en otro estado y actualízalo después.",
+        pm("No puedes crear una tarea con estado completado. Créala con otro estado y actualízala después.", "You cannot create an item as completed. Create it with another status and update it afterward."),
       );
       return;
     }
@@ -410,12 +421,12 @@ function PmAddItemDialog({
     if (editItemId) {
       const prev = working.items.find((i) => i.id === editItemId);
       if (!prev) {
-        toast.error("No se encontró el ítem a editar");
+        toast.error(pm("No se encontró la tarea que deseas editar", "The item could not be found"));
         return;
       }
       if (status === "COMPLETED" && !(Number(totalActual) > 0)) {
         toast.error(
-          "El costo real debe ser mayor que 0 para marcar como completado (como en la app anterior).",
+          pm("El costo real debe ser mayor que cero para marcar la tarea como completada.", "Actual cost must be greater than zero to mark the item complete."),
         );
         return;
       }
@@ -442,7 +453,7 @@ function PmAddItemDialog({
       next.items = next.items.map((i) => (i.id === editItemId ? item : i));
       onSaved(next);
       onOpenChange(false);
-      toast.success("Ítem actualizado");
+      toast.success(pm("Tarea actualizada", "Item updated"));
       return;
     }
 
@@ -471,7 +482,7 @@ function PmAddItemDialog({
     next.items = [...(next.items || []), item];
     onSaved(next);
     onOpenChange(false);
-    toast.success("Ítem agregado");
+    toast.success(pm("Tarea agregada", "Item added"));
   };
 
   return (
@@ -479,7 +490,7 @@ function PmAddItemDialog({
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-primary/30">
         <DialogHeader>
           <DialogTitle className="font-[Montserrat] text-primary">
-            {editItemId ? "Editar ítem" : "Agregar ítem"} —{" "}
+            {editItemId ? pm("Editar tarea", "Edit Item") : pm("Agregar tarea", "Add Item")} —{" "}
             {category === "INTERIOR" ? "Interior" : "Exterior"}
           </DialogTitle>
         </DialogHeader>
@@ -487,16 +498,16 @@ function PmAddItemDialog({
         <div className="space-y-4 py-1">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div className="min-w-[200px] flex-1 space-y-1.5">
-              <Label className="text-primary">Área / subcategoría</Label>
+              <Label className="text-primary">{pm("Área / subcategoría", "Area / Subcategory")}</Label>
               <Select value={selectedArea || "__none__"} onValueChange={(v) => {
                 setSelectedArea(v === "__none__" ? "" : v);
                 setSelectedSubs([]);
               }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
+                  <SelectValue placeholder={pm("Seleccionar…", "Select…")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">Seleccionar…</SelectItem>
+                  <SelectItem value="__none__">{pm("Seleccionar…", "Select…")}</SelectItem>
                   {areaOptions.map((a) => (
                     <SelectItem key={a} value={a}>
                       {a}
@@ -507,17 +518,17 @@ function PmAddItemDialog({
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" onClick={addCustomArea}>
-                + Nueva área
+                {pm("+ Nueva área", "+ New Area")}
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={addCustomSubcategory}>
-                + Nueva subcategoría
+                {pm("+ Nueva subcategoría", "+ New Subcategory")}
               </Button>
             </div>
           </div>
 
           {selectedArea && subRows.length > 0 ? (
             <div className="space-y-2 rounded-lg border border-border p-3">
-              <Label className="text-primary">Subcategorías detalladas</Label>
+              <Label className="text-primary">{pm("Subcategorías detalladas", "Detailed Subcategories")}</Label>
               <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
                 {subRows.map(([subName, costs]) => {
                   const sel = selectedSubs.find((s) => s.name === subName);
@@ -587,7 +598,7 @@ function PmAddItemDialog({
                             <SelectContent>
                               {SUB_WORK_TYPES.map((o) => (
                                 <SelectItem key={o.value} value={o.value}>
-                                  {o.label}
+                                  {pm(o.label, optionLabelsEn[o.value] ?? o.label)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -606,18 +617,18 @@ function PmAddItemDialog({
           ) : null}
 
           <div className="space-y-1.5">
-            <Label>Descripción del trabajo</Label>
+            <Label>{pm("Descripción del trabajo", "Work Description")}</Label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="Describe el trabajo…"
+              placeholder={pm("Describe el trabajo…", "Describe the work…")}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="space-y-1.5">
-              <Label>Cantidad</Label>
+              <Label>{pm("Cantidad", "Quantity")}</Label>
               <Input
                 type="number"
                 min={1}
@@ -628,7 +639,7 @@ function PmAddItemDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Unidad</Label>
+              <Label>{pm("Unidad", "Unit")}</Label>
               <Select value={unit} onValueChange={setUnit}>
                 <SelectTrigger>
                   <SelectValue />
@@ -636,14 +647,14 @@ function PmAddItemDialog({
                 <SelectContent>
                   {UNITS.map((u) => (
                     <SelectItem key={u.value} value={u.value}>
-                      {u.label}
+                      {pm(u.label, optionLabelsEn[u.value] ?? u.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Prioridad</Label>
+              <Label>{pm("Prioridad", "Priority")}</Label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger>
                   <SelectValue />
@@ -651,14 +662,14 @@ function PmAddItemDialog({
                 <SelectContent>
                   {PRIORITIES.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
-                      {p.label}
+                      {pm(p.label, optionLabelsEn[p.value] ?? p.label)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Estado</Label>
+              <Label>{pm("Estado", "Status")}</Label>
               <Select
                 value={status}
                 onValueChange={(v) => setStatus(v as PMItem["status"])}
@@ -669,7 +680,7 @@ function PmAddItemDialog({
                 <SelectContent>
                   {STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {statusLabel[s]}
+                      {pm(statusLabel[s], statusLabelEn[s])}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -679,7 +690,7 @@ function PmAddItemDialog({
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="space-y-1.5">
-              <Label>Materiales</Label>
+              <Label>{pm("Materiales", "Materials")}</Label>
               <Input
                 type="number"
                 step={100}
@@ -691,7 +702,7 @@ function PmAddItemDialog({
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label>Mano de obra</Label>
+              <Label>{pm("Mano de obra", "Labor")}</Label>
               <Input
                 type="number"
                 step={100}
@@ -703,7 +714,7 @@ function PmAddItemDialog({
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label>Otros costos</Label>
+              <Label>{pm("Otros costos", "Other Costs")}</Label>
               <Input
                 type="number"
                 step={100}
@@ -715,7 +726,7 @@ function PmAddItemDialog({
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label>Margen (%)</Label>
+              <Label>{pm("Margen (%)", "Markup (%)")}</Label>
               <Input
                 type="number"
                 step={5}
@@ -741,7 +752,7 @@ function PmAddItemDialog({
 
           {editItemId ? (
             <div className="space-y-1.5">
-              <Label>Gastado real (actual)</Label>
+              <Label>{pm("Gasto real", "Actual Cost")}</Label>
               <Input
                 type="number"
                 step={100}
@@ -756,12 +767,12 @@ function PmAddItemDialog({
           ) : null}
 
           <div className="space-y-1.5">
-            <Label>Notas</Label>
+            <Label>{pm("Notas", "Notes")}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Notas adicionales…"
+              placeholder={pm("Notas adicionales…", "Additional notes…")}
             />
           </div>
         </div>
@@ -771,7 +782,7 @@ function PmAddItemDialog({
             Cancelar
           </Button>
           <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveItem}>
-            {editItemId ? "Guardar cambios" : "Guardar ítem"}
+            {editItemId ? pm("Guardar cambios", "Save Changes") : pm("Guardar tarea", "Save Item")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -804,7 +815,7 @@ export default function FixFlipProjectManagerPage() {
       return;
     }
     if (!deal) {
-      toast.error("Deal no encontrado");
+      toast.error(pm("Inversión no encontrada", "Investment not found"));
       navigate("/project-manager", { replace: true });
       return;
     }
@@ -878,7 +889,7 @@ export default function FixFlipProjectManagerPage() {
       ...data,
       items: data.items.filter((i) => i.id !== id),
     });
-    toast.success("Ítem eliminado");
+    toast.success(pm("Tarea eliminada", "Item deleted"));
   };
 
   if (!data || !deal) {
@@ -899,7 +910,7 @@ export default function FixFlipProjectManagerPage() {
         <div className="flex items-center gap-2">
           <HardHat className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="font-[Montserrat] text-xl font-bold">Project Manager</h1>
+            <h1 className="font-[Montserrat] text-xl font-bold">{pm("Gestión de proyectos", "Project Management")}</h1>
             <p className="text-sm text-muted-foreground line-clamp-1">
               {deal.propertyAddress}
             </p>
@@ -910,7 +921,7 @@ export default function FixFlipProjectManagerPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground">Presupuesto (estimado)</div>
+            <div className="text-xs text-muted-foreground">{pm("Presupuesto estimado", "Estimated Budget")}</div>
             <div className="text-xl font-bold text-primary">
               {formatCurrency(data.budget.total)}
             </div>
@@ -918,7 +929,7 @@ export default function FixFlipProjectManagerPage() {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground">Usado (actual)</div>
+            <div className="text-xs text-muted-foreground">{pm("Gasto real", "Actual Spending")}</div>
             <div className="text-xl font-bold text-amber-500">
               {formatCurrency(data.budget.used)}
             </div>
@@ -926,7 +937,7 @@ export default function FixFlipProjectManagerPage() {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground">Restante</div>
+            <div className="text-xs text-muted-foreground">{pm("Restante", "Remaining")}</div>
             <div className="text-xl font-bold text-sky-400">
               {formatCurrency(data.budget.remaining)}
             </div>
@@ -934,7 +945,7 @@ export default function FixFlipProjectManagerPage() {
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <div className="text-xs text-muted-foreground">Estado</div>
+            <div className="text-xs text-muted-foreground">{pm("Estado", "Status")}</div>
             <div className="text-xl font-bold">{data.status}</div>
           </CardContent>
         </Card>
@@ -1113,18 +1124,18 @@ function ItemsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Área</TableHead>
-          <TableHead>Descripción</TableHead>
+          <TableHead>{pm("Área", "Area")}</TableHead>
+          <TableHead>{pm("Descripción", "Description")}</TableHead>
           {showBreakdown ? (
             <>
-              <TableHead className="text-right">Mat.</TableHead>
-              <TableHead className="text-right">MO</TableHead>
-              <TableHead className="text-right">Margen</TableHead>
+              <TableHead className="text-right">{pm("Mat.", "Mat.")}</TableHead>
+              <TableHead className="text-right">{pm("M. O.", "Labor")}</TableHead>
+              <TableHead className="text-right">{pm("Margen", "Markup")}</TableHead>
             </>
           ) : null}
-          <TableHead className="text-right">Est.</TableHead>
-          <TableHead className="text-right">Actual</TableHead>
-          <TableHead>Estado</TableHead>
+          <TableHead className="text-right">{pm("Est.", "Est.")}</TableHead>
+          <TableHead className="text-right">{pm("Real", "Actual")}</TableHead>
+          <TableHead>{pm("Estado", "Status")}</TableHead>
           <TableHead className="w-24 text-right">{/* edit + delete */}</TableHead>
         </TableRow>
       </TableHeader>
@@ -1155,7 +1166,7 @@ function ItemsTable({
               {formatCurrency(item.totalActual || 0)}
             </TableCell>
             <TableCell>
-              <Badge variant="secondary">{statusLabel[item.status]}</Badge>
+              <Badge variant="secondary">{pm(statusLabel[item.status], statusLabelEn[item.status])}</Badge>
             </TableCell>
             <TableCell className="text-right">
               <Button

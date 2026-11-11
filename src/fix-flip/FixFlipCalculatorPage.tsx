@@ -366,7 +366,7 @@ export default function FixFlipCalculatorPage() {
       setInputs(projectToInputs(p));
       setNumDrafts({});
       setEditingId(id);
-      toast.info(lang === "es" ? `Editando deal` : `Editing deal`);
+      toast.info(lang === "es" ? `Editando análisis` : `Editing analysis`);
     }
     setSearchParams({}, { replace: true });
   }, [editId, lang, setSearchParams]);
@@ -476,7 +476,7 @@ export default function FixFlipCalculatorPage() {
     saveProjects(list);
     setProjects(list);
     setEditingId(null);
-    toast.success(lang === "es" ? "Deal guardado" : "Deal saved");
+    toast.success(lang === "es" ? "Análisis guardado" : "Analysis saved");
   };
 
   const handleReset = () => {
@@ -525,7 +525,7 @@ export default function FixFlipCalculatorPage() {
           </Button>
           <Button size="sm" className="gold-gradient text-primary-foreground" onClick={handleSave}>
             <Save className="h-4 w-4 mr-1" />
-            {lang === "es" ? "Guardar deal" : "Save deal"}
+            {lang === "es" ? "Guardar análisis" : "Save Analysis"}
           </Button>
         </div>
       </div>
@@ -621,7 +621,7 @@ export default function FixFlipCalculatorPage() {
                   )}
                   {num(
                     "rehabBudget",
-                    lang === "es" ? "Rehab" : "Rehab",
+                    lang === "es" ? "Remodelación" : "Renovation",
                     1000,
                     lang === "es"
                       ? "Presupuesto estimado de remodelación."
@@ -637,7 +637,7 @@ export default function FixFlipCalculatorPage() {
                   )}
                   {num(
                     "holdingCosts",
-                    lang === "es" ? "Holding / mes" : "Holding / mo",
+                    lang === "es" ? "Mantenimiento / mes" : "Holding costs / month",
                     100,
                     lang === "es"
                       ? "Gasto mensual de mantenimiento/holding."

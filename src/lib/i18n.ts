@@ -11,9 +11,51 @@ const resources = {
                 "calculator": "Calculator",
                 "deals": "Deals",
                 "projectManager": "Project Manager",
+                "financing": "Request Financing",
                 "admin": "Admin",
                 "role": "Role",
                 "signOut": "Sign Out"
+            },
+            "authErrors": {
+                "generic": "We could not complete your request. Please try again.",
+                "invalidCredentials": "Incorrect email address or password.",
+                "emailNotConfirmed": "Confirm your email address before signing in.",
+                "rateLimited": "Too many attempts. Please try again later.",
+                "notFound": "User not found.",
+                "profileError": "We could not verify your user profile.",
+                "pending": "Your account is waiting for approval by an administrator.",
+                "signupError": "We could not complete registration."
+            },
+            "roles": { "admin": "Administrator", "usuario": "Investor", "investor": "Investor" },
+            "dealsPage": {
+                "title": "My Investments", "subtitle": "Investment analyses saved in this browser",
+                "new": "New Analysis", "list": "Saved Investments",
+                "empty": "No investments have been saved. Create an analysis and save it.",
+                "project": "Project", "address": "Address", "investment": "Investment", "profit": "Profit",
+                "status": "Status", "actions": "Actions",
+                "positive": "Viable", "negative": "Not Viable",
+                "deleteConfirm": "Delete this investment analysis?",
+                "deleted": "Investment analysis deleted.",
+                "manage": "Manage Project", "edit": "Edit Analysis", "delete": "Delete Analysis"
+            },
+            "pmHub": {
+                "title": "Project Management", "subtitle": "Choose an investment to manage its budget, tasks, and schedule.",
+                "emptyBefore": "There are no saved investments. Create one using the",
+                "calculator": "calculator", "emptyMiddle": "or open your", "deals": "investment list",
+                "budget": "Renovation Budget", "open": "Open Project"
+            },
+            "financing": {
+                "title": "Request Financing", "subtitle": "Submit a financing request for your real estate investment.",
+                "type": "Financing Type", "hard_money": "Hard Money Loan", "dscr": "DSCR Loan",
+                "name": "Full Name", "email": "Email Address", "phone": "Phone Number",
+                "propertyAddress": "Property Address", "city": "City", "state": "State", "zip": "ZIP Code",
+                "amount": "Requested Loan Amount (USD)", "purchasePrice": "Purchase Price (USD)",
+                "rehabBudget": "Renovation Budget (USD)", "arv": "After Repair Value (USD)",
+                "estimatedValue": "Estimated Property Value (USD)", "notes": "Additional Information",
+                "submit": "Submit Request", "sending": "Submitting...", "success": "Your financing request has been received.",
+                "error": "We could not submit your request. Please try again.", "required": "Complete all required fields.",
+                "invalidAmount": "Enter a valid loan amount greater than zero.",
+                "privacy": "Your request is visible only to you and authorized administrators."
             },
             "dashboard": {
                 "title": "My Investment Portfolio",
@@ -340,14 +382,56 @@ const resources = {
     es: {
         translation: {
             "nav": {
-                "dashboard": "Dashboard",
+                "dashboard": "Panel de control",
                 "properties": "Inventario",
                 "calculator": "Calculadora",
-                "deals": "Deals",
-                "projectManager": "Project Manager",
-                "admin": "Admin",
+                "deals": "Operaciones",
+                "projectManager": "Gestión de proyectos",
+                "financing": "Solicitar financiamiento",
+                "admin": "Administración",
                 "role": "Rol",
                 "signOut": "Cerrar Sesión"
+            },
+            "authErrors": {
+                "generic": "No pudimos completar tu solicitud. Inténtalo nuevamente.",
+                "invalidCredentials": "El correo electrónico o la contraseña son incorrectos.",
+                "emailNotConfirmed": "Confirma tu correo electrónico antes de ingresar.",
+                "rateLimited": "Demasiados intentos. Inténtalo más tarde.",
+                "notFound": "No se encontró el usuario.",
+                "profileError": "No pudimos verificar tu perfil de usuario.",
+                "pending": "Tu cuenta está pendiente de aprobación por un administrador.",
+                "signupError": "No pudimos completar el registro."
+            },
+            "roles": { "admin": "Administrador", "usuario": "Inversionista", "investor": "Inversionista" },
+            "dealsPage": {
+                "title": "Mis inversiones", "subtitle": "Análisis de inversión guardados en este navegador",
+                "new": "Nuevo análisis", "list": "Inversiones guardadas",
+                "empty": "No hay inversiones guardadas. Crea un análisis y guárdalo.",
+                "project": "Proyecto", "address": "Dirección", "investment": "Inversión", "profit": "Ganancia",
+                "status": "Estado", "actions": "Acciones",
+                "positive": "Viable", "negative": "No viable",
+                "deleteConfirm": "¿Eliminar este análisis de inversión?",
+                "deleted": "Análisis de inversión eliminado.",
+                "manage": "Gestionar proyecto", "edit": "Editar análisis", "delete": "Eliminar análisis"
+            },
+            "pmHub": {
+                "title": "Gestión de proyectos", "subtitle": "Selecciona una inversión para administrar su presupuesto, tareas y cronograma.",
+                "emptyBefore": "No hay inversiones guardadas. Crea una desde la",
+                "calculator": "calculadora", "emptyMiddle": "o consulta tu", "deals": "lista de inversiones",
+                "budget": "Presupuesto de remodelación", "open": "Abrir proyecto"
+            },
+            "financing": {
+                "title": "Solicitar financiamiento", "subtitle": "Envía una solicitud de financiamiento para tu inversión inmobiliaria.",
+                "type": "Tipo de financiamiento", "hard_money": "Préstamo para inversión y remodelación", "dscr": "Préstamo DSCR",
+                "name": "Nombre completo", "email": "Correo electrónico", "phone": "Número de teléfono",
+                "propertyAddress": "Dirección de la propiedad", "city": "Ciudad", "state": "Estado", "zip": "Código postal",
+                "amount": "Monto solicitado (USD)", "purchasePrice": "Precio de compra (USD)",
+                "rehabBudget": "Presupuesto de remodelación (USD)", "arv": "Valor después de remodelar (USD)",
+                "estimatedValue": "Valor estimado de la propiedad (USD)", "notes": "Información adicional",
+                "submit": "Enviar solicitud", "sending": "Enviando...", "success": "Hemos recibido tu solicitud de financiamiento.",
+                "error": "No pudimos enviar tu solicitud. Inténtalo nuevamente.", "required": "Completa todos los campos obligatorios.",
+                "invalidAmount": "Ingresa un monto solicitado válido y mayor que cero.",
+                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud."
             },
             "dashboard": {
                 "title": "Mi Portafolio de Inversión",
@@ -539,7 +623,7 @@ const resources = {
                             "roi": "ROI (%)",
                             "rehab": "Costo de Reparación ($)",
                             "rent": "Renta Mensual ($)",
-                            "otherCosts": "Otros Costos (Cierre + Holding) ($)",
+                            "otherCosts": "Otros costos (cierre y mantenimiento) ($)",
                             "operatingExpenses": "Gastos Operativos Mensuales ($)",
                             "totalInvestment": "Inversión Total",
                             "netProfit": "Ganancia Neta",
@@ -679,6 +763,9 @@ i18n
     .init({
         resources,
         fallbackLng: 'en',
+        supportedLngs: ['en', 'es'],
+        load: 'languageOnly',
+        detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
         defaultNS: 'translation',
         interpolation: {
             escapeValue: false

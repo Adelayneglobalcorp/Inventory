@@ -1,4 +1,5 @@
 import { Banknote, Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -71,22 +72,24 @@ function buildBudgetAlerts(
   dealRepairBudget: number,
   totalActual: number,
   totalEstimated: number,
+  isSpanish: boolean,
 ): Alert[] {
   const alerts: Alert[] = [];
+  const tr = (es: string, en: string) => isSpanish ? es : en;
   const deal = num(dealRepairBudget);
 
   if (deal > 0 && totalActual > deal) {
     alerts.push({
       type: "danger",
       icon: "⚠️",
-      message: `Presupuesto del Deal excedido en ${formatCurrency(totalActual - deal)}`,
+      message: tr(`Presupuesto excedido en ${formatCurrency(totalActual - deal)}`, `Budget exceeded by ${formatCurrency(totalActual - deal)}`),
     });
   }
   if (deal > 0 && totalEstimated > deal) {
     alerts.push({
       type: "warning",
       icon: "📊",
-      message: `Presupuesto PM supera Deal en ${formatCurrency(totalEstimated - deal)}`,
+      message: tr(`El presupuesto detallado supera el previsto en ${formatCurrency(totalEstimated - deal)}`, `Detailed budget exceeds planned budget by ${formatCurrency(totalEstimated - deal)}`),
     });
   }
   const percentUsed = deal > 0 ? (totalActual / deal) * 100 : 0;
@@ -94,7 +97,7 @@ function buildBudgetAlerts(
     alerts.push({
       type: "warning",
       icon: "⚡",
-      message: `Presupuesto del Deal casi agotado (${Math.round(percentUsed)}% utilizado)`,
+      message: tr(`Presupuesto casi agotado (${Math.round(percentUsed)} % utilizado)`, `Budget almost exhausted (${Math.round(percentUsed)}% used)`),
     });
   }
   if (items.length > 0) {
@@ -104,7 +107,7 @@ function buildBudgetAlerts(
       alerts.push({
         type: "info",
         icon: "💰",
-        message: `${expensive.length} ítem(s) con presupuesto elevado`,
+        message: tr(`${expensive.length} tareas con presupuesto elevado`, `${expensive.length} items with high estimated costs`),
       });
     }
     const planning = items.filter((i) => i.status === "PLANNING").length;
@@ -112,7 +115,7 @@ function buildBudgetAlerts(
       alerts.push({
         type: "secondary",
         icon: "📋",
-        message: `${planning} ítems aún en planificación`,
+        message: tr(`${planning} tareas aún en planificación`, `${planning} items still in planning`),
       });
     }
   }
@@ -120,7 +123,7 @@ function buildBudgetAlerts(
     alerts.push({
       type: "success",
       icon: "✅",
-      message: `Buen control del presupuesto del Deal (${Math.round(percentUsed)}% utilizado)`,
+      message: tr(`Presupuesto bajo control (${Math.round(percentUsed)} % utilizado)`, `Budget on track (${Math.round(percentUsed)}% used)`),
     });
   }
   return alerts;
@@ -143,6 +146,8 @@ export function PmBudgetPanel({
   dealRepairBudget: number;
   onEditItem: (item: PMItem) => void;
 }) {
+  const { i18n } = useTranslation();
+  const pm = (es: string, en: string) => i18n.resolvedLanguage === "es" ? es : en;
   const deal = num(dealRepairBudget);
   const totalEstimated = items.reduce((s, i) => s + num(i.totalEstimated), 0);
   const totalActual = items.reduce((s, i) => s + num(i.totalActual), 0);
@@ -165,7 +170,7 @@ export function PmBudgetPanel({
   const pctEstVsDeal = pct(totalEstimated, deal);
   const pctActVsDeal = pct(totalActual, deal);
 
-  const alerts = buildBudgetAlerts(items, deal, totalActual, totalEstimated);
+  const alerts = buildBudgetAlerts(items, deal, totalActual, totalEstimated, i18n.resolvedLanguage === "es");
 
   if (items.length === 0) {
     return (
@@ -174,13 +179,13 @@ export function PmBudgetPanel({
           <Card>
             <CardContent className="pt-6 text-center">
               <div className="text-2xl font-bold text-primary">{formatCurrency(deal)}</div>
-              <p className="text-xs text-muted-foreground">Presupuesto de reparaciones (Deal)</p>
+              <p className="text-xs text-muted-foreground">{pm("Presupuesto de remodelación", "Renovation Budget")}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <div className="text-2xl font-bold text-sky-400">{formatCurrency(0)}</div>
-              <p className="text-xs text-muted-foreground">Gastado en reparaciones</p>
+              <p className="text-xs text-muted-foreground">{pm("Gasto en remodelación", "Renovation Spending")}</p>
             </CardContent>
           </Card>
         </div>
@@ -205,15 +210,15 @@ export function PmBudgetPanel({
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <div className="text-center">
               <div className="text-lg font-bold text-primary">{formatCurrency(deal)}</div>
-              <p className="text-[11px] text-muted-foreground">Presupuesto original (Deal)</p>
+              <p className="text-[11px] text-muted-foreground">{pm("Presupuesto original", "Original Budget")}</p>
             </div>
             <div className="text-center">
               <div className="text-lg font-bold text-amber-500">{formatCurrency(totalEstimated)}</div>
-              <p className="text-[11px] text-muted-foreground">Presupuesto detallado (PM)</p>
+              <p className="text-[11px] text-muted-foreground">{pm("Presupuesto detallado", "Detailed Budget")}</p>
             </div>
             <div className="text-center">
               <div className="text-lg font-bold text-sky-400">{formatCurrency(totalActual)}</div>
-              <p className="text-[11px] text-muted-foreground">Gasto real acumulado</p>
+              <p className="text-[11px] text-muted-foreground">{pm("Gasto real acumulado", "Total Actual Spending")}</p>
             </div>
             <div className="text-center">
               <div
@@ -221,7 +226,7 @@ export function PmBudgetPanel({
               >
                 {formatCurrency(deal - totalActual)}
               </div>
-              <p className="text-[11px] text-muted-foreground">Restante del Deal</p>
+              <p className="text-[11px] text-muted-foreground">{pm("Presupuesto disponible", "Remaining Budget")}</p>
             </div>
           </div>
           <div className="mt-4 space-y-2">
@@ -287,25 +292,25 @@ export function PmBudgetPanel({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-primary">Desglose de costos</CardTitle>
+            <CardTitle className="text-sm font-semibold text-primary">{pm("Desglose de costos", "Cost Breakdown")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
               <div>
                 <div className="font-bold text-blue-400">{formatCurrency(totalMaterials)}</div>
-                <p className="text-[11px] text-muted-foreground">Materiales</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Materiales", "Materials")}</p>
               </div>
               <div>
                 <div className="font-bold text-emerald-400">{formatCurrency(totalLabor)}</div>
-                <p className="text-[11px] text-muted-foreground">Mano de obra</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Mano de obra", "Labor")}</p>
               </div>
               <div>
                 <div className="font-bold text-muted-foreground">{formatCurrency(totalOther)}</div>
-                <p className="text-[11px] text-muted-foreground">Otros</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Otros", "Other")}</p>
               </div>
               <div>
                 <div className="font-bold text-amber-400">{formatCurrency(totalMarkup)}</div>
-                <p className="text-[11px] text-muted-foreground">Margen / otros</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Margen y otros costos", "Markup / Other Costs")}</p>
               </div>
             </div>
           </CardContent>
@@ -314,20 +319,20 @@ export function PmBudgetPanel({
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold text-primary">Presupuesto por área</CardTitle>
+          <CardTitle className="text-sm font-semibold text-primary">{pm("Presupuesto por área", "Budget by Area")}</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Área</TableHead>
-                <TableHead className="text-center">Ítems</TableHead>
-                <TableHead className="text-right">Presupuesto</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
-                <TableHead className="text-right">Diferencia</TableHead>
+                <TableHead>{pm("Área", "Area")}</TableHead>
+                <TableHead className="text-center">{pm("Tareas", "Items")}</TableHead>
+                <TableHead className="text-right">{pm("Presupuesto", "Budget")}</TableHead>
+                <TableHead className="text-right">{pm("Real", "Actual")}</TableHead>
+                <TableHead className="text-right">{pm("Diferencia", "Difference")}</TableHead>
                 <TableHead className="text-center">% Hecho</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead className="w-[70px] text-right">Acciones</TableHead>
+                <TableHead>{pm("Estado", "Status")}</TableHead>
+                <TableHead className="w-[70px] text-right">{pm("Acciones", "Actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -438,7 +443,7 @@ export function PmBudgetPanel({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-primary">Análisis</CardTitle>
+            <CardTitle className="text-sm font-semibold text-primary">{pm("Análisis", "Analysis")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 text-center text-sm">
@@ -446,13 +451,13 @@ export function PmBudgetPanel({
                 <div className="font-bold text-sky-400">
                   {formatCurrency(totalEstimated / items.length)}
                 </div>
-                <p className="text-[11px] text-muted-foreground">Promedio por ítem</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Promedio por tarea", "Average per Item")}</p>
               </div>
               <div>
                 <div className="font-bold text-emerald-400">
                   {formatCurrency(totalEstimated / 90)}
                 </div>
-                <p className="text-[11px] text-muted-foreground">Promedio diario (90 días)</p>
+                <p className="text-[11px] text-muted-foreground">{pm("Promedio diario (90 días)", "Daily Average (90 Days)")}</p>
               </div>
             </div>
             <hr className="my-3 border-border" />
@@ -467,7 +472,7 @@ export function PmBudgetPanel({
                 <div className="font-bold text-blue-400">
                   {totalEstimated > 0 ? Math.round((totalLabor / totalEstimated) * 100) : 0}%
                 </div>
-                <p className="text-[11px] text-muted-foreground">% Mano de obra</p>
+                <p className="text-[11px] text-muted-foreground">{pm("% Mano de obra", "% Labor")}</p>
               </div>
             </div>
           </CardContent>
@@ -475,15 +480,13 @@ export function PmBudgetPanel({
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-primary">Alertas</CardTitle>
+            <CardTitle className="text-sm font-semibold text-primary">{pm("Alertas", "Alerts")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {alerts.length === 0 ? (
               <div className="py-4 text-center text-emerald-500">
-                <p className="font-medium">Presupuesto bajo control</p>
-                <p className="text-xs text-muted-foreground">
-                  Indicadores dentro de parámetros normales
-                </p>
+                <p className="font-medium">{pm("Presupuesto bajo control", "Budget on Track")}</p>
+                <p className="text-xs text-muted-foreground">{pm("Indicadores dentro de los parámetros normales", "All indicators are within normal ranges")}</p>
               </div>
             ) : (
               alerts.map((a, i) => (
