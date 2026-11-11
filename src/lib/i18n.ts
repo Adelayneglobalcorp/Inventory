@@ -11,9 +11,24 @@ const resources = {
                 "calculator": "Calculator",
                 "deals": "Deals",
                 "projectManager": "Project Manager",
+                "financing": "Request Financing",
                 "admin": "Admin",
                 "role": "Role",
                 "signOut": "Sign Out"
+            },
+            "roles": { "admin": "Administrator", "usuario": "Investor", "investor": "Investor" },
+            "financing": {
+                "title": "Request Financing", "subtitle": "Submit a financing request for your real estate investment.",
+                "type": "Financing Type", "hard_money": "Hard Money Loan", "dscr": "DSCR Loan",
+                "name": "Full Name", "email": "Email Address", "phone": "Phone Number",
+                "propertyAddress": "Property Address", "city": "City", "state": "State", "zip": "ZIP Code",
+                "amount": "Requested Loan Amount (USD)", "purchasePrice": "Purchase Price (USD)",
+                "rehabBudget": "Renovation Budget (USD)", "arv": "After Repair Value (USD)",
+                "estimatedValue": "Estimated Property Value (USD)", "notes": "Additional Information",
+                "submit": "Submit Request", "sending": "Submitting...", "success": "Your financing request has been received.",
+                "error": "We could not submit your request. Please try again.", "required": "Complete all required fields.",
+                "invalidAmount": "Enter a valid loan amount greater than zero.",
+                "privacy": "Your request is visible only to you and authorized administrators."
             },
             "dashboard": {
                 "title": "My Investment Portfolio",
@@ -340,14 +355,29 @@ const resources = {
     es: {
         translation: {
             "nav": {
-                "dashboard": "Dashboard",
+                "dashboard": "Panel de control",
                 "properties": "Inventario",
                 "calculator": "Calculadora",
-                "deals": "Deals",
-                "projectManager": "Project Manager",
-                "admin": "Admin",
+                "deals": "Operaciones",
+                "projectManager": "Gestión de proyectos",
+                "financing": "Solicitar financiamiento",
+                "admin": "Administración",
                 "role": "Rol",
                 "signOut": "Cerrar Sesión"
+            },
+            "roles": { "admin": "Administrador", "usuario": "Inversionista", "investor": "Inversionista" },
+            "financing": {
+                "title": "Solicitar financiamiento", "subtitle": "Envía una solicitud de financiamiento para tu inversión inmobiliaria.",
+                "type": "Tipo de financiamiento", "hard_money": "Préstamo para inversión y remodelación", "dscr": "Préstamo DSCR",
+                "name": "Nombre completo", "email": "Correo electrónico", "phone": "Número de teléfono",
+                "propertyAddress": "Dirección de la propiedad", "city": "Ciudad", "state": "Estado", "zip": "Código postal",
+                "amount": "Monto solicitado (USD)", "purchasePrice": "Precio de compra (USD)",
+                "rehabBudget": "Presupuesto de remodelación (USD)", "arv": "Valor después de remodelar (USD)",
+                "estimatedValue": "Valor estimado de la propiedad (USD)", "notes": "Información adicional",
+                "submit": "Enviar solicitud", "sending": "Enviando...", "success": "Hemos recibido tu solicitud de financiamiento.",
+                "error": "No pudimos enviar tu solicitud. Inténtalo nuevamente.", "required": "Completa todos los campos obligatorios.",
+                "invalidAmount": "Ingresa un monto solicitado válido y mayor que cero.",
+                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud."
             },
             "dashboard": {
                 "title": "Mi Portafolio de Inversión",
@@ -679,6 +709,9 @@ i18n
     .init({
         resources,
         fallbackLng: 'en',
+        supportedLngs: ['en', 'es'],
+        load: 'languageOnly',
+        detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] },
         defaultNS: 'translation',
         interpolation: {
             escapeValue: false
