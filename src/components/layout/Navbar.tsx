@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Building2, LayoutDashboard, Shield, LogOut, User, Calculator, FolderKanban, HardHat } from 'lucide-react';
+import { Menu, X, Building2, LayoutDashboard, Shield, LogOut, User, Calculator, FolderKanban, HardHat, Landmark } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,7 @@ const Navbar = () => {
     { to: '/calculator', label: t('nav.calculator'), icon: Calculator },
     { to: '/deals', label: t('nav.deals'), icon: FolderKanban },
     { to: '/project-manager', label: t('nav.projectManager'), icon: HardHat },
+    { to: '/financing', label: t('nav.financing'), icon: Landmark },
     ...(role === 'admin' ? [{ to: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ];
 
@@ -95,7 +96,7 @@ const Navbar = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem className="text-xs text-muted-foreground">
-                {t('nav.role')}: {role}
+                {t('nav.role')}: {t(`roles.${role}`, { defaultValue: role || '' })}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
