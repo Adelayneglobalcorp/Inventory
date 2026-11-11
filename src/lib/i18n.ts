@@ -16,6 +16,16 @@ const resources = {
                 "role": "Role",
                 "signOut": "Sign Out"
             },
+            "authErrors": {
+                "generic": "We could not complete your request. Please try again.",
+                "invalidCredentials": "Incorrect email address or password.",
+                "emailNotConfirmed": "Confirm your email address before signing in.",
+                "rateLimited": "Too many attempts. Please try again later.",
+                "notFound": "User not found.",
+                "profileError": "We could not verify your user profile.",
+                "pending": "Your account is waiting for approval by an administrator.",
+                "signupError": "We could not complete registration."
+            },
             "roles": { "admin": "Administrator", "usuario": "Investor", "investor": "Investor" },
             "dealsPage": {
                 "title": "My Investments", "subtitle": "Investment analyses saved in this browser",
@@ -381,6 +391,16 @@ const resources = {
                 "admin": "Administración",
                 "role": "Rol",
                 "signOut": "Cerrar Sesión"
+            },
+            "authErrors": {
+                "generic": "No pudimos completar tu solicitud. Inténtalo nuevamente.",
+                "invalidCredentials": "El correo electrónico o la contraseña son incorrectos.",
+                "emailNotConfirmed": "Confirma tu correo electrónico antes de ingresar.",
+                "rateLimited": "Demasiados intentos. Inténtalo más tarde.",
+                "notFound": "No se encontró el usuario.",
+                "profileError": "No pudimos verificar tu perfil de usuario.",
+                "pending": "Tu cuenta está pendiente de aprobación por un administrador.",
+                "signupError": "No pudimos completar el registro."
             },
             "roles": { "admin": "Administrador", "usuario": "Inversionista", "investor": "Inversionista" },
             "dealsPage": {
