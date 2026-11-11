@@ -9,7 +9,7 @@ import {
 import { Languages } from 'lucide-react';
 
 export function LanguageSwitcher() {
-    const { i18n } = useTranslation();
+    const { i18n, t } = useTranslation();
 
     const changeLanguage = (lng: string) => {
         i18n.changeLanguage(lng);
@@ -19,8 +19,8 @@ export function LanguageSwitcher() {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 w-10 px-0 text-white border border-white/30 hover:bg-white/20 font-bold text-xs">
-                    {i18n.language.substring(0, 2).toUpperCase()}
-                    <span className="sr-only">Toggle language</span>
+                    {i18n.resolvedLanguage?.toUpperCase() || 'EN'}
+                    <span className="sr-only">{t('common.language')}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
