@@ -15,11 +15,11 @@ const Properties = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-[Montserrat] text-2xl font-bold">{t('properties.title')}</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
             {t('properties.subtitle')}
           </p>
         </div>
