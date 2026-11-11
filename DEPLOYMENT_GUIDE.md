@@ -5,6 +5,7 @@ Netlify es la plataforma de despliegue confirmada para Inventory. El trabajo de 
 ## Estado conocido
 
 - Sitio actual: `admin360inventoryadelayne.netlify.app`.
+- Site ID confirmado: `9bc9df82-cb70-4230-b4e0-64b14e24defd`.
 - Propietario actual: equipo NOVOeia.
 - Repositorio conectado actualmente: `NOVOeia/git-sync-project-cb8f73b7`.
 - Producción observada: `main@9528aa3`, publicada el 20 de octubre de 2026.
@@ -27,5 +28,20 @@ Netlify es la plataforma de despliegue confirmada para Inventory. El trabajo de 
 4. Conectar `Adelayneglobalcorp/Inventory` y configurar las variables sin revelar sus valores.
 5. Generar una vista previa y probar login, propiedades, imágenes e intereses.
 6. Publicar en producción únicamente con confirmación explícita.
+
+## Vistas previas para los próximos ajustes
+
+Cada tarea pendiente se desarrollará en una rama separada. Después de aprobar pruebas y compilación, se generará una vista previa vinculada al Site ID confirmado. Esa vista tendrá una URL independiente para que el cliente pueda revisar el avance sin reemplazar el sitio productivo.
+
+Flujo acordado:
+
+1. Crear rama y PR para el ajuste.
+2. Ejecutar pruebas y compilación.
+3. Crear Deploy Preview, nunca un despliegue de producción.
+4. Compartir la URL de prueba y registrar el commit exacto.
+5. Corregir y repetir la vista previa hasta recibir aprobación.
+6. Fusionar y publicar únicamente con confirmación.
+
+El Site ID identifica el sitio, pero no concede acceso. Para operar Netlify en segundo plano será necesaria una autenticación de Netlify una sola vez; no se guardará el token en Git.
 
 No usar configuraciones de Vercel ni ejecutar SQL como parte del despliegue.
