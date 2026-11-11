@@ -227,6 +227,8 @@ export type DealEvaluation = {
   roi: number;
   profit: number;
   factors: string[];
+  meetsRoiTarget: boolean;
+  meetsProfitTarget: boolean;
 };
 
 export function evaluateDeal(
@@ -245,6 +247,8 @@ export function evaluateDeal(
       roi: 0,
       profit: 0,
       factors: [],
+      meetsRoiTarget: false,
+      meetsProfitTarget: false,
     };
   }
 
@@ -384,6 +388,8 @@ export function evaluateDeal(
     roi,
     profit,
     factors,
+    meetsRoiTarget,
+    meetsProfitTarget,
   };
 }
 
@@ -406,6 +412,12 @@ export function getDealStatusPresentation(
   }
   // Display objective fulfillment separately from the qualitative risk score.
   // Comparisons use the raw values: 14.95 never rounds up to 15.
+  if (!dealDecision && evaluation.meetsRoiTarget !== evaluation.meetsProfitTarget) {
+    return {
+      text: evaluation.meetsRoiTarget ? t("dealStatusPartialRoi") : t("dealStatusPartialProfit"),
+      color: "#f59e0b",
+    };
+  }
   if (!dealDecision && evaluation.profit <= 0) {
     return { text: t("dealStatusRejected"), color: "#ef4444" };
   }
