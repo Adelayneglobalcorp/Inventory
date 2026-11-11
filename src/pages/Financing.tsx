@@ -98,8 +98,8 @@ export default function Financing() {
     label: string,
     opts: { type?: string; required?: boolean; min?: string; step?: string } = {},
   ) => (
-    <div className="space-y-2" key={name}>
-      <Label htmlFor={'financing-' + name}>{label}</Label>
+    <div className="min-w-0 space-y-2" key={name}>
+      <Label htmlFor={'financing-' + name} className="text-xs font-semibold tracking-wide text-slate-200">{label}</Label>
       <Input
         id={'financing-' + name}
         name={name}
@@ -118,10 +118,10 @@ export default function Financing() {
     field(name, label, { type: 'number', min: '0', step: '0.01', required });
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <header className="space-y-2">
-        <h1 className="flex items-center gap-3 text-3xl font-semibold">
-          <Landmark className="h-7 w-7" aria-hidden="true" />
+    <div className="mx-auto max-w-5xl space-y-7 pb-8">
+      <header className="relative overflow-hidden rounded-[26px] border border-gold-400/20 bg-gradient-to-br from-[#20385d] via-[#162841] to-[#101d32] px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.17)] sm:px-8 sm:py-10">\n        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full bg-gold-400/[0.07] blur-3xl" />\n        <div className="relative space-y-3">
+        <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-4xl">
+          <Landmark className="h-7 w-7 shrink-0 text-gold-400 sm:h-9 sm:w-9" aria-hidden="true" />
           {t('financing.title')}
         </h1>
         <p className="text-muted-foreground">{t('financing.subtitle')}</p>
@@ -131,7 +131,7 @@ export default function Financing() {
           <CardTitle>{t('financing.title')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={submit} className="space-y-6">
+          <form onSubmit={submit} className="space-y-7">
             <div className="space-y-2">
               <Label htmlFor="financing-loanType">{t('financing.type')}</Label>
               <select
@@ -139,13 +139,13 @@ export default function Financing() {
                 value={form.loanType}
                 onChange={(event) => update('loanType', event.target.value)}
                 disabled={submitting}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-11 w-full rounded-xl border border-border/90 bg-background/70 px-4 py-2 text-sm outline-none transition-colors focus:border-gold-400/50 focus:ring-2 focus:ring-gold-400/10"
               >
                 <option value="hard_money">{t('financing.hard_money')}</option>
                 <option value="dscr">{t('financing.dscr')}</option>
               </select>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-5 rounded-2xl border border-border/70 bg-background/20 p-4 sm:grid-cols-2 sm:p-6">
               {field('fullName', t('financing.name'), { required: true })}
               {field('email', t('financing.email'), { type: 'email', required: true })}
               {field('phone', t('financing.phone'), { type: 'tel', required: true })}
