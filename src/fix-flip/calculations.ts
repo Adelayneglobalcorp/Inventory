@@ -38,8 +38,8 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -253,56 +253,56 @@ export function evaluateDeal(
   const roi = calculation.roi;
   if (roi >= 30) {
     score += 40;
-    factors.push("ROI Excelente (≥30%)");
+    factors.push(lang === "es" ? "ROI excelente (≥30 %)" : "Excellent ROI (≥30%)");
   } else if (roi >= 20) {
     score += 30;
-    factors.push("ROI Bueno (20-29%)");
+    factors.push(lang === "es" ? "ROI bueno (20–29 %)" : "Good ROI (20–29%)");
   } else if (roi >= 15) {
     score += 20;
-    factors.push("ROI Regular (15-19%)");
+    factors.push(lang === "es" ? "ROI regular (15–19 %)" : "Fair ROI (15–19%)");
   } else if (roi >= 10) {
     score += 10;
-    factors.push("ROI Bajo (10-14%)");
+    factors.push(lang === "es" ? "ROI bajo (10–14 %)" : "Low ROI (10–14%)");
   } else {
-    factors.push("ROI Muy Bajo (<10%)");
+    factors.push(lang === "es" ? "ROI muy bajo (<10 %)" : "Very low ROI (<10%)");
   }
 
   const profit = calculation.profit;
   const profitPercent = (profit / calculation.arv) * 100;
   if (profitPercent >= 25) {
     score += 25;
-    factors.push("Ganancia Excelente (≥25% ARV)");
+    factors.push(lang === "es" ? "Ganancia excelente (≥25 % del ARV)" : "Excellent profit (≥25% ARV)");
   } else if (profitPercent >= 20) {
     score += 20;
-    factors.push("Ganancia Buena (20-24% ARV)");
+    factors.push(lang === "es" ? "Ganancia buena (20–24 % del ARV)" : "Good profit (20–24% ARV)");
   } else if (profitPercent >= 15) {
     score += 15;
-    factors.push("Ganancia Regular (15-19% ARV)");
+    factors.push(lang === "es" ? "Ganancia regular (15–19 % del ARV)" : "Fair profit (15–19% ARV)");
   } else if (profitPercent >= 10) {
     score += 10;
-    factors.push("Ganancia Baja (10-14% ARV)");
+    factors.push(lang === "es" ? "Ganancia baja (10–14 % del ARV)" : "Low profit (10–14% ARV)");
   } else if (profitPercent > 0) {
     score += 5;
-    factors.push("Ganancia Muy Baja (<10% ARV)");
+    factors.push(lang === "es" ? "Ganancia muy baja (<10 % del ARV)" : "Very low profit (<10% ARV)");
   } else {
-    factors.push("Sin Ganancia");
+    factors.push(lang === "es" ? "Sin ganancia" : "No profit");
   }
 
   const cashOnCash = calculation.cashOnCash;
   if (cashOnCash >= 50) {
     score += 20;
-    factors.push("Cash on Cash Excelente (≥50%)");
+    factors.push(lang === "es" ? "Rentabilidad sobre efectivo excelente (≥50 %)" : "Excellent cash-on-cash return (≥50%)");
   } else if (cashOnCash >= 30) {
     score += 15;
-    factors.push("Cash on Cash Bueno (30-49%)");
+    factors.push(lang === "es" ? "Rentabilidad sobre efectivo buena (30–49 %)" : "Good cash-on-cash return (30–49%)");
   } else if (cashOnCash >= 20) {
     score += 10;
-    factors.push("Cash on Cash Regular (20-29%)");
+    factors.push(lang === "es" ? "Rentabilidad sobre efectivo regular (20–29 %)" : "Fair cash-on-cash return (20–29%)");
   } else if (cashOnCash >= 10) {
     score += 5;
-    factors.push("Cash on Cash Bajo (10-19%)");
+    factors.push(lang === "es" ? "Rentabilidad sobre efectivo baja (10–19 %)" : "Low cash-on-cash return (10–19%)");
   } else {
-    factors.push("Cash on Cash Muy Bajo (<10%)");
+    factors.push(lang === "es" ? "Rentabilidad sobre efectivo muy baja (<10 %)" : "Very low cash-on-cash return (<10%)");
   }
 
   const ltv = (calculation.hmlLoanAmount / calculation.arv) * 100;
@@ -311,19 +311,19 @@ export function evaluateDeal(
   if (ltv > 80) {
     riskScore = 0;
     riskLevel = "Muy Alto";
-    factors.push("LTV Muy Alto (>80%)");
+    factors.push(lang === "es" ? "LTV muy alto (>80 %)" : "Very high LTV (>80%)");
   } else if (ltv > 75) {
     riskScore = 5;
     riskLevel = "Alto";
-    factors.push("LTV Alto (75-80%)");
+    factors.push(lang === "es" ? "LTV alto (75–80 %)" : "High LTV (75–80%)");
   } else if (ltv > 70) {
     riskScore = 10;
     riskLevel = "Medio";
-    factors.push("LTV Medio (70-75%)");
+    factors.push(lang === "es" ? "LTV medio (70–75 %)" : "Moderate LTV (70–75%)");
   } else {
     riskScore = 15;
     riskLevel = "Bajo";
-    factors.push("LTV Bajo (≤70%)");
+    factors.push(lang === "es" ? "LTV bajo (≤70 %)" : "Low LTV (≤70%)");
   }
   score += riskScore;
 
@@ -333,16 +333,16 @@ export function evaluateDeal(
   const meetsProfitTarget = profit >= minProfitTarget;
   if (meetsRoiTarget && meetsProfitTarget) {
     score += 5;
-    factors.push("Cumple mínimos de ROI y ganancia");
+    factors.push(lang === "es" ? "Cumple los mínimos de rentabilidad y ganancia" : "Meets minimum ROI and profit");
   } else if (!meetsRoiTarget && !meetsProfitTarget) {
     score -= 10;
-    factors.push("No cumple mínimos de ROI y ganancia");
+    factors.push(lang === "es" ? "No cumple los mínimos de rentabilidad ni de ganancia" : "Below minimum ROI and profit");
   } else if (!meetsRoiTarget) {
     score -= 6;
-    factors.push("No cumple ROI mínimo objetivo");
+    factors.push(lang === "es" ? "No alcanza la rentabilidad mínima" : "Below minimum ROI");
   } else if (!meetsProfitTarget) {
     score -= 6;
-    factors.push("No cumple ganancia mínima objetivo");
+    factors.push(lang === "es" ? "No alcanza la ganancia mínima" : "Below minimum profit");
   }
 
   score = Math.max(0, Math.min(100, score));
@@ -351,6 +351,7 @@ export function evaluateDeal(
   let levelText: string;
   let recommendation: string;
   let icon: string;
+  const meetsAllMinimums = calculation.dealDecision;
   if (score >= 80) {
     level = "excellent";
     levelText = t("evaluateExcellent");
@@ -370,6 +371,14 @@ export function evaluateDeal(
     level = "poor";
     levelText = t("evaluatePoor");
     recommendation = t("evaluatePoorRec");
+    icon = "❌";
+  }
+
+  if (!meetsAllMinimums) {
+    // A favorable qualitative score cannot override an investor's hard thresholds.
+    level = "poor";
+    levelText = t("dealStatusRejected");
+    recommendation = t("evaluateBelowMinimumRec");
     icon = "❌";
   }
 
@@ -403,8 +412,12 @@ export function getDealStatusPresentation(
   if (!evaluation || evaluation.levelText === t("evaluateNoData")) {
     return { text: t("evaluateNoData"), color: "#9e9e9e" };
   }
-  const minSuffix =
-    !dealDecision && evaluation.level !== "poor" ? t("dealStatusMinNotMet") : "";
+  // The investor's mandatory minimums determine acceptance; the risk score is advisory.
+  // Never approve 14.95% against a 15% target based on rounded display values.
+  if (!dealDecision) {
+    return { text: t("dealStatusRejected"), color: "#ef4444" };
+  }
+  const minSuffix = "";
   switch (evaluation.level) {
     case "excellent":
       return {
