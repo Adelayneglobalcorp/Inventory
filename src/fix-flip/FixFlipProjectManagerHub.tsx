@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HardHat, ArrowRight } from "lucide-react";
@@ -7,6 +8,7 @@ import { formatCurrency } from "./calculations";
 
 export default function FixFlipProjectManagerHub() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const projects = loadProjects();
 
   return (
@@ -14,23 +16,23 @@ export default function FixFlipProjectManagerHub() {
       <div>
         <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
           <HardHat className="h-7 w-7 text-primary" />
-          Project Manager
+          {t('pmHub.title')}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Elige un deal para gestionar presupuesto, ítems y cronograma.
+          {t('pmHub.subtitle')}
         </p>
       </div>
 
       {projects.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            No hay deals. Crea uno desde la{" "}
+            {t('pmHub.emptyBefore')}{' '}
             <Button variant="link" className="px-1" onClick={() => navigate("/calculator")}>
-              calculadora
+              {t('pmHub.calculator')}
             </Button>{" "}
-            o la lista de{" "}
+            {' '}{t('pmHub.emptyMiddle')}{' '}
             <Button variant="link" className="px-1" onClick={() => navigate("/deals")}>
-              deals
+              {t('pmHub.deals')}
             </Button>
             .
           </CardContent>
@@ -45,14 +47,14 @@ export default function FixFlipProjectManagerHub() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Rehab budget</span>
+                  <span className="text-muted-foreground">{t('pmHub.budget')}</span>
                   <span className="font-medium">{formatCurrency(p.rehabBudget)}</span>
                 </div>
                 <Button
                   className="w-full gold-gradient text-primary-foreground"
                   onClick={() => navigate(`/project-manager/${p.id}`)}
                 >
-                  Abrir PM
+                  {t('pmHub.open')}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </CardContent>
