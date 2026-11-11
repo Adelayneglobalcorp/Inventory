@@ -418,6 +418,8 @@ export default function FixFlipCalculatorPage() {
     (key: NumericInputKey, raw: string) => {
       const nextVal = numericValueFromRaw(raw);
       setNumDrafts((d) => ({ ...d, [key]: raw }));
+      // Keep the user's draft visible without propagating an invalid number into financial formulas.
+      if (!Number.isFinite(nextVal)) return;
       setInputs((prev) => {
         const next = { ...prev, [key]: nextVal } as UnderwritingInputs;
         const purchase = key === "purchasePrice" ? nextVal : Number(prev.purchasePrice) || 0;
