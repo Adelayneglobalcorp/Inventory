@@ -82,15 +82,15 @@ export function DealGauge({ evaluation, lang }: Props) {
             </g>
           </svg>
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex justify-between px-1 text-[9px] text-muted-foreground">
-            <span>Malo</span>
-            <span>Regular</span>
-            <span>Bueno</span>
-            <span>Excelente</span>
+            <span>{t("gaugePoor")}</span>
+            <span>{t("gaugeFair")}</span>
+            <span>{t("gaugeGood")}</span>
+            <span>{t("gaugeExcellent")}</span>
           </div>
         </div>
         <div className="text-center sm:text-left">
           <div className="font-[Montserrat] text-4xl font-black text-primary">{score}</div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">Puntos</div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("gaugePoints")}</div>
           <div className="mt-1 text-sm font-semibold">{evaluation.levelText}</div>
         </div>
       </div>
