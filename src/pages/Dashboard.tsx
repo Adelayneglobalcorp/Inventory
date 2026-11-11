@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getProperties } from '@/lib/properties';
 import PropertyDetail from '@/components/properties/PropertyDetail';
@@ -159,102 +160,151 @@ const Dashboard = () => {
     { title: t('dashboard.stats.totalArv'), value: fmt(stats.totalArv), icon: DollarSign, color: 'text-emerald-400' },
   ];
 
+
+  const quickLinks = [
+    { to: '/properties', label: t('nav.properties'), icon: Building2 },
+    { to: '/calculator', label: t('nav.calculator'), icon: BarChart3 },
+    { to: '/deals', label: t('nav.deals'), icon: TrendingUp },
+    { to: '/project-manager', label: t('nav.projectManager'), icon: Home },
+    { to: '/financing', label: t('nav.financing'), icon: DollarSign },
+  ];
+
   return (
-    <div className="space-y-7">
-      <div>
-        <h1 className="font-[Montserrat] text-2xl font-bold">{t('dashboard.title')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email })}
-          <span className="ml-2 rounded-full bg-gold-500/20 px-2 py-0.5 text-xs font-medium text-gold-400 border border-gold-500/30">
-            {t(`roles.${role}`, { defaultValue: role || '' })}
-          </span>
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {statCards.map((stat) => (
-          <Card key={stat.title} className="min-w-0 rounded-2xl border-border/70 bg-card/90 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-500/25 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-start justify-between gap-2 px-4 pb-2 pt-4">
-              <CardTitle className="min-w-0 text-xs font-medium leading-snug text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className={`h-5 w-5 shrink-0 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Recent properties */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-[Montserrat]">{t('dashboard.recentProperties')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {loading ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">{t('dashboard.loading')}</p>
-              </div>
-            ) : properties.length > 0 ? (
-              properties.slice(0, 5).map((p) => {
-                const primaryImage = p.property_images?.find((img: any) => img.is_primary) || p.property_images?.[0];
-                const imageUrl = primaryImage?.url || p.image_url;
-
-                return (
-                  <div key={p.id} className="flex flex-col gap-3 rounded-xl border border-border/70 bg-background/25 p-3 transition-colors hover:bg-muted/50 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 items-center gap-3">
-                      {imageUrl && (
-                        <img src={imageUrl} alt={p.title} className="h-12 w-12 rounded-lg object-cover" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium">{p.title}</p>
-                        <p className="text-xs text-muted-foreground">{p.city}, {p.state}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{fmt(p.price)}</p>
-                      <div className="flex gap-1 mt-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewProperty(p)}
-                          className="h-7 px-2"
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        {user && user.role !== 'admin' && p.status === 'available' && (
-                          <Button
-                            variant={userInterests.has(p.id) ? "secondary" : "outline"}
-                            size="sm"
-                            onClick={() => handleToggleInterest(p)}
-                            disabled={loadingInterests.has(p.id)}
-                            className="h-7 px-2"
-                          >
-                            <Heart className={`w-3 h-3 ${userInterests.has(p.id) ? 'fill-current' : ''}`} />
-                            {userInterests.has(p.id) ? t('dashboard.interested') : t('dashboard.interest')}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">{t('dashboard.noProperties')}</p>
-              </div>
-            )}
+    <div className="space-y-7 pb-8">
+      <section className="relative isolate overflow-hidden rounded-[28px] border border-gold-500/20 bg-gradient-to-br from-[#1e3559] via-[#152742] to-[#101b30] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.2)] sm:p-8 lg:p-10">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-36 h-96 w-96 rounded-full border border-gold-400/10 bg-gold-500/[0.07] blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-8 h-40 w-40 rounded-full bg-blue-400/[0.07] blur-3xl" />
+        <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-7 rounded-full bg-gold-400" />
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Inventory by Cash2Day</span>
+            </div>
+            <div>
+              <h1 className="font-[Montserrat] text-3xl font-bold tracking-tight text-white sm:text-4xl">{t('dashboard.title')}</h1>
+              <p className="mt-3 max-w-2xl break-words text-sm leading-relaxed text-slate-300 sm:text-base">
+                {t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email })}
+              </p>
+            </div>
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-gold-400/25 bg-gold-400/10 px-3 py-1.5 text-xs font-medium text-gold-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-gold-400" />
+              {t('nav.role')}: {t(`roles.${role}`, { defaultValue: role || '' })}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <Link to="/properties" className="inline-flex h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-gold-400 px-5 text-sm font-bold text-[#13213a] shadow-[0_10px_30px_rgba(234,179,8,0.14)] transition-all hover:-translate-y-0.5 hover:bg-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white lg:self-end">
+            <Building2 className="h-4 w-4" />
+            {t('nav.properties')}
+          </Link>
+        </div>
+      </section>
 
-      {/* Modal para ver propiedad */}
-      <PropertyDetail
-        property={selectedProperty}
-        open={!!selectedProperty}
-        onClose={() => setSelectedProperty(null)}
-      />
+      <section aria-label={t('dashboard.title')} className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="h-6 w-1 rounded-full bg-gold-400" aria-hidden="true" />
+          <h2 className="font-[Montserrat] text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t('dashboard.title')}</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {statCards.map((stat, index) => (
+            <Card key={stat.title} className="group relative min-w-0 overflow-hidden rounded-2xl border-white/[0.08] bg-[#192840]/90 shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-200 hover:-translate-y-1 hover:border-gold-400/25 hover:shadow-[0_20px_42px_rgba(0,0,0,0.2)]">
+              <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-gold-400/60 via-gold-400/10 to-transparent opacity-70" />
+              <CardContent className="flex min-h-[132px] items-center justify-between gap-3 px-5 py-6">
+                <div className="min-w-0 space-y-4">
+                  <p className="max-w-[230px] text-xs font-medium leading-snug text-slate-300 sm:text-sm">{stat.title}</p>
+                  <p className="break-words text-2xl font-bold tracking-tight text-white tabular-nums sm:text-3xl">{loading ? '—' : stat.value}</p>
+                </div>
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] sm:h-14 sm:w-14 ${stat.color}`}>
+                  <stat.icon className="h-6 w-6" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="h-6 w-1 rounded-full bg-gold-400" aria-hidden="true" />
+          <h2 className="font-[Montserrat] text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t('nav.dashboard')}</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {quickLinks.map((item) => (
+            <Link key={item.to} to={item.to} className="group flex min-h-[116px] min-w-0 flex-col items-start justify-between gap-4 rounded-2xl border border-border/80 bg-card/90 p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-gold-400/35 hover:bg-[#1b2b45] hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-gold-400/20 bg-gold-400/10 text-gold-400 transition-colors group-hover:bg-gold-400/20">
+                <item.icon className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <span className="min-w-0 break-words text-sm font-semibold leading-snug text-foreground group-hover:text-gold-300">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="h-6 w-1 rounded-full bg-gold-400" aria-hidden="true" />
+            <h2 className="font-[Montserrat] text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t('dashboard.recentProperties')}</h2>
+          </div>
+          <Link to="/properties" className="inline-flex items-center gap-2 rounded-lg border border-gold-400/25 bg-gold-400/10 px-3 py-2 text-xs font-semibold text-gold-300 transition-colors hover:bg-gold-400/20">
+            {t('nav.properties')}
+            <Building2 className="h-4 w-4" />
+          </Link>
+        </div>
+        <Card className="overflow-hidden rounded-2xl border-border/70 bg-card/85 shadow-[0_14px_48px_rgba(0,0,0,0.12)]">
+          <CardContent className="p-3 sm:p-5">
+            <div className="space-y-3">
+              {loading ? (
+                <div className="rounded-xl border border-border/60 bg-muted/20 px-6 py-12 text-center text-sm text-muted-foreground">{t('dashboard.loading')}</div>
+              ) : properties.length > 0 ? (
+                properties.slice(0, 5).map((p) => {
+                  const primaryImage = p.property_images?.find((img: any) => img.is_primary) || p.property_images?.[0];
+                  const imageUrl = primaryImage?.url || p.image_url;
+                  return (
+                    <div key={p.id} className="flex flex-col gap-4 rounded-xl border border-border/70 bg-background/25 p-3 transition-all duration-200 hover:border-gold-400/20 hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                      <div className="flex min-w-0 items-center gap-4">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt={p.title} className="h-20 w-24 shrink-0 rounded-xl object-cover ring-1 ring-white/10 sm:h-[76px] sm:w-[112px]" />
+                        ) : (
+                          <div className="flex h-20 w-24 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-muted/50 text-gold-400 sm:h-[76px] sm:w-[112px]">
+                            <Building2 className="h-8 w-8" aria-hidden="true" />
+                          </div>
+                        )}
+                        <div className="min-w-0 space-y-2">
+                          <p className="break-words text-sm font-semibold text-white sm:text-base">{p.title}</p>
+                          <p className="text-xs text-muted-foreground">{p.city}, {p.state}</p>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border/60 pt-3 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0">
+                        <p className="text-base font-bold text-gold-300 tabular-nums">{fmt(p.price)}</p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleViewProperty(p)} className="h-9 rounded-lg px-3" aria-label={t('nav.properties')} title={t('nav.properties')}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {user && user.role !== 'admin' && p.status === 'available' && (
+                            <Button variant={userInterests.has(p.id) ? 'secondary' : 'outline'} size="sm" onClick={() => handleToggleInterest(p)} disabled={loadingInterests.has(p.id)} className="h-9 rounded-lg px-3">
+                              <Heart className={`h-4 w-4 ${userInterests.has(p.id) ? 'fill-current' : ''}`} />
+                              {userInterests.has(p.id) ? t('dashboard.interested') : t('dashboard.interest')}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-14 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-400/10 text-gold-400">
+                    <Building2 className="h-7 w-7" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.noProperties')}</p>
+                  <Link to="/properties" className="rounded-lg border border-gold-400/25 px-4 py-2 text-sm font-medium text-gold-300 transition-colors hover:bg-gold-400/10">{t('nav.properties')}</Link>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <PropertyDetail property={selectedProperty} open={!!selectedProperty} onClose={() => setSelectedProperty(null)} />
     </div>
   );
 };
