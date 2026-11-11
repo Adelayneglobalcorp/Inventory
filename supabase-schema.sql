@@ -1,3 +1,6 @@
+-- ADVERTENCIA: REFERENCIA HISTORICA, NO MIGRACION VIGENTE.
+-- NO EJECUTAR SOBRE EL SUPABASE PRODUCTIVO.
+-- Consulte docs/SUPABASE_BASELINE.md y audite primero el esquema real.
 -- =============================================
 -- Tablas para el Sistema de Gestión de Propiedades
 -- =============================================

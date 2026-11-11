@@ -1,36 +1,52 @@
-# Estado del repositorio — Inventory / Adelayne Global
+# Estado y plan de continuidad — Inventory
 
-Fecha de revisión: 2026-11-11
+Fecha de actualización: 2026-11-11
 
-## Qué existe en la rama main
-- `CalculatorFix-flip-main.zip`: paquete comprimido que contiene una versión de Fix & Flip. Su contenido interno no ha podido validarse con el conector de GitHub (archivo binario).
-- `README.md`: documentación histórica de "Fix & Flip Pro", no verificada como descripción de la aplicación completa.
+## Base completada
 
-**No existen archivos fuente extraídos en la raíz de main** (`src/`, `package.json`, `vite.config.*`, etc.). Por tanto, **no es posible conectar este estado de main directamente a un build típico de Netlify de React/Vite** ni afirmar que contiene Inventory Admin 360 desplegable. El ZIP se conserva sin cambios.
+- Código productivo completo migrado como archivos normales al repositorio del cliente.
+- ZIP histórico y documentación del repositorio cliente preservados.
+- Rama de respaldo: `backup/pre-migration-2026-11-11`.
+- Rama de trabajo: `codex/migrate-production-source`.
+- PR de migración: `Adelayneglobalcorp/Inventory#1` (borrador, pendiente de revisión y fusión).
+- `.env` excluido del repositorio y configuración sensible sustituida por variables de entorno.
+- Compilación aprobada y prueba automatizada aprobada.
+- Supabase productivo transferido a la organización de Adelayne sin cambiar su identificador.
+- Verificación de solo lectura completada sin modificar datos.
 
-## Alcance aprobado por el cliente
-1. A1 — Migración/configuración de GitHub, Netlify y Supabase del cliente.
-2. A2 — Reactivación de Inventory, Calculator, Deals y Project Manager existentes.
-3. A3 — Correcciones de traducción ES/EN.
-4. A4 — Registro automático de inversionistas generales sin aprobación administrativa manual, con permisos seguros.
-5. B2 — Módulo de solicitud de financiamiento, Supabase, integración GoHighLevel y notificación.
+## Supabase confirmado
 
-**Fuera del alcance**: automatización de Dropbox / Google Drive. **Pendiente de aprobación**: B1, actualización de estados por instrucciones.
+- Proyecto: `tfvlgelxqsfyjigteagy`.
+- Auth: 31 usuarios.
+- `properties`: 47 registros.
+- `profiles`: 31 registros.
+- `property_interests`: 0 registros.
+- Storage: bucket público `property-images` presente.
 
-## Preparación técnica antes de desarrollar
-1. Identificar y respaldar el código fuente real de producción (no reemplazarlo por una calculadora histórica).
-2. Incorporar el código fuente descomprimido al repositorio del cliente, revisando archivos privados como `.env` y credenciales.
-3. Verificar `package.json`, build, variables de entorno y configuración de Netlify.
-4. Verificar que la aplicación apunte al proyecto correcto de Supabase y proteger los datos existentes.
-5. Crear una rama para cada cambio, probar y desplegar solo después de aprobar la versión.
+La estructura completa, políticas RLS, funciones y triggers todavía no han sido certificados como una migración reproducible. Los scripts SQL históricos de la raíz no son una fuente de verdad y no deben ejecutarse indiscriminadamente.
 
-## Referencias identificadas para revisión
-- Repositorio cliente: https://github.com/Adelayneglobalcorp/Inventory
-- Posible fuente de aplicación integral: https://github.com/NOVOeia/git-sync-project-cb8f73b7 (debe validarse que corresponda a la versión de producción)
-- Sitio de administración reportado: https://admin360inventoryadelayne.netlify.app
-- Supabase cliente reportado: `tfvlgelxqsfyjigteagy`
+## Pendientes técnicos conocidos
 
-## Precauciones
-- No modificar, borrar ni recrear las propiedades y usuarios existentes durante la preparación.
-- No publicar secretos, llaves privadas o tokens en el repositorio.
-- Los datos de Deals y Project Manager pueden depender de `localStorage`; cualquier migración de esa persistencia exige evaluación independiente.
+- El PR aún no está fusionado con `main`.
+- Lint heredado: 94 errores y 15 advertencias.
+- Auditoría de dependencias heredada: 32 hallazgos.
+- Paquete principal aproximado de 1.74 MB.
+- La aplicación utiliza `user_metadata` como ayuda para mostrar roles en algunos flujos. La autorización real debe depender de la tabla `profiles` y de RLS; esto debe corregirse y verificarse antes de ampliar el registro automático.
+- El flujo actual mantiene aprobación manual para usuarios generales; su eliminación forma parte de la tarea pendiente de registro automático.
+- Netlify está aplazado por decisión del cliente y no se debe tocar hasta retomarlo.
+
+## Orden recomendado de continuación
+
+1. Revisar y fusionar el PR de migración cuando se apruebe la base.
+2. Auditar RLS, roles, trigger de perfiles y Storage contra el esquema real, sin modificar datos.
+3. Implementar registro automático seguro para inversionistas generales, manteniendo administración protegida.
+4. Completar y probar textos ES/EN.
+5. Reactivar y probar Inventory, Calculator, Deals y Project Manager.
+6. Corregir lint, dependencias y tamaño del paquete en cambios separados.
+7. Retomar Netlify al final, configurar variables y desplegar solo con confirmación.
+
+## Fuera del alcance actual
+
+- Automatización de Dropbox o Google Drive.
+- Cambios destructivos o reinicialización de la base de datos.
+- Despliegue de Netlify sin confirmación.

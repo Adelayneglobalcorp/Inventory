@@ -1,4 +1,6 @@
-# Documentación de la Base de Datos - Sistema de Gestión de Propiedades
+# Documentación histórica de la base de datos
+
+> **Advertencia:** este archivo describe un diseño histórico y no certifica el esquema que existe actualmente en producción. No ejecute `supabase-schema.sql` ni los scripts SQL de la raíz sobre el proyecto productivo. Use `docs/SUPABASE_BASELINE.md` como punto de partida y audite primero el esquema real en modo de solo lectura.
 
 ## 📋 Resumen
 
