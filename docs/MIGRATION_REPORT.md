@@ -32,7 +32,9 @@ Se compararon los 210 archivos del código origen contra sus identificadores Git
 
 ## Servicios externos y bloqueos
 
-- El proyecto Supabase confirmado es `rflsfszqfxoyuidmvicf`. Su servicio de autenticación respondió correctamente y la clave pública fue aceptada en consultas de tabla. Las tablas esperadas por la aplicación (`properties`, `profiles` y `property_interests`) respondieron `PGRST205`: no existen actualmente en el esquema público. El catálogo raíz de REST exige una clave secreta, comportamiento independiente de la clave pública del frontend. El proyecto todavía no aparece en la cuenta Supabase conectada a esta sesión y no se modificaron datos.
+- El proyecto Supabase productivo original `tfvlgelxqsfyjigteagy` fue transferido correctamente a `Adelayneglobalcorp's Org` el 11 de noviembre de 2026. Conservó su identificador, URL, base de datos, autenticación y configuración. `adelaynegmarketing@gmail.com` figura como Owner y `team@novoeia.com` como Developer.
+- La verificación posterior a la transferencia confirmó 31 usuarios de Auth y acceso de solo lectura a las tablas principales: `properties` (47 registros), `profiles` (31 registros) y `property_interests` (0 registros). No se modificaron datos. No aparecen buckets ni archivos en Storage.
+- El proyecto vacío `rflsfszqfxoyuidmvicf` fue eliminado antes de la transferencia y ya no debe utilizarse en la aplicación ni en Netlify.
 - La arquitectura confirmada por el cliente usa Supabase para datos y autenticación, y Netlify para el despliegue. GitHub conserva registros históricos de Vercel que no representan el despliegue actual y deben tratarse como obsoletos. La configuración `netlify.toml` está incluida y la compilación local fue aprobada, pero no se inició ni se confirmó ningún despliegue en Netlify.
 
-Por estos bloqueos, no se continuó todavía con reactivación, idiomas ni registro automático. Antes se debe revisar y aprobar una migración base segura para crear el esquema requerido en Supabase, y confirmar el sitio correcto dentro de Netlify.
+La base de Supabase ya está verificada y no requiere una migración de datos adicional. Antes de continuar con reactivación, idiomas y registro automático, queda confirmar el sitio correcto de Netlify y que sus variables de entorno apunten al proyecto conservado `tfvlgelxqsfyjigteagy`.
