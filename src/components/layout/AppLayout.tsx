@@ -26,13 +26,13 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="inventory-shell min-h-screen bg-background">
       <Navbar />
       <main
         className={
           wideMain
-            ? 'mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4'
-            : 'mx-auto max-w-7xl px-4 py-6'
+            ? 'mx-auto w-full max-w-[1600px] px-3 py-5 sm:px-5 lg:px-7'
+            : 'mx-auto w-full max-w-7xl px-3 py-5 sm:px-5 sm:py-7 lg:px-7'
         }
       >
         <Outlet />
