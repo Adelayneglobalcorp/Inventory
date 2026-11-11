@@ -1,0 +1,1187 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Banknote,
+  CalendarDays,
+  Check,
+  Home,
+  Pencil,
+  Plus,
+  Trash2,
+  HardHat,
+  Trees,
+} from "lucide-react";
+import { formatCurrency } from "./calculations";
+import { PmBudgetPanel } from "./PmBudgetPanel";
+import { PmTimelinePanel } from "./PmTimelinePanel";
+import { defaultCategoryForArea } from "./pmDefaults";
+import { computePmItemTotals } from "./pmItemMath";
+import type {
+  PMItem,
+  PMSubcategorySelection,
+  PmSubcategoryDatabase,
+  ProjectManagerData,
+} from "./types";
+import {
+  createDefaultPmData,
+  hydrateProjectManagerData,
+  loadPmData,
+  loadProjects,
+  recalcPmBudget,
+  savePmData,
+} from "./storage";
+
+const STATUSES: PMItem["status"][] = [
+  "PLANNING",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "ON_HOLD",
+];
+
+const statusLabel: Record<PMItem["status"], string> = {
+  PLANNING: "Planificación",
+  IN_PROGRESS: "En progreso",
+  COMPLETED: "Completado",
+  ON_HOLD: "En espera",
+};
+
+const UNITS: { value: string; label: string }[] = [
+  { value: "EACH", label: "Cada uno" },
+  { value: "SQFT", label: "Pie²" },
+  { value: "LINEAR_FT", label: "Pie lineal" },
+  { value: "HOUR", label: "Hora" },
+];
+
+const PRIORITIES: { value: string; label: string }[] = [
+  { value: "HIGH", label: "Alta" },
+  { value: "MEDIUM", label: "Media" },
+  { value: "LOW", label: "Baja" },
+];
+
+const SUB_WORK_TYPES: { value: string; label: string }[] = [
+  { value: "REPAIR", label: "Reparar" },
+  { value: "REPLACE", label: "Reemplazar" },
+  { value: "NEW", label: "Nuevo" },
+  { value: "UPGRADE", label: "Mejorar" },
+];
+
+function areasForCategory(
+  db: PmSubcategoryDatabase,
+  map: Record<string, "INTERIOR" | "EXTERIOR">,
+  category: "INTERIOR" | "EXTERIOR",
+): string[] {
+  return Object.keys(db).filter((area) => {
+    const cat = map[area] ?? defaultCategoryForArea(area);
+    return cat === category;
+  });
+}
+
+function clonePmData(d: ProjectManagerData): ProjectManagerData {
+  return JSON.parse(JSON.stringify(d)) as ProjectManagerData;
+}
+
+function PmCompleteItemDialog({
+  item,
+  open,
+  onOpenChange,
+  onConfirm,
+  title,
+  taskLabel,
+  hint,
+  costLabel,
+  placeholder,
+  cancelLabel,
+  confirmLabel,
+}: {
+  item: PMItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (actualCost: number) => void;
+  title: string;
+  taskLabel: string;
+  hint: string;
+  costLabel: string;
+  placeholder: string;
+  cancelLabel: string;
+  confirmLabel: string;
+}) {
+  const [costStr, setCostStr] = useState("");
+
+  useEffect(() => {
+    if (open && item) {
+      const a = Number(item.totalActual) || 0;
+      setCostStr(a > 0 ? String(a) : "");
+    }
+  }, [open, item]);
+
+  const parsed = parseFloat(String(costStr).replace(",", "."));
+  const valid = Number.isFinite(parsed) && parsed > 0;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="gap-0 overflow-hidden border-amber-500/30 p-0 sm:max-w-md">
+        <div className="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-4 py-3.5">
+          <DialogHeader className="space-y-0 text-left">
+            <DialogTitle className="text-lg font-bold tracking-tight text-zinc-900">
+              {title}
+            </DialogTitle>
+          </DialogHeader>
+        </div>
+        <div className="space-y-4 bg-zinc-950 p-5">
+          <p className="text-base font-semibold text-zinc-50">{taskLabel}</p>
+          <p className="text-sm leading-relaxed text-zinc-400">{hint}</p>
+          <div className="space-y-2">
+            <Label className="text-amber-400/95">
+              {costLabel} <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              type="number"
+              inputMode="decimal"
+              min={0.01}
+              step={1}
+              placeholder={placeholder}
+              className="border-sky-500/50 bg-zinc-900 text-zinc-100"
+              value={costStr}
+              onChange={(e) => setCostStr(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2 border-t border-white/10 bg-zinc-950 px-5 py-4">
+          <Button variant="secondary" type="button" onClick={() => onOpenChange(false)}>
+            {cancelLabel}
+          </Button>
+          <Button
+            type="button"
+            disabled={!valid}
+            className="gap-2 bg-emerald-600 font-semibold uppercase tracking-wide hover:bg-emerald-700"
+            onClick={() => {
+              if (!valid) return;
+              onConfirm(parsed);
+            }}
+          >
+            <Check className="h-4 w-4 shrink-0" aria-hidden />
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PmAddItemDialog({
+  open,
+  onOpenChange,
+  category,
+  baseData,
+  onSaved,
+  editItemId,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  category: "INTERIOR" | "EXTERIOR";
+  baseData: ProjectManagerData;
+  onSaved: (next: ProjectManagerData) => void;
+  editItemId: string | null;
+}) {
+  const [working, setWorking] = useState<ProjectManagerData>(() => clonePmData(baseData));
+  const [selectedArea, setSelectedArea] = useState("");
+  const [selectedSubs, setSelectedSubs] = useState<PMSubcategorySelection[]>([]);
+  const [materials, setMaterials] = useState(0);
+  const [labor, setLabor] = useState(0);
+  const [other, setOther] = useState(0);
+  const [markup, setMarkup] = useState(15);
+  const [quantity, setQuantity] = useState(1);
+  const [unit, setUnit] = useState("EACH");
+  const [priority, setPriority] = useState("MEDIUM");
+  const [status, setStatus] = useState<PMItem["status"]>("PLANNING");
+  const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
+  const [totalActual, setTotalActual] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    const h = hydrateProjectManagerData(clonePmData(baseData));
+    setWorking(h);
+    const existing =
+      editItemId != null ? h.items.find((i) => i.id === editItemId) : undefined;
+    if (existing) {
+      setSelectedArea(existing.area || "");
+      setSelectedSubs(
+        existing.subcategories?.length
+          ? existing.subcategories.map((s) => ({ ...s }))
+          : [],
+      );
+      setMaterials(Number(existing.materialsCost) || 0);
+      setLabor(Number(existing.laborCost) || 0);
+      setOther(Number(existing.otherCosts) || 0);
+      setMarkup(Number(existing.markup) || 15);
+      setQuantity(Math.max(1, Number(existing.quantity) || 1));
+      setUnit(existing.unit || "EACH");
+      setPriority(existing.priority || "MEDIUM");
+      setStatus(existing.status);
+      setDescription(existing.description || "");
+      setNotes(existing.notes || "");
+      setTotalActual(Number(existing.totalActual) || 0);
+    } else {
+      setSelectedArea("");
+      setSelectedSubs([]);
+      setMaterials(0);
+      setLabor(0);
+      setOther(0);
+      setMarkup(15);
+      setQuantity(1);
+      setUnit("EACH");
+      setPriority("MEDIUM");
+      setStatus("PLANNING");
+      setDescription("");
+      setNotes("");
+      setTotalActual(0);
+    }
+  }, [open, baseData, editItemId]);
+
+  const db = working.subcategoryDatabase ?? {};
+  const areaMap = working.areaCategoryMap ?? {};
+
+  const areaOptions = useMemo(
+    () => areasForCategory(db, areaMap, category).sort((a, b) => a.localeCompare(b)),
+    [db, areaMap, category],
+  );
+
+  useEffect(() => {
+    if (selectedSubs.length === 0) return;
+    const tm = selectedSubs.reduce((s, x) => s + x.materials, 0);
+    const tl = selectedSubs.reduce((s, x) => s + x.labor, 0);
+    setMaterials(tm);
+    setLabor(tl);
+    if (selectedSubs.length === 1) setUnit(selectedSubs[0].unit);
+  }, [selectedSubs]);
+
+  const subRows = selectedArea && db[selectedArea] ? Object.entries(db[selectedArea]) : [];
+
+  const toggleSub = (
+    name: string,
+    costs: { materials: number; labor: number; unit: string },
+    checked: boolean,
+    workType: string,
+  ) => {
+    if (checked) {
+      setSelectedSubs((prev) => [
+        ...prev.filter((p) => p.name !== name),
+        {
+          name,
+          materials: costs.materials,
+          labor: costs.labor,
+          unit: costs.unit,
+          workType,
+        },
+      ]);
+      if (!description.trim()) {
+        setDescription((d) => (d.trim() ? d : name));
+      }
+    } else {
+      setSelectedSubs((prev) => prev.filter((p) => p.name !== name));
+    }
+  };
+
+  const updateSubCost = (
+    subName: string,
+    field: "materials" | "labor",
+    value: number,
+  ) => {
+    if (!selectedArea || !db[selectedArea]?.[subName]) return;
+    setWorking((w) => {
+      const next = clonePmData(w);
+      const a = next.subcategoryDatabase![selectedArea][subName];
+      a[field] = value;
+      return next;
+    });
+    setSelectedSubs((prev) =>
+      prev.map((p) =>
+        p.name === subName ? { ...p, [field]: value } : p,
+      ),
+    );
+  };
+
+  const updateSubWorkType = (subName: string, wt: string) => {
+    setSelectedSubs((prev) =>
+      prev.map((p) => (p.name === subName ? { ...p, workType: wt } : p)),
+    );
+  };
+
+  const preview = computePmItemTotals(materials, labor, other, quantity, markup);
+
+  const addCustomArea = () => {
+    const name = window.prompt("Nombre del área (ej. Garaje)")?.trim();
+    if (!name) return;
+    if (db[name]) {
+      toast.error("Esa área ya existe");
+      return;
+    }
+    setWorking((w) => {
+      const next = clonePmData(w);
+      next.subcategoryDatabase = { ...next.subcategoryDatabase!, [name]: {} };
+      next.areaCategoryMap = { ...next.areaCategoryMap!, [name]: category };
+      return next;
+    });
+    setSelectedArea(name);
+    setSelectedSubs([]);
+    toast.success(`Área "${name}" creada`);
+  };
+
+  const addCustomSubcategory = () => {
+    if (!selectedArea || !db[selectedArea]) {
+      toast.message("Primero elige un área");
+      return;
+    }
+    const name = window.prompt("Nombre de la subcategoría")?.trim();
+    if (!name) return;
+    const ms = parseFloat(window.prompt("Costo materiales ($)", "0") || "0") || 0;
+    const lb = parseFloat(window.prompt("Costo mano de obra ($)", "0") || "0") || 0;
+    if (db[selectedArea][name]) {
+      toast.error("Esa subcategoría ya existe en el área");
+      return;
+    }
+    setWorking((w) => {
+      const next = clonePmData(w);
+      next.subcategoryDatabase![selectedArea][name] = {
+        materials: ms,
+        labor: lb,
+        unit: "EACH",
+      };
+      return next;
+    });
+    toast.success("Subcategoría agregada");
+  };
+
+  const saveItem = () => {
+    if (!editItemId && status === "COMPLETED") {
+      toast.error(
+        "No puedes crear un ítem ya como Completado. Créalo en otro estado y actualízalo después.",
+      );
+      return;
+    }
+    const defaultArea =
+      category === "INTERIOR" ? "General Interior" : "General Exterior";
+    const resolvedArea = selectedArea.trim() || defaultArea;
+
+    let desc = description.trim();
+    if (selectedSubs.length > 1 && !desc) {
+      desc = selectedSubs.map((s) => s.name).join(", ");
+    } else if (!desc) {
+      desc = `Trabajo en ${resolvedArea}`;
+    }
+
+    const workType =
+      selectedSubs.length > 0 ? selectedSubs[0].workType || "REPAIR" : "MANUAL";
+
+    if (editItemId) {
+      const prev = working.items.find((i) => i.id === editItemId);
+      if (!prev) {
+        toast.error("No se encontró el ítem a editar");
+        return;
+      }
+      if (status === "COMPLETED" && !(Number(totalActual) > 0)) {
+        toast.error(
+          "El costo real debe ser mayor que 0 para marcar como completado (como en la app anterior).",
+        );
+        return;
+      }
+      const item: PMItem = {
+        ...prev,
+        category,
+        area: resolvedArea,
+        description: desc,
+        workType,
+        priority,
+        quantity,
+        unit,
+        materialsCost: materials,
+        laborCost: labor,
+        otherCosts: other,
+        markup,
+        totalEstimated: preview.totalEstimated,
+        totalActual,
+        status,
+        notes: notes.trim(),
+        subcategories: selectedSubs.length ? [...selectedSubs] : undefined,
+      };
+      const next = clonePmData(working);
+      next.items = next.items.map((i) => (i.id === editItemId ? item : i));
+      onSaved(next);
+      onOpenChange(false);
+      toast.success("Ítem actualizado");
+      return;
+    }
+
+    const item: PMItem = {
+      id: String(Date.now()),
+      category,
+      area: resolvedArea,
+      description: desc,
+      workType,
+      priority,
+      quantity,
+      unit,
+      materialsCost: materials,
+      laborCost: labor,
+      otherCosts: other,
+      markup,
+      totalEstimated: preview.totalEstimated,
+      totalActual: 0,
+      status,
+      notes: notes.trim(),
+      created: new Date().toISOString(),
+      subcategories: selectedSubs.length ? [...selectedSubs] : undefined,
+    };
+
+    const next = clonePmData(working);
+    next.items = [...(next.items || []), item];
+    onSaved(next);
+    onOpenChange(false);
+    toast.success("Ítem agregado");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-primary/30">
+        <DialogHeader>
+          <DialogTitle className="font-[Montserrat] text-primary">
+            {editItemId ? "Editar ítem" : "Agregar ítem"} —{" "}
+            {category === "INTERIOR" ? "Interior" : "Exterior"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-1">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div className="min-w-[200px] flex-1 space-y-1.5">
+              <Label className="text-primary">Área / subcategoría</Label>
+              <Select value={selectedArea || "__none__"} onValueChange={(v) => {
+                setSelectedArea(v === "__none__" ? "" : v);
+                setSelectedSubs([]);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Seleccionar…</SelectItem>
+                  {areaOptions.map((a) => (
+                    <SelectItem key={a} value={a}>
+                      {a}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={addCustomArea}>
+                + Nueva área
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={addCustomSubcategory}>
+                + Nueva subcategoría
+              </Button>
+            </div>
+          </div>
+
+          {selectedArea && subRows.length > 0 ? (
+            <div className="space-y-2 rounded-lg border border-border p-3">
+              <Label className="text-primary">Subcategorías detalladas</Label>
+              <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
+                {subRows.map(([subName, costs]) => {
+                  const sel = selectedSubs.find((s) => s.name === subName);
+                  const checked = !!sel;
+                  const wt = sel?.workType ?? "REPAIR";
+                  return (
+                    <div
+                      key={subName}
+                      className="rounded-md border border-border/60 bg-muted/20 p-2"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(c) =>
+                              toggleSub(subName, costs, c === true, wt)
+                            }
+                          />
+                          <span className="text-sm font-medium">{subName}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">Mat</span>
+                            <Input
+                              type="number"
+                              className="h-8 w-24"
+                              value={costs.materials}
+                              onChange={(e) =>
+                                updateSubCost(
+                                  subName,
+                                  "materials",
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-muted-foreground">MO</span>
+                            <Input
+                              type="number"
+                              className="h-8 w-24"
+                              value={costs.labor}
+                              onChange={(e) =>
+                                updateSubCost(
+                                  subName,
+                                  "labor",
+                                  parseFloat(e.target.value) || 0,
+                                )
+                              }
+                            />
+                          </div>
+                          <span className="self-center text-muted-foreground">
+                            = {formatCurrency(costs.materials + costs.labor)}
+                          </span>
+                        </div>
+                      </div>
+                      {checked ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-muted-foreground">Tipo</span>
+                          <Select
+                            value={wt}
+                            onValueChange={(v) => updateSubWorkType(subName, v)}
+                          >
+                            <SelectTrigger className="h-8 w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SUB_WORK_TYPES.map((o) => (
+                                <SelectItem key={o.value} value={o.value}>
+                                  {o.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Con subcategorías marcadas, materiales y mano de obra se suman automáticamente
+                (como en la app anterior). Sin marcar, puedes ingresar montos manualmente.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="space-y-1.5">
+            <Label>Descripción del trabajo</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="Describe el trabajo…"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label>Cantidad</Label>
+              <Input
+                type="number"
+                min={1}
+                value={quantity}
+                onChange={(e) =>
+                  setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Unidad</Label>
+              <Select value={unit} onValueChange={setUnit}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNITS.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>
+                      {u.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Prioridad</Label>
+              <Select value={priority} onValueChange={setPriority}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITIES.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Estado</Label>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as PMItem["status"])}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {statusLabel[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label>Materiales</Label>
+              <Input
+                type="number"
+                step={100}
+                value={materials}
+                onChange={(e) => setMaterials(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Manual o suma automática de subcategorías
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mano de obra</Label>
+              <Input
+                type="number"
+                step={100}
+                value={labor}
+                onChange={(e) => setLabor(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Manual o suma automática de subcategorías
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Otros costos</Label>
+              <Input
+                type="number"
+                step={100}
+                value={other}
+                onChange={(e) => setOther(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Permisos, impuestos, etc.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Margen (%)</Label>
+              <Input
+                type="number"
+                step={5}
+                value={markup}
+                onChange={(e) => setMarkup(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                % para ganancia del contratista
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
+            <div className="font-semibold text-emerald-200">Presupuesto estimado (ítem)</div>
+            <div className="mt-1 text-lg font-bold tabular-nums">
+              {formatCurrency(preview.totalEstimated)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Subtotal {(materials + labor + other) * quantity} + margen{" "}
+              {formatCurrency(preview.markupAmount)} (misma lógica que el modelo viejo)
+            </p>
+          </div>
+
+          {editItemId ? (
+            <div className="space-y-1.5">
+              <Label>Gastado real (actual)</Label>
+              <Input
+                type="number"
+                step={100}
+                min={0}
+                value={totalActual}
+                onChange={(e) => setTotalActual(parseFloat(e.target.value) || 0)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Costo real ejecutado para comparar con el estimado
+              </p>
+            </div>
+          ) : null}
+
+          <div className="space-y-1.5">
+            <Label>Notas</Label>
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Notas adicionales…"
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveItem}>
+            {editItemId ? "Guardar cambios" : "Guardar ítem"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function FixFlipProjectManagerPage() {
+  const { i18n } = useTranslation();
+  const es = i18n.language.startsWith("es");
+  const pm = (s: string, e: string) => (es ? s : e);
+  const { dealId: dealIdParam } = useParams<{ dealId: string }>();
+  const navigate = useNavigate();
+  const dealId = Number(dealIdParam);
+
+  const [data, setData] = useState<ProjectManagerData | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addCategory, setAddCategory] = useState<"INTERIOR" | "EXTERIOR">("INTERIOR");
+  const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [completeTargetItem, setCompleteTargetItem] = useState<PMItem | null>(null);
+
+  const deal = useMemo(() => {
+    if (!Number.isFinite(dealId)) return null;
+    return loadProjects().find((p) => p.id === dealId) ?? null;
+  }, [dealId]);
+
+  useEffect(() => {
+    if (!Number.isFinite(dealId) || dealId <= 0) {
+      navigate("/project-manager", { replace: true });
+      return;
+    }
+    if (!deal) {
+      toast.error("Deal no encontrado");
+      navigate("/project-manager", { replace: true });
+      return;
+    }
+    const existing = loadPmData(dealId);
+    const base =
+      existing ||
+      createDefaultPmData(dealId, deal.rehabBudget || 0);
+    setData(recalcPmBudget(hydrateProjectManagerData(base)));
+  }, [dealId, deal, navigate]);
+
+  const persist = useCallback(
+    (next: ProjectManagerData) => {
+      const hydrated = hydrateProjectManagerData(next);
+      const merged = recalcPmBudget(hydrated);
+      setData(merged);
+      savePmData(dealId, merged);
+    },
+    [dealId],
+  );
+
+  const reopenPhase = useCallback(
+    (phaseCategory: "INTERIOR" | "EXTERIOR", area: string) => {
+      if (!data) return;
+      const norm = (a: string) => a.trim() || "—";
+      const target = norm(area);
+      const slice = data.items.filter(
+        (i) => i.category === phaseCategory && norm(i.area) === target,
+      );
+      if (slice.length === 0 || !slice.every((i) => i.status === "COMPLETED")) return;
+      persist({
+        ...data,
+        items: data.items.map((i) =>
+          i.category === phaseCategory && norm(i.area) === target
+            ? { ...i, status: "IN_PROGRESS" as const }
+            : i,
+        ),
+      });
+      toast.success(pm("Fase reactivada", "Phase reopened"));
+    },
+    [data, persist, pm],
+  );
+
+  const confirmCompleteWithCost = useCallback(
+    (actualCost: number) => {
+      if (!data || !completeTargetItem) return;
+      const id = completeTargetItem.id;
+      persist({
+        ...data,
+        items: data.items.map((i) =>
+          i.id === id ? { ...i, status: "COMPLETED" as const, totalActual: actualCost } : i,
+        ),
+      });
+      toast.success(pm("Ítem marcado como completado", "Item marked complete"));
+      setCompleteTargetItem(null);
+    },
+    [data, completeTargetItem, persist, pm],
+  );
+
+  const openEditItem = useCallback((item: PMItem) => {
+    setEditItemId(item.id);
+    setAddCategory(item.category);
+    setAddOpen(true);
+  }, []);
+
+  const interiorItems = data?.items.filter((i) => i.category === "INTERIOR") ?? [];
+  const exteriorItems = data?.items.filter((i) => i.category === "EXTERIOR") ?? [];
+
+  const removeItem = (id: string) => {
+    if (!data) return;
+    persist({
+      ...data,
+      items: data.items.filter((i) => i.id !== id),
+    });
+    toast.success("Ítem eliminado");
+  };
+
+  if (!data || !deal) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">
+        Cargando…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" size="sm" onClick={() => navigate("/project-manager")}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Volver
+        </Button>
+        <div className="flex items-center gap-2">
+          <HardHat className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="font-[Montserrat] text-xl font-bold">Project Manager</h1>
+            <p className="text-sm text-muted-foreground line-clamp-1">
+              {deal.propertyAddress}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xs text-muted-foreground">Presupuesto (estimado)</div>
+            <div className="text-xl font-bold text-primary">
+              {formatCurrency(data.budget.total)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xs text-muted-foreground">Usado (actual)</div>
+            <div className="text-xl font-bold text-amber-500">
+              {formatCurrency(data.budget.used)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xs text-muted-foreground">Restante</div>
+            <div className="text-xl font-bold text-sky-400">
+              {formatCurrency(data.budget.remaining)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="text-xs text-muted-foreground">Estado</div>
+            <div className="text-xl font-bold">{data.status}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="interior">
+        <TabsList className="grid h-auto w-full max-w-3xl grid-cols-2 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 sm:grid-cols-4">
+          <TabsTrigger
+            value="interior"
+            className="gap-2 data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <Home className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            <span className="truncate">{pm("Interior", "Interior")}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="exterior"
+            className="gap-2 data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <Trees className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            <span className="truncate">{pm("Exterior", "Exterior")}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="timeline"
+            className="gap-2 data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <CalendarDays className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            <span className="truncate">{pm("Cronograma", "Timeline")}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="budget"
+            className="gap-2 data-[state=active]:border data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
+            <Banknote className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            <span className="truncate">{pm("Presupuesto", "Budget")}</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="interior" className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+            <Home className="h-5 w-5 text-primary" aria-hidden />
+            <h2 className="font-semibold text-primary">{pm("Módulo interior", "Interior module")}</h2>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditItemId(null);
+                setAddCategory("INTERIOR");
+                setAddOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {pm("Agregar ítem", "Add item")}
+            </Button>
+          </div>
+          <ItemsTable
+            items={interiorItems}
+            onDelete={removeItem}
+            onEdit={openEditItem}
+          />
+        </TabsContent>
+
+        <TabsContent value="exterior" className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+            <Trees className="h-5 w-5 text-primary" aria-hidden />
+            <h2 className="font-semibold text-primary">{pm("Módulo exterior", "Exterior module")}</h2>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditItemId(null);
+                setAddCategory("EXTERIOR");
+                setAddOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              {pm("Agregar ítem", "Add item")}
+            </Button>
+          </div>
+          <ItemsTable
+            items={exteriorItems}
+            onDelete={removeItem}
+            onEdit={openEditItem}
+          />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+            <CalendarDays className="h-5 w-5 text-primary" aria-hidden />
+            <h2 className="font-semibold text-primary">
+              {pm("Cronograma del proyecto", "Project timeline")}
+            </h2>
+          </div>
+          <PmTimelinePanel
+            data={data}
+            onPersist={persist}
+            onReopenPhase={reopenPhase}
+            onRequestCompleteItem={(item) => setCompleteTargetItem(item)}
+            onEditItem={openEditItem}
+          />
+        </TabsContent>
+
+        <TabsContent value="budget" className="space-y-3">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-2">
+            <Banknote className="h-5 w-5 text-primary" aria-hidden />
+            <h2 className="font-semibold text-primary">
+              {pm("Control de presupuesto", "Budget control")}
+            </h2>
+          </div>
+          <PmBudgetPanel
+            items={data.items}
+            dealRepairBudget={data.dealRepairBudget}
+            onEditItem={openEditItem}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <PmAddItemDialog
+        open={addOpen}
+        onOpenChange={(v) => {
+          setAddOpen(v);
+          if (!v) setEditItemId(null);
+        }}
+        category={addCategory}
+        baseData={data}
+        onSaved={persist}
+        editItemId={editItemId}
+      />
+
+      <PmCompleteItemDialog
+        item={completeTargetItem}
+        open={completeTargetItem != null}
+        onOpenChange={(v) => {
+          if (!v) setCompleteTargetItem(null);
+        }}
+        onConfirm={confirmCompleteWithCost}
+        title={pm("Marcar como completado", "Mark as completed")}
+        taskLabel={completeTargetItem?.description || completeTargetItem?.workType || "—"}
+        hint={pm(
+          "El costo real es obligatorio y debe ser mayor que 0 para marcar el ítem como completado.",
+          "Actual cost is required and must be greater than 0 to mark the item as completed.",
+        )}
+        costLabel={pm("Costo real ($)", "Actual cost ($)")}
+        placeholder={pm("Ej: 1500", "e.g. 1500")}
+        cancelLabel={pm("CANCELAR", "CANCEL")}
+        confirmLabel={pm("MARCAR COMPLETADO", "MARK COMPLETE")}
+      />
+    </div>
+  );
+}
+
+function ItemsTable({
+  items,
+  onDelete,
+  onEdit,
+}: {
+  items: PMItem[];
+  onDelete: (id: string) => void;
+  onEdit: (item: PMItem) => void;
+}) {
+  const showBreakdown = items.some(
+    (i) =>
+      i.materialsCost != null ||
+      i.laborCost != null ||
+      i.markup != null,
+  );
+  if (items.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed py-8 text-center text-muted-foreground">
+        Sin ítems. Agrega el primero con el botón superior.
+      </p>
+    );
+  }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Área</TableHead>
+          <TableHead>Descripción</TableHead>
+          {showBreakdown ? (
+            <>
+              <TableHead className="text-right">Mat.</TableHead>
+              <TableHead className="text-right">MO</TableHead>
+              <TableHead className="text-right">Margen</TableHead>
+            </>
+          ) : null}
+          <TableHead className="text-right">Est.</TableHead>
+          <TableHead className="text-right">Actual</TableHead>
+          <TableHead>Estado</TableHead>
+          <TableHead className="w-24 text-right">{/* edit + delete */}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.map((item) => (
+          <TableRow key={item.id}>
+            <TableCell className="font-medium">{item.area}</TableCell>
+            <TableCell className="max-w-[220px] truncate text-muted-foreground">
+              {item.description}
+            </TableCell>
+            {showBreakdown ? (
+              <>
+                <TableCell className="text-right tabular-nums">
+                  {item.materialsCost != null ? formatCurrency(item.materialsCost) : "—"}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {item.laborCost != null ? formatCurrency(item.laborCost) : "—"}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {item.markup != null ? `${item.markup}%` : "—"}
+                </TableCell>
+              </>
+            ) : null}
+            <TableCell className="text-right tabular-nums">
+              {formatCurrency(item.totalEstimated)}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">
+              {formatCurrency(item.totalActual || 0)}
+            </TableCell>
+            <TableCell>
+              <Badge variant="secondary">{statusLabel[item.status]}</Badge>
+            </TableCell>
+            <TableCell className="text-right">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-amber-500 hover:text-amber-400"
+                onClick={() => onEdit(item)}
+                aria-label="Editar ítem"
+                type="button"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-destructive"
+                onClick={() => onDelete(item.id)}
+                aria-label="Eliminar ítem"
+                type="button"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
