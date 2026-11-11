@@ -882,6 +882,11 @@ export default function FixFlipProjectManagerPage() {
 
   const interiorItems = data?.items.filter((i) => i.category === "INTERIOR") ?? [];
   const exteriorItems = data?.items.filter((i) => i.category === "EXTERIOR") ?? [];
+  const totalTasks = data?.items.length ?? 0;
+  const completedTasks = data?.items.filter((i) => i.status === "COMPLETED").length ?? 0;
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const overBudget = (data?.budget.remaining ?? 0) < 0;
+
 
   const removeItem = (id: string) => {
     if (!data) return;
@@ -895,7 +900,7 @@ export default function FixFlipProjectManagerPage() {
   if (!data || !deal) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">
-        Cargando…
+        {pm("Cargando…", "Loading…")}
       </div>
     );
   }
@@ -905,7 +910,7 @@ export default function FixFlipProjectManagerPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" size="sm" onClick={() => navigate("/project-manager")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
-          Volver
+          {pm("Volver", "Back")}
         </Button>
         <div className="flex items-center gap-2">
           <HardHat className="h-6 w-6 text-primary" />
@@ -916,6 +921,20 @@ export default function FixFlipProjectManagerPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-border/70 bg-card/85 p-4 shadow-sm sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold">{pm("Avance de tareas", "Task progress")}</p>
+            <p className="text-xs text-muted-foreground">{completedTasks} / {totalTasks} {pm("tareas completadas", "tasks completed")}</p>
+          </div>
+          <span className="text-xl font-bold text-primary tabular-nums">{progressPercent}%</span>
+        </div>
+        <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent} className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
+        </div>
+        {overBudget && <p className="mt-3 text-xs font-medium text-red-400">{pm("Atención: los gastos reales superan el presupuesto actual.", "Warning: actual spending exceeds the current budget.")}</p>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
