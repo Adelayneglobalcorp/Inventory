@@ -16,6 +16,7 @@ import FixFlipCalculatorPage from "@/fix-flip/FixFlipCalculatorPage";
 import FixFlipDealsPage from "@/fix-flip/FixFlipDealsPage";
 import FixFlipProjectManagerHub from "@/fix-flip/FixFlipProjectManagerHub";
 import FixFlipProjectManagerPage from "@/fix-flip/FixFlipProjectManagerPage";
+import Financing from "@/pages/Financing";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/deals" element={<FixFlipDealsPage />} />
               <Route path="/project-manager" element={<FixFlipProjectManagerHub />} />
               <Route path="/project-manager/:dealId" element={<FixFlipProjectManagerPage />} />
+              <Route path="/financing" element={<Financing />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
             <Route path="*" element={<NotFound />} />
