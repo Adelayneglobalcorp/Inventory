@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import i18n from '@/lib/i18n';
 import type { User, Session } from '@supabase/supabase-js';
 import type { UserRole } from '@/types/property';
 import { notifySignupWebhook } from '@/lib/signupWebhook';
@@ -119,11 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ SignIn error:', error);
-        return { error: new Error(error.message) };
+        return { error: new Error(error.code === 'invalid_credentials' ? i18n.t('authErrors.invalidCredentials') : error.code === 'email_not_confirmed' ? i18n.t('authErrors.emailNotConfirmed') : error.code === 'over_email_send_rate_limit' ? i18n.t('authErrors.rateLimited') : i18n.t('authErrors.generic')) };
       }
 
       if (!data.user) {
-        return { error: new Error('Usuario no encontrado') };
+        return { error: new Error(i18n.t('authErrors.notFound')) };
       }
 
       // Verificar si el usuario está aprobado en la tabla profiles
@@ -135,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (profileError || !profile) {
         console.error('❌ Profile fetch error:', profileError);
-        return { error: new Error('Error al verificar el perfil del usuario') };
+        return { error: new Error(i18n.t('authErrors.profileError')) };
       }
 
       console.log('📋 User profile:', profile);
@@ -143,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Si no está aprobado y no es admin, no permitir login
       if (!profile.is_approved && profile.role !== 'admin') {
         console.log('🚫 User not approved:', profile);
-        return { error: new Error('Tu cuenta está pendiente de aprobación. Por favor, espera a que un administrador apruebe tu cuenta.') };
+        return { error: new Error(i18n.t('authErrors.pending')) };
       }
 
       // Sincronizar rol del perfil con el metadata del usuario si es diferente
@@ -198,7 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('✅ User created in auth successfully');
 
       if (!data.user) {
-        return { error: new Error('No user returned from signup') };
+        return { error: new Error(i18n.t('authErrors.signupError')) };
       }
 
       // Paso 2: Crear perfil en la tabla profiles
