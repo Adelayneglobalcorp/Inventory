@@ -45,8 +45,19 @@ La estructura completa, políticas RLS, funciones y triggers todavía no han sid
 6. Corregir lint, dependencias y tamaño del paquete en cambios separados.
 7. Retomar Netlify al final, configurar variables y desplegar solo con confirmación.
 
+## Trabajo funcional y de diseño incluido
+
+- Crear, ajustar y diseñar las pantallas y flujos aprobados dentro de Inventory.
+- Registro automático seguro para usuarios generales.
+- Administración, roles y permisos protegidos.
+- Experiencia completa en español e inglés.
+- Inventory, Calculator, Deals y Project Manager.
+- Módulo de solicitudes de financiamiento y su persistencia en Supabase.
+- Vistas previas para revisar cada avance antes de producción.
+
 ## Fuera del alcance actual
 
 - Automatización de Dropbox o Google Drive.
+- Conexión, configuración o automatización de GoHighLevel/LeadConnector. Otro equipo será responsable de esa integración.
 - Cambios destructivos o reinicialización de la base de datos.
 - Despliegue de Netlify sin confirmación.

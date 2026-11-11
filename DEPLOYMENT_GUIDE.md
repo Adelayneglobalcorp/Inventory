@@ -18,7 +18,7 @@ Netlify es la plataforma de despliegue confirmada para Inventory. El trabajo de 
 - Directorio publicado: `dist`.
 - Redirección SPA: definida en `netlify.toml`.
 - Variables obligatorias: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` y `VITE_SITE_URL`.
-- Variables opcionales: webhooks descritos en `.env.example`.
+- Los webhooks de integraciones externas quedan sin configurar porque pertenecen a otro equipo.
 
 ## Secuencia cuando se retome
 

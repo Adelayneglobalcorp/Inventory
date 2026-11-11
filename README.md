@@ -24,7 +24,7 @@ Código fuente de **Inventory / Admin 360**, con listados de propiedades, autent
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_SITE_URL`
 
-Los webhooks son opcionales y están documentados en `.env.example`.
+Los webhooks heredados para integraciones externas permanecen desactivados y fuera del alcance actual. Su conexión será responsabilidad de otro equipo.
 
 ## Documentación vigente
 
