@@ -119,21 +119,24 @@ export default function Financing() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-8">
-      <header className="relative overflow-hidden rounded-[26px] border border-gold-400/20 bg-gradient-to-br from-[#20385d] via-[#162841] to-[#101d32] px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.17)] sm:px-8 sm:py-10">\n        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full bg-gold-400/[0.07] blur-3xl" />\n        <div className="relative space-y-3">
+      <header className="relative overflow-hidden rounded-[26px] border border-gold-400/20 bg-gradient-to-br from-[#20385d] via-[#162841] to-[#101d32] px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.17)] sm:px-8 sm:py-10">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full bg-gold-400/[0.07] blur-3xl" />
+        <div className="relative space-y-3">
         <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-4xl">
           <Landmark className="h-7 w-7 shrink-0 text-gold-400 sm:h-9 sm:w-9" aria-hidden="true" />
           {t('financing.title')}
         </h1>
-        <p className="text-muted-foreground">{t('financing.subtitle')}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">{t('financing.subtitle')}</p>
+        </div>
       </header>
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden rounded-[24px] border-border/70 bg-card/90 shadow-[0_16px_50px_rgba(0,0,0,0.15)]">
+        <CardHeader className="border-b border-border/60 bg-muted/20 py-6">
           <CardTitle>{t('financing.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-7">
-            <div className="space-y-2">
-              <Label htmlFor="financing-loanType">{t('financing.type')}</Label>
+            <div className="space-y-3 rounded-2xl border border-border/70 bg-background/30 p-4 sm:p-5">
+              <Label htmlFor="financing-loanType" className="text-sm font-semibold">{t('financing.type')}</Label>
               <select
                 id="financing-loanType"
                 value={form.loanType}
@@ -159,8 +162,8 @@ export default function Financing() {
               {money('arv', t('financing.arv'))}
               {money('estimatedValue', t('financing.estimatedValue'))}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="financing-notes">{t('financing.notes')}</Label>
+            <div className="space-y-3 rounded-2xl border border-border/70 bg-background/20 p-4 sm:p-6">
+              <Label htmlFor="financing-notes" className="text-sm font-semibold">{t('financing.notes')}</Label>
               <Textarea
                 id="financing-notes"
                 value={form.notes}
@@ -169,10 +172,12 @@ export default function Financing() {
                 rows={4}
               />
             </div>
-            <p className="text-sm text-muted-foreground">{t('financing.privacy')}</p>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? t('financing.sending') : t('financing.submit')}
-            </Button>
+            <div className="flex flex-col gap-4 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{t('financing.privacy')}</p>
+              <Button type="submit" disabled={submitting} className="h-11 shrink-0 rounded-xl px-7 shadow-lg">
+                {submitting ? t('financing.sending') : t('financing.submit')}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
