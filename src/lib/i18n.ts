@@ -17,6 +17,23 @@ const resources = {
                 "signOut": "Sign Out"
             },
             "roles": { "admin": "Administrator", "usuario": "Investor", "investor": "Investor" },
+            "dealsPage": {
+                "title": "My Investments", "subtitle": "Investment analyses saved in this browser",
+                "new": "New Analysis", "list": "Saved Investments",
+                "empty": "No investments have been saved. Create an analysis and save it.",
+                "project": "Project", "address": "Address", "investment": "Investment", "profit": "Profit",
+                "status": "Status", "actions": "Actions",
+                "positive": "Viable", "negative": "Not Viable",
+                "deleteConfirm": "Delete this investment analysis?",
+                "deleted": "Investment analysis deleted.",
+                "manage": "Manage Project", "edit": "Edit Analysis", "delete": "Delete Analysis"
+            },
+            "pmHub": {
+                "title": "Project Management", "subtitle": "Choose an investment to manage its budget, tasks, and schedule.",
+                "emptyBefore": "There are no saved investments. Create one using the",
+                "calculator": "calculator", "emptyMiddle": "or open your", "deals": "investment list",
+                "budget": "Renovation Budget", "open": "Open Project"
+            },
             "financing": {
                 "title": "Request Financing", "subtitle": "Submit a financing request for your real estate investment.",
                 "type": "Financing Type", "hard_money": "Hard Money Loan", "dscr": "DSCR Loan",
@@ -366,6 +383,23 @@ const resources = {
                 "signOut": "Cerrar Sesión"
             },
             "roles": { "admin": "Administrador", "usuario": "Inversionista", "investor": "Inversionista" },
+            "dealsPage": {
+                "title": "Mis inversiones", "subtitle": "Análisis de inversión guardados en este navegador",
+                "new": "Nuevo análisis", "list": "Inversiones guardadas",
+                "empty": "No hay inversiones guardadas. Crea un análisis y guárdalo.",
+                "project": "Proyecto", "address": "Dirección", "investment": "Inversión", "profit": "Ganancia",
+                "status": "Estado", "actions": "Acciones",
+                "positive": "Viable", "negative": "No viable",
+                "deleteConfirm": "¿Eliminar este análisis de inversión?",
+                "deleted": "Análisis de inversión eliminado.",
+                "manage": "Gestionar proyecto", "edit": "Editar análisis", "delete": "Eliminar análisis"
+            },
+            "pmHub": {
+                "title": "Gestión de proyectos", "subtitle": "Selecciona una inversión para administrar su presupuesto, tareas y cronograma.",
+                "emptyBefore": "No hay inversiones guardadas. Crea una desde la",
+                "calculator": "calculadora", "emptyMiddle": "o consulta tu", "deals": "lista de inversiones",
+                "budget": "Presupuesto de remodelación", "open": "Abrir proyecto"
+            },
             "financing": {
                 "title": "Solicitar financiamiento", "subtitle": "Envía una solicitud de financiamiento para tu inversión inmobiliaria.",
                 "type": "Tipo de financiamiento", "hard_money": "Préstamo para inversión y remodelación", "dscr": "Préstamo DSCR",
