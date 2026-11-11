@@ -151,3 +151,64 @@
   border-color: hsl(var(--muted-foreground));
   opacity: 0.65;
 }
+
+/* Inventory interface refinement: preserve the original navy/gold identity. */
+@layer base {
+  body {
+    min-width: 320px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button, input, select, textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .inventory-shell {
+    background:
+      radial-gradient(circle at 85% 0%, hsl(215 47% 17% / 0.5), transparent 40rem),
+      hsl(var(--background));
+  }
+  .inventory-shell main {
+    min-width: 0;
+  }
+  .inventory-shell main > * {
+    min-width: 0;
+  }
+  .inventory-shell main .rounded-lg.border,
+  .inventory-shell main .rounded-xl.border {
+    border-color: hsl(var(--border) / 0.8);
+  }
+  .inventory-shell main [class*="rounded-lg"][class*="border"][class*="bg-card"],
+  .inventory-shell main [class*="rounded-xl"][class*="border"][class*="bg-card"] {
+    box-shadow: 0 8px 28px hsl(220 50% 3% / 0.12);
+  }
+  .inventory-shell main input:not([type="checkbox"]):not([type="radio"]),
+  .inventory-shell main select,
+  .inventory-shell main textarea {
+    max-width: 100%;
+    transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  }
+  .inventory-shell main input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  .inventory-shell main select:focus-visible,
+  .inventory-shell main textarea:focus-visible {
+    border-color: hsl(var(--ring) / 0.75);
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1);
+  }
+  .inventory-shell main table {
+    width: 100%;
+  }
+  .inventory-shell main h1 {
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-shell *, .inventory-shell *::before, .inventory-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
