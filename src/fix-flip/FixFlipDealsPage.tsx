@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,16 +20,17 @@ import { loadProjects, saveProjects } from "./storage";
 
 export default function FixFlipDealsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
 
   const refresh = useCallback(() => setProjects(loadProjects()), []);
 
   const handleDelete = (id: number) => {
-    if (!confirm("¿Eliminar este deal? / Delete this deal?")) return;
+    if (!confirm(t('dealsPage.deleteConfirm'))) return;
     const next = loadProjects().filter((p) => p.id !== id);
     saveProjects(next);
     refresh();
-    toast.success("Deal eliminado / Deal removed");
+    toast.success(t('dealsPage.deleted'));
   };
 
   return (
@@ -37,39 +39,39 @@ export default function FixFlipDealsPage() {
         <div>
           <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
             <FolderKanban className="h-7 w-7 text-primary" />
-            Mis deals
+            {t('dealsPage.title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Inventario guardado en este navegador (localStorage)
+            {t('dealsPage.subtitle')}
           </p>
         </div>
         <Button className="gold-gradient text-primary-foreground" onClick={() => navigate("/calculator")}>
           <Calculator className="h-4 w-4 mr-2" />
-          Nueva calculadora
+          {t('dealsPage.new')}
         </Button>
       </div>
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Lista de deals</CardTitle>
+          <CardTitle className="text-base">{t('dealsPage.list')}</CardTitle>
         </CardHeader>
         <CardContent>
           {projects.length === 0 ? (
             <p className="text-center text-muted-foreground py-12">
-              No hay deals guardados. Usa la calculadora y pulsa &quot;Guardar deal&quot;.
+              {t('dealsPage.empty')}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Proyecto</TableHead>
-                    <TableHead>Dirección</TableHead>
-                    <TableHead>Inversión</TableHead>
+                    <TableHead>{t('dealsPage.project')}</TableHead>
+                    <TableHead>{t('dealsPage.address')}</TableHead>
+                    <TableHead>{t('dealsPage.investment')}</TableHead>
                     <TableHead>ROI</TableHead>
-                    <TableHead>Ganancia</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>{t('dealsPage.profit')}</TableHead>
+                    <TableHead>{t('dealsPage.status')}</TableHead>
+                    <TableHead className="text-right">{t('dealsPage.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -94,7 +96,7 @@ export default function FixFlipDealsPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={p.dealDecision ? "default" : "destructive"}>
-                          {p.dealDecision ? "BUENO" : "MALO"}
+                          {p.dealDecision ? t('dealsPage.positive') : t('dealsPage.negative')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -103,7 +105,7 @@ export default function FixFlipDealsPage() {
                             size="icon"
                             variant="outline"
                             className="h-8 w-8"
-                            title="Project Manager"
+                            title={t('dealsPage.manage')}
                             onClick={() => navigate(`/project-manager/${p.id}`)}
                           >
                             <Wrench className="h-3.5 w-3.5" />
@@ -112,7 +114,7 @@ export default function FixFlipDealsPage() {
                             size="icon"
                             variant="outline"
                             className="h-8 w-8"
-                            title="Editar en calculadora"
+                            title={t('dealsPage.edit')}
                             onClick={() => navigate(`/calculator?edit=${p.id}`)}
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -121,6 +123,7 @@ export default function FixFlipDealsPage() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-destructive"
+                            title={t('dealsPage.delete')}
                             onClick={() => handleDelete(p.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
