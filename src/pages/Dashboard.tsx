@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, role, loading: authLoading } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,7 +148,7 @@ const Dashboard = () => {
   }, [properties, loading]);
 
   const fmt = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
   const statCards = [
     { title: t('dashboard.stats.totalProperties'), value: stats.total, icon: Building2, color: 'text-gold-500' },
@@ -166,7 +166,7 @@ const Dashboard = () => {
         <p className="text-sm text-muted-foreground">
           {t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email })}
           <span className="ml-2 rounded-full bg-gold-500/20 px-2 py-0.5 text-xs font-medium text-gold-400 border border-gold-500/30">
-            {role}
+            {t(`roles.${role}`, { defaultValue: role || '' })}
           </span>
         </p>
       </div>
