@@ -30,7 +30,7 @@ export const PropertyList = forwardRef<
   { refreshProperties: () => void },
   PropertyListProps
 >(({ onEdit, onView, adminMode = false, showAdminActions = false }, ref) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, role } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -221,7 +221,7 @@ export const PropertyList = forwardRef<
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
@@ -439,7 +439,7 @@ export const PropertyList = forwardRef<
                     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground/60">{t('properties.list.labels.rent')}</span>
-                        <p className="text-sm font-black text-emerald-600">{formatCurrency(property.monthly_rent)}/mo</p>
+                        <p className="text-sm font-black text-emerald-600">{formatCurrency(property.monthly_rent)} {t('uiFixes.perMonth')}</p>
                       </div>
                       <div className="text-right space-y-0.5">
                         <span className="text-muted-foreground/60">ARV</span>
