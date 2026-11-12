@@ -945,7 +945,9 @@ export default function FixFlipProjectManagerPage() {
   const totalTasks = data?.items.length ?? 0;
   const completedTasks = data?.items.filter((i) => i.status === "COMPLETED").length ?? 0;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  const overBudget = (data?.budget.remaining ?? 0) < 0;
+  const detailedEstimate = (data?.items ?? []).reduce((sum, item) => sum + (Number(item.totalEstimated) || 0), 0);
+  const overBudget = (data?.budget.remaining ?? 0) < 0 ||
+    ((data?.dealRepairBudget ?? 0) > 0 && detailedEstimate > (data?.dealRepairBudget ?? 0));
 
 
   const removeItem = (id: string) => {
@@ -994,7 +996,7 @@ export default function FixFlipProjectManagerPage() {
         <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent} className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-        {overBudget && <p className="mt-3 text-xs font-medium text-red-400">{pm("Atención: los gastos reales superan el presupuesto actual.", "Warning: actual spending exceeds the current budget.")}</p>}
+        {overBudget && <p className="mt-3 text-xs font-medium text-red-400">{pm("Atención: los gastos reales o presupuestados superan el presupuesto original.", "Warning: actual or estimated costs exceed the original budget.")}</p>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
