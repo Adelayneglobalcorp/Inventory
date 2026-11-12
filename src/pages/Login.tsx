@@ -15,7 +15,7 @@ import type { PhoneFieldValue } from '@/components/PhoneInputField';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 
 const Login = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -74,7 +74,7 @@ const Login = () => {
     }
   };
 
-  const isSpanish = t('login.signIn').toLowerCase().includes('sesión') || t('login.signIn').toLowerCase().includes('sesion');
+  const isSpanish = (i18n.resolvedLanguage || i18n.language).startsWith('es');
 
   const features = [
     { icon: House, label: 'Inventory' },
