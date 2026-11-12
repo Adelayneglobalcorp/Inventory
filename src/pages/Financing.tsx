@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HandCoins, Search } from 'lucide-react';
 import { getProperties } from '@/lib/properties';
+import { usePortalContent } from '@/lib/portalContent';
 import type { Property } from '@/types/property';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,7 +51,9 @@ const moneyText = (value: number | null | undefined): string =>
   value == null || !Number.isFinite(Number(value)) ? '' : Number(value).toFixed(2);
 
 export default function Financing() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language.startsWith("en") ? "en" : "es";
+  const portal = usePortalContent("financing", lang);
   const { user } = useAuth();
   const [form, setForm] = useState<FinancingForm>(() => initialValues(user?.email ?? ''));
   const [submitting, setSubmitting] = useState(false);
@@ -175,14 +178,14 @@ export default function Financing() {
         <div className="relative space-y-3">
         <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-4xl">
           <HandCoins className="h-7 w-7 shrink-0 text-gold-400 sm:h-9 sm:w-9" aria-hidden="true" />
-          {t('financing.title')}
+          {portal('title', t('financing.title'))}
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">{t('financing.subtitle')}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">{portal('subtitle', t('financing.subtitle'))}</p>
         </div>
       </header>
       <Card className="overflow-hidden rounded-[24px] border-border/70 bg-card/90 shadow-[0_16px_50px_rgba(0,0,0,0.15)]">
         <CardHeader className="border-b border-border/60 bg-muted/20 py-6">
-          <CardTitle>{t('financing.title')}</CardTitle>
+          <CardTitle>{portal('title', t('financing.title'))}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-7">
@@ -252,9 +255,9 @@ export default function Financing() {
               />
             </div>
             <div className="flex flex-col gap-4 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{t('financing.privacy')}</p>
+              <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{portal('privacy', t('financing.privacy'))}</p>
               <Button type="submit" disabled={submitting} className="h-11 shrink-0 rounded-xl px-7 shadow-lg">
-                {submitting ? t('financing.sending') : t('financing.submit')}
+                {submitting ? t('financing.sending') : portal('submit', t('financing.submit'))}
               </Button>
             </div>
           </form>
