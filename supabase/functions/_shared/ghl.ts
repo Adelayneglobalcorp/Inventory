@@ -76,14 +76,13 @@ export async function upsertContact(input: {
     email: input.email,
     ...splitName(input.fullName),
     ...(input.phone ? { phone: input.phone } : {}),
-    ...(input.tags?.length ? { tags: input.tags } : {}),
+    // Las etiquetas NO van en el upsert: GHL reemplaza las existentes. Se agregan después con addTags.
     ...(input.source ? { source: input.source } : {}),
     ...(customFields.length ? { customFields } : {}),
   };
   const data = await ghl("/contacts/upsert", { method: "POST", body: JSON.stringify(body) });
   const id = data?.contact?.id;
   if (!id) throw new Error("GHL no devolvió el id del contacto");
-  // upsert reemplaza etiquetas en algunos casos: se agregan explícitamente para no perder las anteriores.
   // Etiqueta de idioma (idioma-es / idioma-en): deja solo la del idioma actual.
   const tags = [...(input.tags ?? [])];
   if (input.lang) {
