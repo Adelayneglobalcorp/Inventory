@@ -17,10 +17,13 @@ import { FolderKanban, Pencil, Trash2, Wrench, Calculator } from "lucide-react";
 import { formatCurrency, formatPercentage } from "./calculations";
 import type { FixFlipProject } from "./types";
 import { loadProjects, saveProjects } from "./storage";
+import { usePortalContent } from "@/lib/portalContent";
 
 export default function FixFlipDealsPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language.startsWith("en") ? "en" : "es";
+  const portal = usePortalContent("deals", lang);
   const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
 
   const refresh = useCallback(() => setProjects(loadProjects()), []);
@@ -39,10 +42,10 @@ export default function FixFlipDealsPage() {
         <div>
           <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
             <FolderKanban className="h-7 w-7 text-primary" />
-            {t('dealsPage.title')}
+            {portal('title', t('dealsPage.title'))}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t('dealsPage.subtitle')}
+            {portal('subtitle', t('dealsPage.subtitle'))}
           </p>
         </div>
         <Button className="gold-gradient text-primary-foreground" onClick={() => navigate("/calculator")}>
@@ -95,9 +98,21 @@ export default function FixFlipDealsPage() {
                         {formatCurrency(p.profit)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={p.dealDecision ? "default" : "destructive"}>
-                          {p.dealDecision ? t('dealsPage.positive') : t('dealsPage.negative')}
-                        </Badge>
+                        {(() => {
+                          const roiMet = p.roi >= (p.profitMinPercent || 0);
+                          const profitMet = p.profit >= (p.profitMinAmount || 0);
+                          const both = roiMet && profitMet;
+                          const partial = roiMet !== profitMet;
+                          const status = both
+                            ? (lang === "es" ? "Cumple objetivos" : "Targets met")
+                            : partial
+                            ? (lang === "es" ? "Cumple parcialmente" : "Partially meets targets")
+                            : (lang === "es" ? "Por debajo de objetivos" : "Below targets");
+                          return <Badge variant={both ? "default" : partial ? "secondary" : "destructive"} title={
+                            (lang === "es" ? "ROI objetivo: " : "ROI target: ") + formatPercentage(p.profitMinPercent || 0) +
+                            " · " + (lang === "es" ? "Ganancia mínima: " : "Minimum profit: ") + formatCurrency(p.profitMinAmount || 0)
+                          }>{status}</Badge>;
+                        })()}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex flex-wrap justify-end gap-1">
