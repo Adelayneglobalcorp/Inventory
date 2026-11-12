@@ -2,6 +2,7 @@ import type { Property } from '@/types/property';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BedDouble, Bath, Ruler, TrendingUp, DollarSign, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const statusConfig = {
   available: { label: 'Available', className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
@@ -15,10 +16,12 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
+  const { t, i18n } = useTranslation();
   const status = statusConfig[property.status];
+  const statusLabel = property.status === 'available' ? t('properties.list.status.available') : property.status === 'on_sale' ? t('properties.list.status.onSale') : t('properties.list.status.sold');
 
   const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+    new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
   return (
     <Card
@@ -31,7 +34,7 @@ const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
           alt={property.title}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <Badge className={`absolute left-3 top-3 ${status.className}`}>{status.label}</Badge>
+        <Badge className={`absolute left-3 top-3 ${status.className}`}>{statusLabel}</Badge>
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <p className="text-2xl font-bold text-white">{formatCurrency(property.price)}</p>
         </div>
@@ -45,13 +48,13 @@ const PropertyCard = ({ property, onClick }: PropertyCardProps) => {
 
         <div className="mb-3 grid grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <BedDouble className="h-4 w-4" /> {property.bedrooms} bd
+            <BedDouble className="h-4 w-4" /> {property.bedrooms} {t('uiFixes.bedroomsShort')}
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Bath className="h-4 w-4" /> {property.bathrooms} ba
+            <Bath className="h-4 w-4" /> {property.bathrooms} {t('uiFixes.bathroomsShort')}
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Ruler className="h-4 w-4" /> {property.sqft.toLocaleString()} ft²
+            <Ruler className="h-4 w-4" /> {property.sqft.toLocaleString(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US')} ft²
           </div>
         </div>
 
