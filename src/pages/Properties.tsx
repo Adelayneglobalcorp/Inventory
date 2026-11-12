@@ -3,9 +3,11 @@ import PropertyDetail from '@/components/properties/PropertyDetail';
 import { PropertyList } from '@/components/PropertyList';
 import type { Property } from '@/types/property';
 import { useTranslation } from 'react-i18next';
+import { usePortalContent } from '@/lib/portalContent';
 
 const Properties = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const portal = usePortalContent('inventory', i18n.language.startsWith('en') ? 'en' : 'es');
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -18,9 +20,9 @@ const Properties = () => {
     <div className="space-y-6 pb-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-[Montserrat] text-2xl font-bold">{t('properties.title')}</h1>
+          <h1 className="font-[Montserrat] text-2xl font-bold">{portal('title', t('properties.title'))}</h1>
           <p className="max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            {t('properties.subtitle')}
+            {portal('subtitle', t('properties.subtitle'))}
           </p>
         </div>
       </div>
