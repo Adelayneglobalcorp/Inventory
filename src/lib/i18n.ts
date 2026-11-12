@@ -6,6 +6,18 @@ const resources = {
     en: {
         translation: {
             "uiFixes": {
+                "breadcrumbMore": "More",
+                "breadcrumbAria": "Breadcrumb",
+                "carouselPrevious": "Previous slide",
+                "carouselNext": "Next slide",
+                "close": "Close",
+                "paginationAria": "Pagination",
+                "paginationPrevious": "Previous",
+                "paginationNext": "Next",
+                "paginationPrevAria": "Go to previous page",
+                "paginationNextAria": "Go to next page",
+                "paginationMore": "More pages",
+                "sidebarToggle": "Toggle sidebar",
     "sortBy": "Sort by",
     "sortNewest": "Newest first",
     "sortLow": "Lowest price",
@@ -451,6 +463,18 @@ const resources = {
     es: {
         translation: {
             "uiFixes": {
+                "breadcrumbMore": "Más opciones",
+                "breadcrumbAria": "Ruta de navegación",
+                "carouselPrevious": "Diapositiva anterior",
+                "carouselNext": "Diapositiva siguiente",
+                "close": "Cerrar",
+                "paginationAria": "Paginación",
+                "paginationPrevious": "Anterior",
+                "paginationNext": "Siguiente",
+                "paginationPrevAria": "Ir a la página anterior",
+                "paginationNextAria": "Ir a la página siguiente",
+                "paginationMore": "Más páginas",
+                "sidebarToggle": "Mostrar u ocultar el menú lateral",
     "sortBy": "Ordenar por",
     "sortNewest": "Más recientes primero",
     "sortLow": "Precio más bajo",
