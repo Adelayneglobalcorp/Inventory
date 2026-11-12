@@ -1,17 +1,27 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HardHat, ArrowRight } from "lucide-react";
-import { loadProjects } from "./storage";
+import { loadProjects, syncCloudProjects } from "./storage";
 import { formatCurrency } from "./calculations";
 import { usePortalContent } from "@/lib/portalContent";
 
 export default function FixFlipProjectManagerHub() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const portal = usePortalContent("pm", i18n.language.startsWith("en") ? "en" : "es");
-  const projects = loadProjects();
+  const [projects, setProjects] = useState(() => loadProjects(user?.id));
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    syncCloudProjects(user.id).then(all => { if (active) setProjects(all); })
+      .catch(() => { /* Local projects remain visible. */ });
+    return () => { active = false; };
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
