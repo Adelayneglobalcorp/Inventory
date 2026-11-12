@@ -195,8 +195,14 @@ export const PM_AREA_LABELS_EN: Record<string, string> = {
   "HVAC exterior": "Outdoor HVAC", "Seguridad y permisos": "Safety and permits",
   "Sala": "Living room",
 };
+/** Translate legacy mixed-language area names without changing stored identifiers. */
+const PM_AREA_LABELS_ES: Record<string, string> = {
+  "Entrada y driveway": "Entrada para vehículos",
+  "HVAC exterior": "Climatización exterior",
+};
+
 export function pmDisplayArea(area: string, english: boolean): string {
-  if (!english) return area;
+  if (!english) return PM_AREA_LABELS_ES[area] ?? area;
   const bathroom = /^Baño (\d+)$/.exec(area);
   if (bathroom) return "Bathroom " + bathroom[1];
   const bedroom = /^Habitación (\d+)$/.exec(area);
@@ -320,8 +326,20 @@ export const PM_WORK_LABELS_EN: Record<string, string> = {
   "Sellar grietas": "Seal cracks",
   "Instalar aislamiento exterior": "Install exterior insulation",
 };
+/** Clean up mixed-language names displayed in Spanish; preserve persisted keys. */
+const PM_WORK_LABELS_ES: Record<string, string> = {
+  "Instalar countertop": "Instalar encimera",
+  "Instalar backsplash": "Instalar revestimiento de pared en la cocina",
+  "Instalar baseboards": "Instalar zócalos",
+  "Instalar breaker": "Instalar disyuntor eléctrico",
+  "Reparar drywall / paneles": "Reparar paneles de yeso",
+  "Instalar drywall nuevo": "Instalar paneles de yeso nuevos",
+  "Reparar deck": "Reparar plataforma exterior",
+  "Reemplazar siding": "Reemplazar revestimiento exterior",
+};
+
 export function pmDisplayWork(name: string, english: boolean): string {
-  if (!english) return name;
+  if (!english) return name.split(", ").map(part => PM_WORK_LABELS_ES[part] ?? part).join(", ");
   if (name.startsWith("Trabajo en ")) return "Work in " + pmDisplayArea(name.slice(11), true);
   return name.split(", ").map(part => PM_WORK_LABELS_EN[part] ?? part).join(", ");
 }
