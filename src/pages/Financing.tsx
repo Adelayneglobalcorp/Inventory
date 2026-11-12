@@ -173,7 +173,7 @@ export default function Financing() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-8">
-      <header className="relative overflow-hidden rounded-[26px] border border-gold-400/20 bg-gradient-to-br from-[#20385d] via-[#162841] to-[#101d32] px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.17)] sm:px-8 sm:py-10">
+      <header className="g360-section-header relative overflow-hidden rounded-[26px] border border-gold-400/20 bg-gradient-to-br from-[#183958] via-[#162841] to-[#101d32] px-6 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.17)] sm:px-8 sm:py-10">
         <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full bg-gold-400/[0.07] blur-3xl" />
         <div className="relative space-y-3">
         <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-4xl">
