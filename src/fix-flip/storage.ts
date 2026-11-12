@@ -139,8 +139,9 @@ export function recalcPmBudget(data: ProjectManagerData): ProjectManagerData {
     0,
   );
   const baseline = Number(data.dealRepairBudget) || 0;
-  const totalEstimated =
-    lineEstimated > 0 ? lineEstimated : baseline;
+  // The calculator's rehab budget remains the approved baseline; detail lines
+  // are estimates, not a replacement for the original budget.
+  const totalEstimated = baseline > 0 ? baseline : lineEstimated;
   return {
     ...data,
     budget: {
