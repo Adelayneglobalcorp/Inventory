@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Global360Brand } from '@/components/branding/Global360Brand';\nimport { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,7 @@ const ResetPassword = () => {
 
             <div className="w-full max-w-md space-y-6">
                 <div className="text-center">
-                    <img src="/logo.png" alt="Inventory by Cash2Day" className="mx-auto mb-8 drop-shadow-lg rounded-lg bg-black/10 p-4 backdrop-blur-sm" style={{ width: 'calc(100% + 20px)', height: '288px' }} />
+                    <Global360Brand variant="dark" className="mx-auto mb-8 justify-center" />
                     <h1 className="font-[Montserrat] text-4xl font-bold text-white">
                         {t('resetPassword.newPasswordTitle')}
                     </h1>
