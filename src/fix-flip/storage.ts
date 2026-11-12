@@ -199,7 +199,11 @@ export async function syncCloudPm(dealId: number, userId: string): Promise<Proje
     .select("payload").eq("user_id", userId).eq("deal_id", dealId).maybeSingle();
   if (error) throw error;
   const result = data?.payload as ProjectManagerData | undefined;
-  if (result) localStorage.setItem("fixFlipPmCloud:" + userId + ":" + dealId, JSON.stringify(result));
+  const local = loadPmData(dealId, userId);
+  // Never overwrite work performed offline with an older server snapshot.
+  if (result && (!local || String(result.lastUpdated ?? "") > String(local.lastUpdated ?? ""))) {
+    localStorage.setItem("fixFlipPmCloud:" + userId + ":" + dealId, JSON.stringify(result));
+  }
   return result ?? null;
 }
 
