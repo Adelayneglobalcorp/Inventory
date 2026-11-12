@@ -429,8 +429,8 @@ export default function FixFlipCalculatorPage() {
   );
 
   const student = useMemo(
-    () => buildStudentAnalysis(calculation, evaluation),
-    [calculation, evaluation],
+    () => buildStudentAnalysis(calculation, evaluation, lang),
+    [calculation, evaluation, lang],
   );
 
   const setNum = useCallback((key: NumericInputKey, v: number) => {
