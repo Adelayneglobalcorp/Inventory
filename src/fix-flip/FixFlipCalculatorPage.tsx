@@ -107,6 +107,7 @@ const emptyInputs = (): UnderwritingInputs => ({
   rehabBudget: 0,
   closingCosts: 0,
   holdingCosts: 0,
+  cashOnHand: 0,
   downPaymentAmount: 0,
   downPaymentPercent: 0,
   hmlPointsRate: 0,
@@ -128,6 +129,7 @@ function projectToInputs(p: FixFlipProject): UnderwritingInputs {
     rehabBudget: p.rehabBudget,
     closingCosts: p.closingCosts,
     holdingCosts: p.holdingCosts,
+    cashOnHand: p.cashOnHand ?? 0,
     downPaymentAmount: p.downPaymentAmount,
     downPaymentPercent: p.downPaymentPercent,
     hmlPointsRate: p.hmlPointsRate,
@@ -155,6 +157,8 @@ export default function FixFlipCalculatorPage() {
             downHint:
               "Monto del enganche; el % sobre precio de compra se sincroniza automáticamente.",
             downPct: "% Enganche",
+            cashAvailable: "Efectivo disponible ($)",
+            cashAvailableHint: "Dinero propio disponible. Deja 0 si aún no lo conoces.",
             downPctHint:
               "Porcentaje sobre precio de compra; el monto se sincroniza si editas el %.",
             loanAmt: "Monto préstamo HML",
@@ -167,8 +171,8 @@ export default function FixFlipCalculatorPage() {
             pointsHint: "Puntos del préstamo HML.",
             rate: "Tasa de interés",
             rateHint: "Tasa de interés anual (nominal).",
-            intType: "Tipo de interés",
-            intTypeHint: "Tipo de cálculo de interés.",
+            intType: "Pago de intereses",
+            intTypeHint: "La tasa indicada es ANUAL. Estimación de interés simple, sin amortización.",
             intMonthly: "Mensual",
             intAnnual: "Anual",
             fees: "Gastos administrativos HML",
@@ -188,6 +192,8 @@ export default function FixFlipCalculatorPage() {
             downHint:
               "Down payment amount (% is calculated automatically over purchase price).",
             downPct: "% Down payment",
+            cashAvailable: "Available cash ($)",
+            cashAvailableHint: "Your available funds. Enter 0 if not known yet.",
             downPctHint:
               "Percent of purchase price; amount stays in sync when you edit %.",
             loanAmt: "HML loan amount",
@@ -199,8 +205,8 @@ export default function FixFlipCalculatorPage() {
             pointsHint: "HML loan points.",
             rate: "HML interest rate",
             rateHint: "Annual interest rate.",
-            intType: "Interest type",
-            intTypeHint: "Interest calculation type.",
+            intType: "Interest payment timing",
+            intTypeHint: "The rate above is ANNUAL. Interest-only estimate, without amortization.",
             intMonthly: "Monthly",
             intAnnual: "Annual",
             fees: "HML admin fees",
@@ -427,7 +433,7 @@ export default function FixFlipCalculatorPage() {
         // Legacy behavior: down payment amount and percent stay in sync.
         if (key === "downPaymentAmount") {
           next.downPaymentPercent =
-            purchase > 0 ? Math.round((nextVal / purchase) * 100 * 10) / 10 : 0;
+            purchase > 0 ? (nextVal / purchase) * 100 : 0;
           return next;
         }
         if (key === "downPaymentPercent") {
@@ -441,7 +447,7 @@ export default function FixFlipCalculatorPage() {
               (purchase * (Number(prev.downPaymentPercent) || 0)) / 100;
           } else {
             next.downPaymentPercent =
-              Math.round(((Number(prev.downPaymentAmount) || 0) / purchase) * 100 * 10) / 10;
+              ((Number(prev.downPaymentAmount) || 0) / purchase) * 100;
           }
           return next;
         }
@@ -692,6 +698,11 @@ export default function FixFlipCalculatorPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1.5">
+                    <HmlFieldLabel>{hmlI18n.cashAvailable}</HmlFieldLabel>
+                    <Input {...numInputProps("cashOnHand")} onFocus={() => setLastField("cashOnHand")} />
+                    <HmlHelper>{hmlI18n.cashAvailableHint}</HmlHelper>
+                  </div>
+                  <div className="space-y-1">
                     <HmlFieldLabel>{hmlI18n.down$}</HmlFieldLabel>
                     <Input
                       {...numInputProps("downPaymentAmount")}
