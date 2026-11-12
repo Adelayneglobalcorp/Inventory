@@ -62,7 +62,13 @@ const resources = {
                 "submit": "Submit Request", "sending": "Submitting...", "success": "Your financing request has been received.",
                 "error": "We could not submit your request. Please try again.", "required": "Complete all required fields.",
                 "invalidAmount": "Enter a valid loan amount greater than zero.",
-                "privacy": "Your request is visible only to you and authorized administrators."
+                "privacy": "Your request is visible only to you and authorized administrators.",
+                "inventoryProperty": "Select from inventory",
+                "manualProperty": "Enter a new address",
+                "searchProperty": "Search by address or city",
+                "chooseProperty": "Choose a property",
+                "inventoryUnavailable": "The property inventory could not be loaded. You can enter the address manually.",
+                "autoFillHint": "Selecting a property fills in available information. You can edit the fields below."
             },
             "dashboard": {
                 "title": "My Investment Portfolio",
@@ -445,7 +451,13 @@ const resources = {
                 "submit": "Enviar solicitud", "sending": "Enviando...", "success": "Hemos recibido tu solicitud de financiamiento.",
                 "error": "No pudimos enviar tu solicitud. Inténtalo nuevamente.", "required": "Completa todos los campos obligatorios.",
                 "invalidAmount": "Ingresa un monto solicitado válido y mayor que cero.",
-                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud."
+                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud.",
+                "inventoryProperty": "Seleccionar del inventario",
+                "manualProperty": "Ingresar una dirección nueva",
+                "searchProperty": "Buscar por dirección o ciudad",
+                "chooseProperty": "Selecciona una propiedad",
+                "inventoryUnavailable": "No se pudo cargar el inventario de propiedades. Puedes ingresar la dirección manualmente.",
+                "autoFillHint": "Al seleccionar una propiedad, se completarán los datos disponibles. Puedes modificarlos abajo."
             },
             "dashboard": {
                 "title": "Mi Portafolio de Inversión",
