@@ -55,7 +55,8 @@ import {
   getDealStatusPresentation,
 } from "./calculations";
 import type { FixFlipLanguage, FixFlipProject, UnderwritingInputs } from "./types";
-import { loadProjects, saveProjects } from "./storage";
+import { loadProjects, saveProjects, syncCloudProjects, saveCloudProject } from "./storage";
+import { useAuth } from "@/contexts/AuthContext";
 import { getProperties } from "@/lib/properties";
 import { usePortalContent } from "@/lib/portalContent";
 
@@ -154,6 +155,7 @@ function projectToInputs(p: FixFlipProject): UnderwritingInputs {
 
 export default function FixFlipCalculatorPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { i18n } = useTranslation();
   const lang: FixFlipLanguage = i18n.language.startsWith("en") ? "en" : "es";
   const portal = usePortalContent("calculator", lang);
@@ -333,6 +335,14 @@ export default function FixFlipCalculatorPage() {
   const [lastField, setLastField] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    syncCloudProjects(user.id).then(all => { if (active) setProjects(all); })
+      .catch(() => { /* Browser copy remains available offline. */ });
+    return () => { active = false; };
+  }, [user?.id]);
+
   const [selectedInventoryId, setSelectedInventoryId] = useState<string | null>(null);
   const [inventoryProperties, setInventoryProperties] = useState<Array<{
     id: string; address: string; city: string; state: string;
@@ -504,7 +514,7 @@ export default function FixFlipCalculatorPage() {
         : "Enter purchase price, ARV, and project duration before saving.");
       return;
     }
-    const list = loadProjects();
+    const list = loadProjects(user?.id);
     const id = editingId ?? Date.now();
     const existing = list.find((p) => p.id === id);
     const saved: FixFlipProject = {
@@ -523,8 +533,11 @@ export default function FixFlipCalculatorPage() {
     const idx = list.findIndex((p) => p.id === id);
     if (idx >= 0) list[idx] = saved;
     else list.push(saved);
-    saveProjects(list);
+    saveProjects(list, user?.id);
     setProjects(list);
+    if (user?.id) void saveCloudProject(saved, user.id).catch(() =>
+      toast.error(lang === "es" ? "Guardado local. No se pudo sincronizar con la nube." :
+        "Saved locally. Cloud synchronization failed."));
     setEditingId(null);
     toast.success(lang === "es" ? "Análisis guardado" : "Analysis saved");
   };
