@@ -38,27 +38,27 @@ const Navbar = () => {
   };
 
   const links = [
-    { to: '/dashboard', label: t('nav.dashboard'), icon: LayoutDashboard },
-    { to: '/properties', label: t('nav.properties'), icon: Building2 },
-    { to: '/calculator', label: t('nav.calculator'), icon: Calculator },
-    { to: '/deals', label: t('nav.deals'), icon: FolderKanban },
-    { to: '/project-manager', label: t('nav.projectManager'), icon: ClipboardList },
-    { to: '/financing', label: t('nav.financing'), icon: HandCoins },
-    ...(role === 'admin' ? [{ to: '/admin', label: t('nav.admin'), icon: Shield }] : []),
+    { to: '/dashboard', label: t('nav.dashboard'), shortLabel: t('nav.shortDashboard'), icon: LayoutDashboard },
+    { to: '/properties', label: t('nav.properties'), shortLabel: t('nav.properties'), icon: Building2 },
+    { to: '/calculator', label: t('nav.calculator'), shortLabel: t('nav.calculator'), icon: Calculator },
+    { to: '/deals', label: t('nav.deals'), shortLabel: t('nav.deals'), icon: FolderKanban },
+    { to: '/project-manager', label: t('nav.projectManager'), shortLabel: t('nav.shortProjects'), icon: ClipboardList },
+    { to: '/financing', label: t('nav.financing'), shortLabel: t('nav.shortFinancing'), icon: HandCoins },
+    ...(role === 'admin' ? [{ to: '/admin', label: t('nav.admin'), shortLabel: t('nav.admin'), icon: Shield }] : []),
   ];
 
   const isActive = (path: string) =>
     location.pathname === path || (path === '/project-manager' && location.pathname.startsWith('/project-manager/'));
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/70 bg-card/95 shadow-[0_3px_24px_rgba(0,0,0,0.12)] backdrop-blur-xl" aria-label="Primary navigation">
-      <div className="mx-auto flex h-[76px] w-full max-w-[1600px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
+    <nav className="sticky top-0 z-50 border-b border-border/70 bg-card/95 shadow-[0_3px_24px_rgba(0,0,0,0.12)] backdrop-blur-xl" aria-label={t('nav.navigation')}>
+      <div className="mx-auto flex h-[84px] w-full max-w-[1600px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
         <Link to="/properties" className="flex min-w-0 shrink-0 items-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Inventory by Cash2Day">
-          <img src="/logo.png" alt="Inventory by Cash2Day" className="h-[56px] w-auto max-w-[130px] object-contain sm:max-w-[160px]" />
+          <img src="/logo.png" alt="Inventory by Cash2Day" className="h-[60px] w-auto max-w-[130px] object-contain sm:max-w-[160px]" />
         </Link>
 
-        {/* Fixed-width icon navigation prevents ES/EN labels from shifting the layout. */}
-        <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex" aria-label="Modules">
+        {/* Compact on laptops; icons and readable labels on larger screens. */}
+        <div className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex xl:gap-1.5" aria-label={t('nav.modules')}>
           {links.map((link) => (
             <Tooltip key={link.to} delayDuration={100}>
               <TooltipTrigger asChild>
@@ -66,13 +66,14 @@ const Navbar = () => {
                   to={link.to}
                   aria-label={link.label}
                   aria-current={isActive(link.to) ? 'page' : undefined}
-                  className={`group relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${isActive(link.to)
-                    ? 'border-gold-500/35 bg-gold-500/15 text-gold-400 shadow-[0_8px_24px_rgba(0,0,0,0.16)]'
+                  className={`group relative flex h-[54px] w-[54px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary xl:h-[62px] xl:w-auto xl:min-w-[80px] xl:px-2 2xl:min-w-[95px] 2xl:px-3 ${isActive(link.to)
+                    ? 'border-gold-500/50 bg-gradient-to-b from-gold-500/20 to-gold-500/5 text-gold-400 shadow-[0_8px_24px_rgba(0,0,0,0.16)]'
                     : 'border-transparent text-muted-foreground hover:-translate-y-0.5 hover:border-border/80 hover:bg-muted/80 hover:text-foreground'
                   }`}
                 >
-                  <link.icon className="h-[21px] w-[21px] shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
-                  {isActive(link.to) && <span className="absolute -bottom-1 h-1 w-5 rounded-full bg-gold-400" />}
+                  <link.icon className="h-6 w-6 shrink-0 transition-transform group-hover:scale-110" aria-hidden="true" />
+                  <span className="hidden max-w-[113px] truncate whitespace-nowrap text-xs font-semibold leading-tight xl:block">{link.shortLabel}</span>
+                  {isActive(link.to) && <span className="absolute -bottom-1 h-1 w-6 rounded-full bg-gold-400" />}
                   <span className="sr-only">{link.label}</span>
                 </Link>
               </TooltipTrigger>
@@ -91,14 +92,14 @@ const Navbar = () => {
             rel="noopener noreferrer"
             aria-label={`WhatsApp ${WHATSAPP_DISPLAY}`}
             title={`WhatsApp ${WHATSAPP_DISPLAY}`}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-emerald-400 transition-colors hover:bg-muted hover:text-emerald-300"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-emerald-400 transition-colors hover:bg-muted hover:text-emerald-300"
           >
-            <WhatsAppGlyph className="h-[19px] w-[19px]" />
+            <WhatsAppGlyph className="h-6 w-6" />
           </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-xl border-border/80" aria-label={user?.email || t('nav.role')} title={user?.email || t('nav.role')}>
-                <User className="h-5 w-5" />
+              <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 rounded-xl border-border/80" aria-label={user?.email || t('nav.role')} title={user?.email || t('nav.role')}>
+                <User className="h-6 w-6" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[220px] max-w-[280px]">
@@ -122,7 +123,7 @@ const Navbar = () => {
             size="icon"
             className="h-10 w-10 rounded-xl"
             onClick={() => setMobileOpen((open) => !open)}
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-label={mobileOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -131,7 +132,7 @@ const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-76px)] overflow-y-auto border-t border-border/70 bg-card px-3 pb-4 pt-3 md:hidden">
+        <div className="max-h-[calc(100vh-84px)] overflow-y-auto border-t border-border/70 bg-card px-3 pb-4 pt-3 md:hidden">
           <div className="mx-auto grid max-w-lg grid-cols-2 gap-2">
             {links.map((link) => (
               <Link
@@ -144,7 +145,7 @@ const Navbar = () => {
                   : 'border-border/70 bg-background/40 text-foreground hover:bg-muted'
                 }`}
               >
-                <link.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <link.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
                 <span className="min-w-0 break-words leading-snug">{link.label}</span>
               </Link>
             ))}
