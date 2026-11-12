@@ -431,7 +431,7 @@ export const PropertyList = forwardRef<
                           <Square className="w-4 h-4" />
                           <span className="text-sm font-bold">{property.sqft}</span>
                         </div>
-                        <span className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground/70">SQFT</span>
+                        <span className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground/70">ft²</span>
                       </div>
                     </div>
 
