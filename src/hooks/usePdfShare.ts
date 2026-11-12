@@ -101,7 +101,7 @@ export const usePdfShare = () => {
             // CRITICAL: Check canvas dimensions to avoid jsPDF.scale error
             if (canvas.width === 0 || canvas.height === 0) {
                 console.error('Captured canvas has 0 dimensions');
-                toast.error(t('properties.list.actions.shareError') + ' Element has 0 dimensions', { id: toastId });
+                toast.error(t('properties.list.actions.shareError'), { id: toastId });
                 setIsGenerating(false);
                 return;
             }
@@ -157,7 +157,7 @@ export const usePdfShare = () => {
             }
         } catch (error: any) {
             console.error('Error generating/sharing PDF:', error);
-            toast.error(t('properties.list.actions.shareError') + (error.message || 'Unknown error'), { id: toastId });
+            toast.error(t('properties.list.actions.shareError'), { id: toastId });
         } finally {
             setIsGenerating(false);
         }
