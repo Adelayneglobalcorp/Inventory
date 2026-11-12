@@ -18,14 +18,14 @@ const Properties = () => {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-[Montserrat] text-2xl font-bold">{portal('title', t('properties.title'))}</h1>
-          <p className="max-w-xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            {portal('subtitle', t('properties.subtitle'))}
-          </p>
+      <header className="g360-section-header relative overflow-hidden rounded-[26px] border border-[#d4aa56]/20 bg-gradient-to-br from-[#183958] via-[#0c2440] to-[#07182f] p-6 shadow-[0_18px_55px_rgba(0,0,0,.15)] sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full border border-[#f0bf52]/10 bg-[#edbf52]/[.05] blur-2xl" />
+        <div className="relative">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[.22em] text-[#e7bf63]">Global 360 <span className="text-slate-300/65">/ Inventory</span></p>
+          <h1 className="font-[Montserrat] text-2xl font-bold tracking-tight text-white sm:text-3xl">{portal('title', t('properties.title'))}</h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-200/80 sm:text-base">{portal('subtitle', t('properties.subtitle'))}</p>
         </div>
-      </div>
+      </header>
 
       <PropertyList
         key={refreshKey}
