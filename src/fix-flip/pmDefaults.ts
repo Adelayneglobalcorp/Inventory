@@ -180,3 +180,26 @@ const interiorSet = new Set<string>(PM_INTERIOR_AREA_NAMES);
 export function defaultCategoryForArea(area: string): "INTERIOR" | "EXTERIOR" {
   return interiorSet.has(area) ? "INTERIOR" : "EXTERIOR";
 }
+
+/** UI labels only. Keys stored in existing projects remain unchanged. */
+export const PM_AREA_LABELS_EN: Record<string, string> = {
+  "Baños": "Bathrooms", "Cocina": "Kitchen", "Pisos": "Floors",
+  "Pintura": "Painting", "Eléctrico": "Electrical", "Plomería": "Plumbing",
+  "Paredes": "Walls", "Puertas": "Doors", "Ventanas": "Windows",
+  "Techo": "Roof", "Paredes Exteriores/Fachada": "Exterior walls / Facade",
+  "Jardín y paisajismo": "Landscaping", "Entrada y driveway": "Driveway",
+  "Patio y terraza": "Patio and deck", "Cercas y portones": "Fences and gates",
+  "Garaje": "Garage", "Piscina y spa": "Pool and spa",
+  "Drenaje exterior": "Exterior drainage", "Iluminación exterior": "Outdoor lighting",
+  "Puertas y ventanas exteriores": "Exterior doors and windows",
+  "HVAC exterior": "Outdoor HVAC", "Seguridad y permisos": "Safety and permits",
+  "Sala": "Living room",
+};
+export function pmDisplayArea(area: string, english: boolean): string {
+  if (!english) return area;
+  const bathroom = /^Baño (\d+)$/.exec(area);
+  if (bathroom) return "Bathroom " + bathroom[1];
+  const bedroom = /^Habitación (\d+)$/.exec(area);
+  if (bedroom) return "Bedroom " + bedroom[1];
+  return PM_AREA_LABELS_EN[area] ?? area;
+}
