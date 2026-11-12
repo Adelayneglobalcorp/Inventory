@@ -321,5 +321,7 @@ export const PM_WORK_LABELS_EN: Record<string, string> = {
   "Instalar aislamiento exterior": "Install exterior insulation",
 };
 export function pmDisplayWork(name: string, english: boolean): string {
-  return english ? PM_WORK_LABELS_EN[name] ?? name : name;
+  if (!english) return name;
+  if (name.startsWith("Trabajo en ")) return "Work in " + pmDisplayArea(name.slice(11), true);
+  return name.split(", ").map(part => PM_WORK_LABELS_EN[part] ?? part).join(", ");
 }
