@@ -2,7 +2,7 @@ import {
   PM_SUBCATEGORY_DATABASE_DEFAULT,
   defaultCategoryForArea,
 } from "./pmDefaults";
-import type { FixFlipProject, ProjectManagerData, PmSubcategoryDatabase } from "./types";
+import type { FixFlipProject, ProjectManagerData, PmSubcategoryDatabase, PMSpace } from "./types";
 
 function deepClonePmDb<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
@@ -39,6 +39,10 @@ export function hydrateProjectManagerData(data: ProjectManagerData): ProjectMana
   };
   for (const area of Object.keys(mergedDb)) {
     if (!map[area]) map[area] = defaultCategoryForArea(area);
+  }
+  for (const space of data.spaces ?? []) {
+    if (!mergedDb[space.name]) mergedDb[space.name] = { ...(mergedDb[space.templateArea] ?? {}) };
+    map[space.name] = space.category;
   }
   return {
     ...data,
@@ -79,9 +83,22 @@ export function savePmData(dealId: number, data: ProjectManagerData): void {
   localStorage.setItem(`pm_${dealId}`, JSON.stringify(data));
 }
 
+export function buildPropertySpaces(snapshot?: FixFlipProject["inventorySnapshot"]): PMSpace[] {
+  if (!snapshot) return [];
+  const spaces: PMSpace[] = [];
+  for (let i = 1; i <= Math.min(30, Math.ceil(Math.max(0, snapshot.bathrooms || 0))); i++)
+    spaces.push({ id: "bath-" + i, name: "Baño " + i, category: "INTERIOR", templateArea: "Baños" });
+  for (let i = 1; i <= Math.min(30, Math.floor(Math.max(0, snapshot.bedrooms || 0))); i++)
+    spaces.push({ id: "bed-" + i, name: "Habitación " + i, category: "INTERIOR", templateArea: "Pintura" });
+  spaces.push({ id: "kitchen", name: "Cocina", category: "INTERIOR", templateArea: "Cocina" });
+  spaces.push({ id: "living", name: "Sala", category: "INTERIOR", templateArea: "Pintura" });
+  return spaces;
+}
+
 export function createDefaultPmData(
   dealId: number,
   repairBudget: number,
+  snapshot?: FixFlipProject["inventorySnapshot"],
 ): ProjectManagerData {
   const now = new Date().toISOString();
   return hydrateProjectManagerData({
@@ -104,6 +121,7 @@ export function createDefaultPmData(
       phases: [],
     },
     items: [],
+    spaces: buildPropertySpaces(snapshot),
     areaCategoryMap: {},
     phaseMeta: {},
   });
