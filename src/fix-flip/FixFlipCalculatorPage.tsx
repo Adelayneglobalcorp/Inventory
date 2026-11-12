@@ -334,7 +334,7 @@ export default function FixFlipCalculatorPage() {
   );
   const [lastField, setLastField] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  const [projects, setProjects] = useState<FixFlipProject[]>(() => []);
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
@@ -402,7 +402,7 @@ export default function FixFlipCalculatorPage() {
     if (!editId) return;
     const id = Number(editId);
     if (!Number.isFinite(id)) return;
-    const list = loadProjects();
+    const list = loadProjects(user?.id);
     const p = list.find((x) => x.id === id);
     if (p) {
       setInputs(projectToInputs(p));
@@ -412,7 +412,7 @@ export default function FixFlipCalculatorPage() {
       toast.info(lang === "es" ? `Editando análisis` : `Editing analysis`);
     }
     setSearchParams({}, { replace: true });
-  }, [editId, lang, setSearchParams]);
+  }, [editId, lang, setSearchParams, user?.id, projects]);
 
   const calculation = useMemo(
     () =>
