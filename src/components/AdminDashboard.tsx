@@ -14,6 +14,7 @@ import { Shield, Users, Building2, Settings, BarChart3, Plus, Heart } from 'luci
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
+import PortalContentSettings from '@/components/PortalContentSettings';
 
 export const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -142,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
             {t('admin.tabs.overview')}
@@ -158,6 +159,10 @@ export const AdminDashboard: React.FC = () => {
           <TabsTrigger value="interests" className="flex items-center gap-2">
             <Heart className="w-4 h-4" />
             {t('admin.tabs.interests')}
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            {t('admin.actions.systemSettings', { defaultValue: 'Portal settings' })}
           </TabsTrigger>
         </TabsList>
 
@@ -321,6 +326,7 @@ export const AdminDashboard: React.FC = () => {
         <TabsContent value="interests" className="space-y-6">
           <PropertyInterests />
         </TabsContent>
+        <TabsContent value="settings"><PortalContentSettings /></TabsContent>
       </Tabs>
 
       {/* Modal para agregar propiedad */}
