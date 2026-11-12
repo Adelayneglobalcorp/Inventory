@@ -4,6 +4,7 @@ import {
   useMemo,
   useState,
   type ReactNode,
+  type ComponentProps,
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -59,6 +60,7 @@ import { loadProjects, saveProjects, syncCloudProjects, saveCloudProject } from 
 import { useAuth } from "@/contexts/AuthContext";
 import { getProperties } from "@/lib/properties";
 import { usePortalContent } from "@/lib/portalContent";
+import { parseCalculatorNumber, displayCalculatorNumber, editingCalculatorNumber, type CalculatorNumberKind } from "./calculatorNumberInput";
 
 /** Campos numéricos del formulario (excl. texto y select). */
 type NumericInputKey = Exclude<
@@ -70,23 +72,55 @@ const PERCENTAGE_KEYS = new Set<NumericInputKey>([
   "downPaymentPercent", "hmlPointsRate", "hmlInterestRate",
   "reCommissions", "profitMinPercent",
 ]);
-function numericValueFromRaw(raw: string, key: NumericInputKey): number {
-  const value = raw.trim().replace(/\s/g, "").replace(/[$%]/g, "");
-  if (value === "" || value === "-" || value === "." || value === "-.") return 0;
-  const comma = value.lastIndexOf(",");
-  const dot = value.lastIndexOf(".");
-  const isFractional = PERCENTAGE_KEYS.has(key);
-  // For money, a single separator followed by exactly three digits
-  // is a grouping separator: 1,234 or 1.234 both mean 1234.
-  const grouping = !isFractional && ((comma >= 0 && dot < 0 &&
-    /^-?\d{1,3}(,\d{3})+$/.test(value)) || (dot >= 0 && comma < 0 &&
-    /^-?\d{1,3}(\.\d{3})+$/.test(value)));
-  const normalized = grouping ? value.replace(/[,.]/g, "") :
-    comma > dot ? value.replace(/\./g, "").replace(",", ".") :
-    value.replace(/,/g, "");
-  if (!/^-?\d*(?:\.\d*)?$/.test(normalized)) return NaN;
-  const number = Number(normalized);
-  return Number.isFinite(number) ? number : NaN;
+const calculatorInputKind = (key: NumericInputKey): CalculatorNumberKind =>
+  key === "projectMonths" ? "integer" : PERCENTAGE_KEYS.has(key) ? "percent" : "currency";
+
+type CalculatorNumberInputProps = ComponentProps<typeof Input> & {
+  kind: CalculatorNumberKind;
+  onBeginEdit?: () => void;
+};
+
+/** Show the unit automatically while leaving only the number editable. */
+function CalculatorNumberInput({
+  kind,
+  onBeginEdit,
+  onFocus,
+  className,
+  ...props
+}: CalculatorNumberInputProps) {
+  return (
+    <div className="relative">
+      {kind === "currency" && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-foreground/80"
+        >
+          $
+        </span>
+      )}
+      <Input
+        {...props}
+        onFocus={(event) => {
+          onBeginEdit?.();
+          onFocus?.(event);
+        }}
+        className={cn(
+          "bg-background tabular-nums",
+          kind === "currency" && "pl-8",
+          kind === "percent" && "pr-8",
+          className,
+        )}
+      />
+      {kind === "percent" && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground/80"
+        >
+          %
+        </span>
+      )}
+    </div>
+  );
 }
 
 function HmlFieldLabel({ children }: { children: ReactNode }) {
@@ -454,7 +488,7 @@ export default function FixFlipCalculatorPage() {
 
   const handleNumChange = useCallback(
     (key: NumericInputKey, raw: string) => {
-      const nextVal = numericValueFromRaw(raw, key);
+      const nextVal = parseCalculatorNumber(raw, calculatorInputKind(key));
       setNumDrafts((d) => ({ ...d, [key]: raw }));
       // Keep the user's draft visible without propagating an invalid number into financial formulas.
       if (!Number.isFinite(nextVal)) return;
@@ -498,18 +532,33 @@ export default function FixFlipCalculatorPage() {
   }, []);
 
   const numInputProps = useCallback(
-    (key: NumericInputKey) => ({
-      type: "text" as const,
-      inputMode: "decimal" as const,
-      autoComplete: "off" as const,
-      value: numDrafts[key] ?? (key === "projectMonths"
-        ? String(Math.round(Number(inputs[key]) || 0))
-        : (Number(inputs[key]) || 0).toFixed(2)),
-      onChange: (e: { target: { value: string } }) =>
-        handleNumChange(key, e.target.value),
-      onBlur: () => handleNumBlur(key),
-    }),
-    [numDrafts, inputs, handleNumChange, handleNumBlur],
+    (key: NumericInputKey) => {
+      const kind = calculatorInputKind(key);
+      const currentValue = Number(inputs[key]) || 0;
+      return {
+        id: `fix-flip-${key}`,
+        kind,
+        type: "text" as const,
+        inputMode: kind === "integer" ? ("numeric" as const) : ("decimal" as const),
+        autoComplete: "off" as const,
+        placeholder: kind === "integer"
+          ? (lang === "es" ? "Meses" : "Months")
+          : kind === "percent"
+            ? (lang === "es" ? "Porcentaje" : "Percentage")
+            : (lang === "es" ? "Ingresa un monto" : "Enter an amount"),
+        // Zero is internal for calculations; the input stays visually empty until entered.
+        value: numDrafts[key] ?? displayCalculatorNumber(currentValue, kind),
+        // Remove grouping on focus. Never format while a person is typing.
+        onBeginEdit: () => setNumDrafts((drafts) => ({
+          ...drafts,
+          [key]: editingCalculatorNumber(currentValue, kind),
+        })),
+        onChange: (e: { target: { value: string } }) =>
+          handleNumChange(key, e.target.value),
+        onBlur: () => handleNumBlur(key),
+      };
+    },
+    [numDrafts, inputs, handleNumChange, handleNumBlur, lang],
   );
 
   const handleSave = () => {
@@ -563,7 +612,7 @@ export default function FixFlipCalculatorPage() {
     helper?: ReactNode,
   ) => (
     <div className="space-y-1.5">
-      <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <Label htmlFor={`fix-flip-${key}`} className="flex items-center gap-1.5 text-xs text-muted-foreground">
         {label}
         {/ARV|ROI|HML|LTV|LTC/i.test(label) && (
           <Tooltip delayDuration={100}>
@@ -582,7 +631,7 @@ export default function FixFlipCalculatorPage() {
           </Tooltip>
         )}
       </Label>
-      <Input
+      <CalculatorNumberInput
         {...numInputProps(key)}
         onFocus={() => setLastField(String(key))}
         className="bg-background"
@@ -757,12 +806,12 @@ export default function FixFlipCalculatorPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{hmlI18n.cashAvailable}</HmlFieldLabel>
-                    <Input {...numInputProps("cashOnHand")} onFocus={() => setLastField("cashOnHand")} />
+                    <CalculatorNumberInput {...numInputProps("cashOnHand")} onFocus={() => setLastField("cashOnHand")} />
                     <HmlHelper>{hmlI18n.cashAvailableHint}</HmlHelper>
                   </div>
                   <div className="space-y-1">
                     <HmlFieldLabel>{hmlI18n.down$}</HmlFieldLabel>
-                    <Input
+                    <CalculatorNumberInput
                       {...numInputProps("downPaymentAmount")}
                       onFocus={() => setLastField("down-payment-amount")}
                       className="bg-background"
@@ -771,7 +820,7 @@ export default function FixFlipCalculatorPage() {
                   </div>
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{hmlI18n.downPct}</HmlFieldLabel>
-                    <Input
+                    <CalculatorNumberInput
                       {...numInputProps("downPaymentPercent")}
                       onFocus={() => setLastField("down-payment-percent")}
                       className="bg-background"
@@ -797,7 +846,7 @@ export default function FixFlipCalculatorPage() {
                   </div>
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{hmlI18n.points}</HmlFieldLabel>
-                    <Input
+                    <CalculatorNumberInput
                       {...numInputProps("hmlPointsRate")}
                       onFocus={() => setLastField("hmlPointsRate")}
                       className="bg-background"
@@ -806,7 +855,7 @@ export default function FixFlipCalculatorPage() {
                   </div>
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{hmlI18n.rate}</HmlFieldLabel>
-                    <Input
+                    <CalculatorNumberInput
                       {...numInputProps("hmlInterestRate")}
                       onFocus={() => setLastField("hmlInterestRate")}
                       className="bg-background"
@@ -836,7 +885,7 @@ export default function FixFlipCalculatorPage() {
                   </div>
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{hmlI18n.fees}</HmlFieldLabel>
-                    <Input
+                    <CalculatorNumberInput
                       {...numInputProps("hmlAdminFees")}
                       onFocus={() => setLastField("hmlAdminFees")}
                       className="bg-background"
@@ -895,7 +944,7 @@ export default function FixFlipCalculatorPage() {
                   <div className="space-y-1.5">
                     <HmlFieldLabel>{saleI18n.reComm}</HmlFieldLabel>
                     <div className="relative">
-                      <Input
+                      <CalculatorNumberInput
                         {...numInputProps("reCommissions")}
                         onFocus={() => setLastField("reCommissions")}
                         className={cn("bg-background pr-10 tabular-nums")}
@@ -912,7 +961,7 @@ export default function FixFlipCalculatorPage() {
                       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                         $
                       </span>
-                      <Input
+                      <CalculatorNumberInput
                         {...numInputProps("resaleClosingCosts")}
                         onFocus={() => setLastField("resaleClosingCosts")}
                         className={cn("bg-background pl-8 tabular-nums")}
