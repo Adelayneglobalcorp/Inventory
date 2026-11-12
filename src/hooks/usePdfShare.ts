@@ -3,9 +3,11 @@ import jsPDF from 'jspdf';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import type { Property } from '@/types/property';
+import { downloadPropertySheet } from '@/lib/pdf/propertySheet';
 
 export const usePdfShare = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [isGenerating, setIsGenerating] = useState(false);
 
     const sharePdf = async (elementId: string, fileName: string) => {
@@ -163,5 +165,23 @@ export const usePdfShare = () => {
         }
     };
 
-    return { sharePdf, isGenerating };
+    /** Ficha de propiedad con diseño Global 360 (PDF vectorial, ES/EN según el idioma de la app). */
+    const shareProperty = async (property: Property) => {
+        if (isGenerating) return;
+        setIsGenerating(true);
+        const toastId = toast.loading(t('properties.list.actions.pdfGenerating'));
+        try {
+            const lang = i18n.resolvedLanguage === 'en' ? 'en' : 'es';
+            const result = await downloadPropertySheet(property, lang);
+            if (result === 'cancelled') toast.dismiss(toastId);
+            else toast.success(t('properties.list.actions.shareSuccess'), { id: toastId });
+        } catch (error) {
+            console.error('Error generating property sheet:', error);
+            toast.error(t('properties.list.actions.shareError'), { id: toastId });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    return { sharePdf, shareProperty, isGenerating };
 };

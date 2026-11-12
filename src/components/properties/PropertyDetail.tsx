@@ -33,7 +33,7 @@ const PropertyDetail = ({ property, open, onClose, id, pureContent = false }: Pr
     }).format(n);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
-  const { sharePdf, isGenerating } = usePdfShare();
+  const { shareProperty, isGenerating } = usePdfShare();
   const [hasInterest, setHasInterest] = useState(false);
   const { user } = useAuth();
 
@@ -301,7 +301,7 @@ const PropertyDetail = ({ property, open, onClose, id, pureContent = false }: Pr
           <Button
             variant="outline"
             className="flex-1 gap-4 h-20 text-2xl font-black rounded-3xl border-2 border-primary/20 hover:bg-primary/5 transition-all hover:scale-[1.02] active:scale-95"
-            onClick={() => sharePdf(id || `property-detail-${property.id}`, property.title)}
+            onClick={() => void shareProperty(property)}
             disabled={isGenerating}
           >
             <Share2 className={`h-8 w-8 text-primary ${isGenerating ? 'animate-pulse' : ''}`} />

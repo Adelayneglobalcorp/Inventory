@@ -45,7 +45,7 @@ import {
   Trees,
   FileDown,
 } from "lucide-react";
-import { jsPDF } from "jspdf";
+import { exportScopePdfBranded } from "./scopePdf";
 import { formatCurrency } from "./calculations";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePortalContent } from "@/lib/portalContent";
@@ -72,70 +72,12 @@ import {
   savePmData,
 } from "./storage";
 
-/** Export only selected project tasks; no costs in the contractor-facing version. */
+/** Export only selected project tasks; no costs in the contractor-facing version (diseño Global 360). */
 function exportScopePdf(data: ProjectManagerData, address: string, withValues: boolean, es: boolean): void {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const money = (n: number) => formatCurrency(Number(n) || 0);
-  let y = 22;
-  const newPage = (needed = 14) => {
-    if (y + needed > 275) { doc.addPage(); y = 22; }
-  };
-  const line = (value: string, bold = false, size = 10) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.setFontSize(size);
-    const lines = doc.splitTextToSize(value || "-", 168) as string[];
-    newPage(lines.length * 5 + 4);
-    doc.text(lines, 20, y);
-    y += lines.length * 5 + 3;
-  };
-  doc.setFillColor(22, 40, 65);
-  doc.rect(0, 0, 210, 14, "F");
-  doc.setTextColor(24, 42, 69);
-  line("ADELAYNE GLOBAL CORP | " + (es ? "ALCANCE DE TRABAJO" : "SCOPE OF WORK"), true, 15);
-  line(address, true, 11);
-  line((es ? "Proyecto " : "Project ") + data.projectId + " | " + new Date().toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
-  line(es ? "Documento de planificación; sujeto a inspección y presupuesto final." : "Planning document; subject to inspection and final budget.", false, 9);
-  if (data.timeline?.startDate) line(
-    (es ? "Inicio estimado: " : "Planned start: ") +
-    new Date(data.timeline.startDate).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
-  if (data.timeline?.estimatedCompletion) line(
-    (es ? "Finalización estimada: " : "Planned finish: ") +
-    new Date(data.timeline.estimatedCompletion).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
-  y += 3;
-  const labels: Record<PMItem["status"], [string, string]> = {
-    PLANNING: ["Pendiente", "Planned"],
-    IN_PROGRESS: ["En progreso", "In progress"],
-    COMPLETED: ["Completado", "Completed"],
-    ON_HOLD: ["En espera", "On hold"],
-  };
-  const rows = [...(data.items ?? [])].sort((a,b)=>
-    (a.category + a.area).localeCompare(b.category + b.area));
-  if (!rows.length) line(es ? "Todavía no hay tareas asignadas." : "No tasks assigned yet.");
-  for (const category of ["INTERIOR", "EXTERIOR"] as const) {
-    const group = rows.filter((t) => t.category === category);
-    if (!group.length) continue;
-    newPage(18);
-    line(category === "INTERIOR" ? (es ? "INTERIOR" : "INTERIOR") : (es ? "EXTERIOR" : "EXTERIOR"), true, 12);
-    for (const task of group) {
-      newPage(24);
-      line(pmDisplayArea(task.area, !es) + "  -  " + pmDisplayWork(task.description || task.workType || "-", !es), true);
-      line((es ? "Estado: " : "Status: ") + labels[task.status][es ? 0 : 1] +
-        " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
-      const phase = data.phaseMeta?.[task.category + "::" + task.area];
-      if (phase?.coordinator) line((es ? "Responsable: " : "Coordinator: ") + phase.coordinator, false, 9);
-      if (phase?.estimatedDays) line((es ? "Días previstos: " : "Estimated days: ") + phase.estimatedDays, false, 9);
-      if (task.notes) line((es ? "Notas: " : "Notes: ") + task.notes, false, 9);
-      if (withValues) line((es ? "Estimado: " : "Estimated: ") + money(task.totalEstimated) +
-        " | " + (es ? "Real: " : "Actual: ") + money(task.totalActual ?? 0), false, 9);
-    }
-  }
-  if (withValues) {
-    y += 5;
-    line((es ? "Presupuesto original: " : "Original budget: ") + money(data.dealRepairBudget), true);
-    line((es ? "Presupuesto detallado: " : "Detailed budget: ") + money(data.budget.total));
-    line((es ? "Costo real: " : "Actual spent: ") + money(data.budget.used));
-  }
-  doc.save("adelayne-scope-" + data.projectId + (withValues ? "-budget" : "-tasks") + ".pdf");
+  void exportScopePdfBranded(data, address, withValues, es).catch((e) => {
+    console.error("Scope PDF error", e);
+    toast.error(es ? "No se pudo generar el PDF" : "Could not generate the PDF");
+  });
 }
 
 const STATUSES: PMItem["status"][] = [

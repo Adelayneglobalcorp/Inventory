@@ -16,7 +16,6 @@ import PropertyInterests from '@/components/PropertyInterests';
 import { addInterest, checkUserInterest, getUserInterests, removeInterestByUserAndProperty } from '@/lib/interests';
 import { notifyLeadConnectorPropertyInterest } from '@/lib/propertyInterestWebhook';
 import { useTranslation } from 'react-i18next';
-import PropertyDetail from '@/components/properties/PropertyDetail';
 import { Slider } from '@/components/ui/slider';
 
 interface PropertyListProps {
@@ -45,8 +44,7 @@ export const PropertyList = forwardRef<
   const [selectedPropertyForInterests, setSelectedPropertyForInterests] = useState<Property | null>(null);
   const [userInterests, setUserInterests] = useState<Set<string>>(new Set());
   const [loadingInterests, setLoadingInterests] = useState<Set<string>>(new Set());
-  const { sharePdf, isGenerating } = usePdfShare();
-  const [propertyToShare, setPropertyToShare] = useState<Property | null>(null);
+  const { shareProperty, isGenerating } = usePdfShare();
 
   useEffect(() => {
     loadProperties();
@@ -471,11 +469,7 @@ export const PropertyList = forwardRef<
                         onClick={async (e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          setPropertyToShare(property);
-                          // Delay slightly to allow the "hidden" component to render if it's new
-                          setTimeout(() => {
-                            sharePdf(`share-report-${property.id}`, property.title);
-                          }, 100);
+                          void shareProperty(property);
                         }}
                         disabled={isGenerating}
                       >
@@ -583,27 +577,6 @@ export const PropertyList = forwardRef<
         </DialogContent>
       </Dialog>
 
-      {/* Off-screen PropertyDetail for PDF Capture only (ensures dimensions for jsPDF) */}
-      {propertyToShare && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            top: '-9999px',
-            width: '1200px', // Set explicit width for capture
-            zIndex: -1
-          }}
-        >
-          <PropertyDetail
-            id={`share-report-${propertyToShare.id}`}
-            property={propertyToShare}
-            open={false}
-            onClose={() => setPropertyToShare(null)}
-            pureContent={true}
-          />
-        </div>
-      )}
     </div>
   );
 });
