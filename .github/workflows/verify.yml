@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/bilingual-financing-20261111
+      - feature/financial-pm-admin-overhaul-2026-11
   pull_request:
     branches:
       - main
@@ -19,4 +20,5 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
+      - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run validate

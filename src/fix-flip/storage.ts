@@ -2,7 +2,8 @@ import {
   PM_SUBCATEGORY_DATABASE_DEFAULT,
   defaultCategoryForArea,
 } from "./pmDefaults";
-import type { FixFlipProject, ProjectManagerData, PmSubcategoryDatabase } from "./types";
+import type { FixFlipProject, ProjectManagerData, PmSubcategoryDatabase, PMSpace } from "./types";
+import { supabase } from "@/lib/supabase";
 
 function deepClonePmDb<T>(v: T): T {
   return JSON.parse(JSON.stringify(v));
@@ -40,6 +41,10 @@ export function hydrateProjectManagerData(data: ProjectManagerData): ProjectMana
   for (const area of Object.keys(mergedDb)) {
     if (!map[area]) map[area] = defaultCategoryForArea(area);
   }
+  for (const space of data.spaces ?? []) {
+    if (!mergedDb[space.name]) mergedDb[space.name] = { ...(mergedDb[space.templateArea] ?? {}) };
+    map[space.name] = space.category;
+  }
   return {
     ...data,
     subcategoryDatabase: mergedDb,
@@ -50,38 +55,57 @@ export function hydrateProjectManagerData(data: ProjectManagerData): ProjectMana
 
 const PROJECTS_KEY = "fixFlipProjects";
 
-export function loadProjects(): FixFlipProject[] {
+export function loadProjects(userId?: string): FixFlipProject[] {
   try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
+    const raw = userId
+      ? localStorage.getItem("fixFlipCloudCache:" + userId)
+      : localStorage.getItem(PROJECTS_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data.filter((p): p is FixFlipProject =>
+      p != null && Number.isFinite(p.id)) : [];
   } catch {
     return [];
   }
 }
 
-export function saveProjects(projects: FixFlipProject[]): void {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
+/** Legacy values are never mixed into another account implicitly. */
+export function saveProjects(projects: FixFlipProject[], userId?: string): void {
+  const key = userId ? "fixFlipCloudCache:" + userId : PROJECTS_KEY;
+  localStorage.setItem(key, JSON.stringify(projects));
 }
 
-export function loadPmData(dealId: number): ProjectManagerData | null {
+export function loadPmData(dealId: number, userId?: string): ProjectManagerData | null {
   try {
-    const raw = localStorage.getItem(`pm_${dealId}`);
-    if (!raw) return null;
-    return JSON.parse(raw) as ProjectManagerData;
+    const raw = localStorage.getItem(userId
+      ? "fixFlipPmCloud:" + userId + ":" + dealId
+      : `pm_${dealId}`);
+    return raw ? JSON.parse(raw) as ProjectManagerData : null;
   } catch {
     return null;
   }
 }
 
-export function savePmData(dealId: number, data: ProjectManagerData): void {
-  localStorage.setItem(`pm_${dealId}`, JSON.stringify(data));
+export function savePmData(dealId: number, data: ProjectManagerData, userId?: string): void {
+  const key = userId ? "fixFlipPmCloud:" + userId + ":" + dealId : `pm_${dealId}`;
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+export function buildPropertySpaces(snapshot?: FixFlipProject["inventorySnapshot"]): PMSpace[] {
+  if (!snapshot) return [];
+  const spaces: PMSpace[] = [];
+  for (let i = 1; i <= Math.min(30, Math.ceil(Math.max(0, snapshot.bathrooms || 0))); i++)
+    spaces.push({ id: "bath-" + i, name: "Baño " + i, category: "INTERIOR", templateArea: "Baños" });
+  for (let i = 1; i <= Math.min(30, Math.floor(Math.max(0, snapshot.bedrooms || 0))); i++)
+    spaces.push({ id: "bed-" + i, name: "Habitación " + i, category: "INTERIOR", templateArea: "Pintura" });
+  spaces.push({ id: "kitchen", name: "Cocina", category: "INTERIOR", templateArea: "Cocina" });
+  spaces.push({ id: "living", name: "Sala", category: "INTERIOR", templateArea: "Pintura" });
+  return spaces;
 }
 
 export function createDefaultPmData(
   dealId: number,
   repairBudget: number,
+  snapshot?: FixFlipProject["inventorySnapshot"],
 ): ProjectManagerData {
   const now = new Date().toISOString();
   return hydrateProjectManagerData({
@@ -104,6 +128,7 @@ export function createDefaultPmData(
       phases: [],
     },
     items: [],
+    spaces: buildPropertySpaces(snapshot),
     areaCategoryMap: {},
     phaseMeta: {},
   });
@@ -121,8 +146,9 @@ export function recalcPmBudget(data: ProjectManagerData): ProjectManagerData {
     0,
   );
   const baseline = Number(data.dealRepairBudget) || 0;
-  const totalEstimated =
-    lineEstimated > 0 ? lineEstimated : baseline;
+  // The calculator's rehab budget remains the approved baseline; detail lines
+  // are estimates, not a replacement for the original budget.
+  const totalEstimated = baseline > 0 ? baseline : lineEstimated;
   return {
     ...data,
     budget: {
@@ -132,4 +158,71 @@ export function recalcPmBudget(data: ProjectManagerData): ProjectManagerData {
     },
     lastUpdated: new Date().toISOString(),
   };
+}
+
+/** Cloud writes are owned by the authenticated user and protected by Supabase RLS.
+ * Legacy browser data is never uploaded automatically without explicit consent.
+ */
+export async function syncCloudProjects(userId: string): Promise<FixFlipProject[]> {
+  const { data, error } = await supabase.from("investment_deals")
+    .select("payload").eq("user_id", userId);
+  if (error) throw error;
+  const projects = (data ?? []).map(row => row.payload as FixFlipProject)
+    .filter((p) => Number.isFinite(p?.id));
+  localStorage.setItem("fixFlipCloudCache:" + userId, JSON.stringify(projects));
+  return loadProjects(userId);
+}
+
+export async function saveCloudProject(project: FixFlipProject, userId: string): Promise<void> {
+  const { error } = await supabase.from("investment_deals").upsert({
+    user_id: userId, deal_id: project.id, payload: project, updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id,deal_id" });
+  if (error) throw error;
+  const cacheKey = "fixFlipCloudCache:" + userId;
+  const cached = JSON.parse(localStorage.getItem(cacheKey) || "[]") as FixFlipProject[];
+  localStorage.setItem(cacheKey, JSON.stringify([...new Map(
+    [...cached.filter(p => p.id !== project.id), project].map(p => [p.id, p])
+  ).values()]));
+}
+
+export async function deleteCloudProject(dealId: number, userId: string): Promise<void> {
+  const { error } = await supabase.from("investment_deals")
+    .delete().eq("user_id", userId).eq("deal_id", dealId);
+  if (error) throw error;
+  const key = "fixFlipCloudCache:" + userId;
+  const cached = JSON.parse(localStorage.getItem(key) || "[]") as FixFlipProject[];
+  localStorage.setItem(key, JSON.stringify(cached.filter(p => p.id !== dealId)));
+}
+
+export async function syncCloudPm(dealId: number, userId: string): Promise<ProjectManagerData | null> {
+  const { data, error } = await supabase.from("investment_projects")
+    .select("payload").eq("user_id", userId).eq("deal_id", dealId).maybeSingle();
+  if (error) throw error;
+  const result = data?.payload as ProjectManagerData | undefined;
+  const local = loadPmData(dealId, userId);
+  // Never overwrite work performed offline with an older server snapshot.
+  if (result && (!local || String(result.lastUpdated ?? "") > String(local.lastUpdated ?? ""))) {
+    localStorage.setItem("fixFlipPmCloud:" + userId + ":" + dealId, JSON.stringify(result));
+  }
+  return result ?? null;
+}
+
+export async function saveCloudPm(dealId: number, data: ProjectManagerData, userId: string): Promise<void> {
+  const { error } = await supabase.from("investment_projects").upsert({
+    user_id: userId, deal_id: dealId, payload: data, updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id,deal_id" });
+  if (error) throw error;
+  localStorage.setItem("fixFlipPmCloud:" + userId + ":" + dealId, JSON.stringify(data));
+}
+
+export async function importLocalDeals(userId: string): Promise<number> {
+  const legacy = loadProjects();
+  for (const deal of legacy) {
+    await saveCloudProject(deal, userId);
+    // Legacy Project Manager data is copied only during explicit import.
+    const pm = loadPmData(deal.id);
+    if (pm) await saveCloudPm(deal.id, pm, userId);
+  }
+  await syncCloudProjects(userId);
+  return legacy.length;
 }

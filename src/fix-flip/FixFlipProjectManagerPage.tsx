@@ -43,11 +43,15 @@ import {
   Trash2,
   HardHat,
   Trees,
+  FileDown,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { formatCurrency } from "./calculations";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePortalContent } from "@/lib/portalContent";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
-import { defaultCategoryForArea } from "./pmDefaults";
+import { defaultCategoryForArea, pmDisplayArea, pmDisplayWork } from "./pmDefaults";
 import { computePmItemTotals } from "./pmItemMath";
 import type {
   PMItem,
@@ -60,9 +64,79 @@ import {
   hydrateProjectManagerData,
   loadPmData,
   loadProjects,
+  buildPropertySpaces,
+  syncCloudProjects,
+  syncCloudPm,
+  saveCloudPm,
   recalcPmBudget,
   savePmData,
 } from "./storage";
+
+/** Export only selected project tasks; no costs in the contractor-facing version. */
+function exportScopePdf(data: ProjectManagerData, address: string, withValues: boolean, es: boolean): void {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const money = (n: number) => formatCurrency(Number(n) || 0);
+  let y = 22;
+  const newPage = (needed = 14) => {
+    if (y + needed > 275) { doc.addPage(); y = 22; }
+  };
+  const line = (value: string, bold = false, size = 10) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(value || "-", 168) as string[];
+    newPage(lines.length * 5 + 4);
+    doc.text(lines, 20, y);
+    y += lines.length * 5 + 3;
+  };
+  doc.setFillColor(22, 40, 65);
+  doc.rect(0, 0, 210, 14, "F");
+  doc.setTextColor(24, 42, 69);
+  line("ADELAYNE GLOBAL CORP | " + (es ? "ALCANCE DE TRABAJO" : "SCOPE OF WORK"), true, 15);
+  line(address, true, 11);
+  line((es ? "Proyecto " : "Project ") + data.projectId + " | " + new Date().toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
+  line(es ? "Documento de planificación; sujeto a inspección y presupuesto final." : "Planning document; subject to inspection and final budget.", false, 9);
+  if (data.timeline?.startDate) line(
+    (es ? "Inicio estimado: " : "Planned start: ") +
+    new Date(data.timeline.startDate).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
+  if (data.timeline?.estimatedCompletion) line(
+    (es ? "Finalización estimada: " : "Planned finish: ") +
+    new Date(data.timeline.estimatedCompletion).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
+  y += 3;
+  const labels: Record<PMItem["status"], [string, string]> = {
+    PLANNING: ["Pendiente", "Planned"],
+    IN_PROGRESS: ["En progreso", "In progress"],
+    COMPLETED: ["Completado", "Completed"],
+    ON_HOLD: ["En espera", "On hold"],
+  };
+  const rows = [...(data.items ?? [])].sort((a,b)=>
+    (a.category + a.area).localeCompare(b.category + b.area));
+  if (!rows.length) line(es ? "Todavía no hay tareas asignadas." : "No tasks assigned yet.");
+  for (const category of ["INTERIOR", "EXTERIOR"] as const) {
+    const group = rows.filter((t) => t.category === category);
+    if (!group.length) continue;
+    newPage(18);
+    line(category === "INTERIOR" ? (es ? "INTERIOR" : "INTERIOR") : (es ? "EXTERIOR" : "EXTERIOR"), true, 12);
+    for (const task of group) {
+      newPage(24);
+      line(pmDisplayArea(task.area, !es) + "  -  " + pmDisplayWork(task.description || task.workType || "-", !es), true);
+      line((es ? "Estado: " : "Status: ") + labels[task.status][es ? 0 : 1] +
+        " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
+      const phase = data.phaseMeta?.[task.category + "::" + task.area];
+      if (phase?.coordinator) line((es ? "Responsable: " : "Coordinator: ") + phase.coordinator, false, 9);
+      if (phase?.estimatedDays) line((es ? "Días previstos: " : "Estimated days: ") + phase.estimatedDays, false, 9);
+      if (task.notes) line((es ? "Notas: " : "Notes: ") + task.notes, false, 9);
+      if (withValues) line((es ? "Estimado: " : "Estimated: ") + money(task.totalEstimated) +
+        " | " + (es ? "Real: " : "Actual: ") + money(task.totalActual ?? 0), false, 9);
+    }
+  }
+  if (withValues) {
+    y += 5;
+    line((es ? "Presupuesto original: " : "Original budget: ") + money(data.dealRepairBudget), true);
+    line((es ? "Presupuesto detallado: " : "Detailed budget: ") + money(data.budget.total));
+    line((es ? "Costo real: " : "Actual spent: ") + money(data.budget.used));
+  }
+  doc.save("adelayne-scope-" + data.projectId + (withValues ? "-budget" : "-tasks") + ".pdf");
+}
 
 const STATUSES: PMItem["status"][] = [
   "PLANNING",
@@ -217,6 +291,7 @@ function PmAddItemDialog({
   baseData,
   onSaved,
   editItemId,
+  initialArea,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -224,6 +299,7 @@ function PmAddItemDialog({
   baseData: ProjectManagerData;
   onSaved: (next: ProjectManagerData) => void;
   editItemId: string | null;
+  initialArea?: string;
 }) {
   const { i18n } = useTranslation();
   const pm = (spanish: string, english: string) => i18n.resolvedLanguage === "es" ? spanish : english;
@@ -267,7 +343,7 @@ function PmAddItemDialog({
       setNotes(existing.notes || "");
       setTotalActual(Number(existing.totalActual) || 0);
     } else {
-      setSelectedArea("");
+      setSelectedArea(initialArea || "");
       setSelectedSubs([]);
       setMaterials(0);
       setLabor(0);
@@ -281,7 +357,7 @@ function PmAddItemDialog({
       setNotes("");
       setTotalActual(0);
     }
-  }, [open, baseData, editItemId]);
+  }, [open, baseData, editItemId, initialArea]);
 
   const db = working.subcategoryDatabase ?? {};
   const areaMap = working.areaCategoryMap ?? {};
@@ -510,7 +586,7 @@ function PmAddItemDialog({
                   <SelectItem value="__none__">{pm("Seleccionar…", "Select…")}</SelectItem>
                   {areaOptions.map((a) => (
                     <SelectItem key={a} value={a}>
-                      {a}
+                      {pmDisplayArea(a, i18n.language.startsWith("en"))}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -547,7 +623,7 @@ function PmAddItemDialog({
                               toggleSub(subName, costs, c === true, wt)
                             }
                           />
-                          <span className="text-sm font-medium">{subName}</span>
+                          <span className="text-sm font-medium">{pmDisplayWork(subName, i18n.language.startsWith("en"))}</span>
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs">
                           <div className="flex items-center gap-1">
@@ -610,8 +686,8 @@ function PmAddItemDialog({
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Con subcategorías marcadas, materiales y mano de obra se suman automáticamente
-                (como en la app anterior). Sin marcar, puedes ingresar montos manualmente.
+                {pm("Al seleccionar trabajos, sus costos se suman automáticamente. También puedes escribir montos manualmente.",
+                  "Selected work items automatically add costs. You can also enter amounts manually.")}
               </p>
             </div>
           ) : null}
@@ -693,19 +769,19 @@ function PmAddItemDialog({
               <Label>{pm("Materiales", "Materials")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={materials}
                 onChange={(e) => setMaterials(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Manual o suma automática de subcategorías
+{pm("Ingreso manual o suma automática", "Manual entry or automatic total")}
               </p>
             </div>
             <div className="space-y-1.5">
               <Label>{pm("Mano de obra", "Labor")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={labor}
                 onChange={(e) => setLabor(parseFloat(e.target.value) || 0)}
               />
@@ -717,24 +793,24 @@ function PmAddItemDialog({
               <Label>{pm("Otros costos", "Other Costs")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={other}
                 onChange={(e) => setOther(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Permisos, impuestos, etc.
+{pm("Permisos, tasas y otros gastos", "Permits, fees and other costs")}
               </p>
             </div>
             <div className="space-y-1.5">
               <Label>{pm("Margen (%)", "Markup (%)")}</Label>
               <Input
                 type="number"
-                step={5}
+                step={0.01}
                 value={markup}
                 onChange={(e) => setMarkup(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                % para ganancia del contratista
+{pm("Porcentaje del contratista", "Contractor markup percentage")}
               </p>
             </div>
           </div>
@@ -745,8 +821,8 @@ function PmAddItemDialog({
               {formatCurrency(preview.totalEstimated)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Subtotal {(materials + labor + other) * quantity} + margen{" "}
-              {formatCurrency(preview.markupAmount)} (misma lógica que el modelo viejo)
+              {pm("Subtotal", "Subtotal")} {formatCurrency((materials + labor + other) * quantity)} + {pm("margen", "markup")}{" "}
+              {formatCurrency(preview.markupAmount)}
             </p>
           </div>
 
@@ -755,13 +831,13 @@ function PmAddItemDialog({
               <Label>{pm("Gasto real", "Actual Cost")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 min={0}
                 value={totalActual}
                 onChange={(e) => setTotalActual(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Costo real ejecutado para comparar con el estimado
+{pm("Gasto real para comparar con el estimado", "Actual spending compared with the estimate")}
               </p>
             </div>
           ) : null}
@@ -793,21 +869,38 @@ function PmAddItemDialog({
 export default function FixFlipProjectManagerPage() {
   const { i18n } = useTranslation();
   const es = i18n.language.startsWith("es");
+  const portal = usePortalContent("pm", es ? "es" : "en");
   const pm = (s: string, e: string) => (es ? s : e);
   const { dealId: dealIdParam } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const dealId = Number(dealIdParam);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudRevision, setCloudRevision] = useState(0);
 
   const [data, setData] = useState<ProjectManagerData | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addCategory, setAddCategory] = useState<"INTERIOR" | "EXTERIOR">("INTERIOR");
   const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [presetArea, setPresetArea] = useState<string | undefined>(undefined);
   const [completeTargetItem, setCompleteTargetItem] = useState<PMItem | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setCloudReady(false);
+    if (!user?.id) { setCloudReady(true); return; }
+    void syncCloudProjects(user.id).then(() => {
+      if (active) setCloudRevision(value => value + 1);
+    }).catch(() => {
+      // Existing browser data remain available if the connection fails.
+    }).finally(() => { if (active) setCloudReady(true); });
+    return () => { active = false; };
+  }, [user?.id]);
 
   const deal = useMemo(() => {
     if (!Number.isFinite(dealId)) return null;
-    return loadProjects().find((p) => p.id === dealId) ?? null;
-  }, [dealId]);
+    return loadProjects(user?.id).find((p) => p.id === dealId) ?? null;
+  }, [dealId, user?.id, cloudRevision]);
 
   useEffect(() => {
     if (!Number.isFinite(dealId) || dealId <= 0) {
@@ -815,25 +908,44 @@ export default function FixFlipProjectManagerPage() {
       return;
     }
     if (!deal) {
+      if (!cloudReady) return;
       toast.error(pm("Inversión no encontrada", "Investment not found"));
       navigate("/project-manager", { replace: true });
       return;
     }
-    const existing = loadPmData(dealId);
+    const existing = loadPmData(dealId, user?.id);
     const base =
       existing ||
-      createDefaultPmData(dealId, deal.rehabBudget || 0);
+      createDefaultPmData(dealId, deal.rehabBudget || 0, deal.inventorySnapshot);
     setData(recalcPmBudget(hydrateProjectManagerData(base)));
-  }, [dealId, deal, navigate]);
+    if (!user?.id) return;
+    let active = true;
+    // Compare original timestamps, before recomputing UI totals.
+    const localUpdated = existing?.lastUpdated ?? "";
+    void syncCloudPm(dealId, user.id).then(remote => {
+      if (!active || !remote) return;
+      if (!existing || String(remote.lastUpdated || "") > String(localUpdated)) {
+        setData(recalcPmBudget(hydrateProjectManagerData(remote)));
+      }
+    }).catch(() => {
+      // Existing browser project remains accessible offline.
+    });
+    return () => { active = false; };
+  }, [dealId, deal, navigate, user?.id, cloudReady]);
 
   const persist = useCallback(
     (next: ProjectManagerData) => {
       const hydrated = hydrateProjectManagerData(next);
       const merged = recalcPmBudget(hydrated);
       setData(merged);
-      savePmData(dealId, merged);
+      savePmData(dealId, merged, user?.id);
+      if (user?.id) void saveCloudPm(dealId, merged, user.id).catch(() =>
+        toast.error(es
+          ? "Cambios guardados en este navegador, pero no se sincronizaron."
+          : "Changes saved in this browser but cloud sync failed."
+        ));
     },
-    [dealId],
+    [dealId, user?.id, es],
   );
 
   const reopenPhase = useCallback(
@@ -876,6 +988,7 @@ export default function FixFlipProjectManagerPage() {
 
   const openEditItem = useCallback((item: PMItem) => {
     setEditItemId(item.id);
+    setPresetArea(undefined);
     setAddCategory(item.category);
     setAddOpen(true);
   }, []);
@@ -885,7 +998,9 @@ export default function FixFlipProjectManagerPage() {
   const totalTasks = data?.items.length ?? 0;
   const completedTasks = data?.items.filter((i) => i.status === "COMPLETED").length ?? 0;
   const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  const overBudget = (data?.budget.remaining ?? 0) < 0;
+  const detailedEstimate = (data?.items ?? []).reduce((sum, item) => sum + (Number(item.totalEstimated) || 0), 0);
+  const overBudget = (data?.budget.remaining ?? 0) < 0 ||
+    ((data?.dealRepairBudget ?? 0) > 0 && detailedEstimate > (data?.dealRepairBudget ?? 0));
 
 
   const removeItem = (id: string) => {
@@ -915,7 +1030,7 @@ export default function FixFlipProjectManagerPage() {
         <div className="flex items-center gap-2">
           <HardHat className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="font-[Montserrat] text-xl font-bold">{pm("Gestión de proyectos", "Project Management")}</h1>
+            <h1 className="font-[Montserrat] text-xl font-bold">{portal("title", pm("Gestión de proyectos", "Project Management"))}</h1>
             <p className="text-sm text-muted-foreground line-clamp-1">
               {deal.propertyAddress}
             </p>
@@ -934,7 +1049,7 @@ export default function FixFlipProjectManagerPage() {
         <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent} className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progressPercent}%` }} />
         </div>
-        {overBudget && <p className="mt-3 text-xs font-medium text-red-400">{pm("Atención: los gastos reales superan el presupuesto actual.", "Warning: actual spending exceeds the current budget.")}</p>}
+        {overBudget && <p className="mt-3 text-xs font-medium text-red-400">{pm("Atención: los gastos reales o presupuestados superan el presupuesto original.", "Warning: actual or estimated costs exceed the original budget.")}</p>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -970,6 +1085,20 @@ export default function FixFlipProjectManagerPage() {
         </Card>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card/60 p-3">
+        <span className="mr-auto text-sm font-medium">{pm("Documentos de obra / Scope of Work", "Construction scope / Scope of Work")}</span>
+        <Button type="button" size="sm" variant="outline" onClick={() => exportScopePdf(data, deal.propertyAddress, false, es)}>
+          <FileDown className="mr-2 h-4 w-4" />{pm("PDF sin valores", "PDF without costs")}
+        </Button>
+        <Button type="button" size="sm" onClick={() => exportScopePdf(data, deal.propertyAddress, true, es)}>
+          <FileDown className="mr-2 h-4 w-4" />{pm("PDF con valores", "PDF with costs")}
+        </Button>
+        {(!data.spaces || data.spaces.length === 0) && deal.inventorySnapshot && (
+          <Button type="button" size="sm" variant="secondary" onClick={() => persist({
+            ...data, spaces: buildPropertySpaces(deal.inventorySnapshot),
+          })}>{pm("Cargar espacios de Inventory", "Load Inventory spaces")}</Button>
+        )}
+      </div>
       <Tabs defaultValue="interior">
         <TabsList className="grid h-auto w-full max-w-3xl grid-cols-2 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 sm:grid-cols-4">
           <TabsTrigger
@@ -1012,6 +1141,7 @@ export default function FixFlipProjectManagerPage() {
               size="sm"
               onClick={() => {
                 setEditItemId(null);
+                setPresetArea(undefined);
                 setAddCategory("INTERIOR");
                 setAddOpen(true);
               }}
@@ -1020,6 +1150,23 @@ export default function FixFlipProjectManagerPage() {
               {pm("Agregar ítem", "Add item")}
             </Button>
           </div>
+          {(data.spaces ?? []).filter((space) => space.category === "INTERIOR").length > 0 && (
+            <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+              <p className="mb-3 text-sm font-semibold">{pm("Espacios disponibles para remodelar", "Spaces available for renovation")}</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {(data.spaces ?? []).filter((space) => space.category === "INTERIOR").map((space) => {
+                  const count = data.items.filter((item) => item.area === space.name).length;
+                  return <Button type="button" key={space.id} variant="outline" className="h-auto min-h-14 flex-col gap-1 px-3 py-2 text-left" onClick={() => {
+                    setEditItemId(null); setPresetArea(space.name); setAddCategory("INTERIOR"); setAddOpen(true);
+                  }}>
+                    <span className="w-full truncate font-semibold">{pmDisplayArea(space.name, !es)}</span>
+                    <span className="w-full text-xs text-muted-foreground">{count} {pm("tareas", "tasks")}</span>
+                  </Button>;
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">{pm("Solo los trabajos añadidos generan costos.", "Only assigned work creates costs.")}</p>
+            </div>
+          )}
           <ItemsTable
             items={interiorItems}
             onDelete={removeItem}
@@ -1037,6 +1184,7 @@ export default function FixFlipProjectManagerPage() {
               size="sm"
               onClick={() => {
                 setEditItemId(null);
+                setPresetArea(undefined);
                 setAddCategory("EXTERIOR");
                 setAddOpen(true);
               }}
@@ -1093,6 +1241,7 @@ export default function FixFlipProjectManagerPage() {
         baseData={data}
         onSaved={persist}
         editItemId={editItemId}
+        initialArea={presetArea}
       />
 
       <PmCompleteItemDialog
@@ -1164,9 +1313,9 @@ function ItemsTable({
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.area}</TableCell>
+            <TableCell className="font-medium">{pmDisplayArea(item.area, i18n.language.startsWith("en"))}</TableCell>
             <TableCell className="max-w-[220px] truncate text-muted-foreground">
-              {item.description}
+              {pmDisplayWork(item.description, i18n.language.startsWith("en"))}
             </TableCell>
             {showBreakdown ? (
               <>

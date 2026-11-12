@@ -55,8 +55,10 @@ import {
   getDealStatusPresentation,
 } from "./calculations";
 import type { FixFlipLanguage, FixFlipProject, UnderwritingInputs } from "./types";
-import { loadProjects, saveProjects } from "./storage";
+import { loadProjects, saveProjects, syncCloudProjects, saveCloudProject } from "./storage";
+import { useAuth } from "@/contexts/AuthContext";
 import { getProperties } from "@/lib/properties";
+import { usePortalContent } from "@/lib/portalContent";
 
 /** Campos numéricos del formulario (excl. texto y select). */
 type NumericInputKey = Exclude<
@@ -64,16 +66,24 @@ type NumericInputKey = Exclude<
   "propertyAddress" | "interestType"
 >;
 
-function numericValueFromRaw(raw: string): number {
-  const value = raw.trim().replace(/\s/g, "");
+const PERCENTAGE_KEYS = new Set<NumericInputKey>([
+  "downPaymentPercent", "hmlPointsRate", "hmlInterestRate",
+  "reCommissions", "profitMinPercent",
+]);
+function numericValueFromRaw(raw: string, key: NumericInputKey): number {
+  const value = raw.trim().replace(/\s/g, "").replace(/[$%]/g, "");
   if (value === "" || value === "-" || value === "." || value === "-.") return 0;
   const comma = value.lastIndexOf(",");
   const dot = value.lastIndexOf(".");
-  // If both separators exist, treat the last one as the decimal separator.
-  const decimal = comma > dot ? "," : ".";
-  const normalized = decimal === ","
-    ? value.replace(/\./g, "").replace(",", ".")
-    : value.replace(/,/g, "");
+  const isFractional = PERCENTAGE_KEYS.has(key);
+  // For money, a single separator followed by exactly three digits
+  // is a grouping separator: 1,234 or 1.234 both mean 1234.
+  const grouping = !isFractional && ((comma >= 0 && dot < 0 &&
+    /^-?\d{1,3}(,\d{3})+$/.test(value)) || (dot >= 0 && comma < 0 &&
+    /^-?\d{1,3}(\.\d{3})+$/.test(value)));
+  const normalized = grouping ? value.replace(/[,.]/g, "") :
+    comma > dot ? value.replace(/\./g, "").replace(",", ".") :
+    value.replace(/,/g, "");
   if (!/^-?\d*(?:\.\d*)?$/.test(normalized)) return NaN;
   const number = Number(normalized);
   return Number.isFinite(number) ? number : NaN;
@@ -107,6 +117,7 @@ const emptyInputs = (): UnderwritingInputs => ({
   rehabBudget: 0,
   closingCosts: 0,
   holdingCosts: 0,
+  cashOnHand: 0,
   downPaymentAmount: 0,
   downPaymentPercent: 0,
   hmlPointsRate: 0,
@@ -128,6 +139,7 @@ function projectToInputs(p: FixFlipProject): UnderwritingInputs {
     rehabBudget: p.rehabBudget,
     closingCosts: p.closingCosts,
     holdingCosts: p.holdingCosts,
+    cashOnHand: p.cashOnHand ?? 0,
     downPaymentAmount: p.downPaymentAmount,
     downPaymentPercent: p.downPaymentPercent,
     hmlPointsRate: p.hmlPointsRate,
@@ -143,8 +155,10 @@ function projectToInputs(p: FixFlipProject): UnderwritingInputs {
 
 export default function FixFlipCalculatorPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { i18n } = useTranslation();
   const lang: FixFlipLanguage = i18n.language.startsWith("en") ? "en" : "es";
+  const portal = usePortalContent("calculator", lang);
   const hmlI18n = useMemo(
     () =>
       lang === "es"
@@ -155,6 +169,8 @@ export default function FixFlipCalculatorPage() {
             downHint:
               "Monto del enganche; el % sobre precio de compra se sincroniza automáticamente.",
             downPct: "% Enganche",
+            cashAvailable: "Efectivo disponible ($)",
+            cashAvailableHint: "Dinero propio disponible. Deja 0 si aún no lo conoces.",
             downPctHint:
               "Porcentaje sobre precio de compra; el monto se sincroniza si editas el %.",
             loanAmt: "Monto préstamo HML",
@@ -167,8 +183,8 @@ export default function FixFlipCalculatorPage() {
             pointsHint: "Puntos del préstamo HML.",
             rate: "Tasa de interés",
             rateHint: "Tasa de interés anual (nominal).",
-            intType: "Tipo de interés",
-            intTypeHint: "Tipo de cálculo de interés.",
+            intType: "Pago de intereses",
+            intTypeHint: "La tasa indicada es ANUAL. Estimación de interés simple, sin amortización.",
             intMonthly: "Mensual",
             intAnnual: "Anual",
             fees: "Gastos administrativos HML",
@@ -188,6 +204,8 @@ export default function FixFlipCalculatorPage() {
             downHint:
               "Down payment amount (% is calculated automatically over purchase price).",
             downPct: "% Down payment",
+            cashAvailable: "Available cash ($)",
+            cashAvailableHint: "Your available funds. Enter 0 if not known yet.",
             downPctHint:
               "Percent of purchase price; amount stays in sync when you edit %.",
             loanAmt: "HML loan amount",
@@ -199,8 +217,8 @@ export default function FixFlipCalculatorPage() {
             pointsHint: "HML loan points.",
             rate: "HML interest rate",
             rateHint: "Annual interest rate.",
-            intType: "Interest type",
-            intTypeHint: "Interest calculation type.",
+            intType: "Interest payment timing",
+            intTypeHint: "The rate above is ANNUAL. Interest-only estimate, without amortization.",
             intMonthly: "Monthly",
             intAnnual: "Annual",
             fees: "HML admin fees",
@@ -316,10 +334,24 @@ export default function FixFlipCalculatorPage() {
   );
   const [lastField, setLastField] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  const [projects, setProjects] = useState<FixFlipProject[]>(() => []);
+  const [cloudHydrated, setCloudHydrated] = useState(false);
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    setProjects(loadProjects(user.id));
+    setCloudHydrated(false);
+    syncCloudProjects(user.id).then(all => { if (active) setProjects(all); })
+      .catch(() => { /* Browser copy remains available offline. */ })
+      .finally(() => { if (active) setCloudHydrated(true); });
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const [selectedInventoryId, setSelectedInventoryId] = useState<string | null>(null);
   const [inventoryProperties, setInventoryProperties] = useState<Array<{
     id: string; address: string; city: string; state: string;
     price: number; arv: number | null; rehab_cost: number | null; status: string;
+    bedrooms: number; bathrooms: number; property_type?: string;
   }>>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [inventoryError, setInventoryError] = useState<string | null>(null);
@@ -337,6 +369,9 @@ export default function FixFlipCalculatorPage() {
         arv: p.arv == null ? null : Number(p.arv),
         rehab_cost: p.rehab_cost == null ? null : Number(p.rehab_cost),
         status: p.status,
+        bedrooms: Number(p.bedrooms) || 0,
+        bathrooms: Number(p.bathrooms) || 0,
+        property_type: p.property_type,
       })));
     }).catch((error: unknown) => {
       if (!active) return;
@@ -349,6 +384,7 @@ export default function FixFlipCalculatorPage() {
   const selectInventoryProperty = (id: string) => {
     const p = inventoryProperties.find((property) => property.id === id);
     if (!p) return;
+    setSelectedInventoryId(id);
     setInputs((prev) => ({
       ...prev,
       propertyAddress: [p.address, p.city, p.state].filter(Boolean).join(", "),
@@ -370,16 +406,18 @@ export default function FixFlipCalculatorPage() {
     if (!editId) return;
     const id = Number(editId);
     if (!Number.isFinite(id)) return;
-    const list = loadProjects();
+    const list = loadProjects(user?.id);
     const p = list.find((x) => x.id === id);
+    if (!p && !cloudHydrated) return;
     if (p) {
       setInputs(projectToInputs(p));
       setNumDrafts({});
       setEditingId(id);
+      setSelectedInventoryId(p.inventoryPropertyId ?? null);
       toast.info(lang === "es" ? `Editando análisis` : `Editing analysis`);
     }
     setSearchParams({}, { replace: true });
-  }, [editId, lang, setSearchParams]);
+  }, [editId, lang, setSearchParams, user?.id, projects, cloudHydrated]);
 
   const calculation = useMemo(
     () =>
@@ -406,8 +444,8 @@ export default function FixFlipCalculatorPage() {
   );
 
   const student = useMemo(
-    () => buildStudentAnalysis(calculation, evaluation),
-    [calculation, evaluation],
+    () => buildStudentAnalysis(calculation, evaluation, lang),
+    [calculation, evaluation, lang],
   );
 
   const setNum = useCallback((key: NumericInputKey, v: number) => {
@@ -416,7 +454,7 @@ export default function FixFlipCalculatorPage() {
 
   const handleNumChange = useCallback(
     (key: NumericInputKey, raw: string) => {
-      const nextVal = numericValueFromRaw(raw);
+      const nextVal = numericValueFromRaw(raw, key);
       setNumDrafts((d) => ({ ...d, [key]: raw }));
       // Keep the user's draft visible without propagating an invalid number into financial formulas.
       if (!Number.isFinite(nextVal)) return;
@@ -427,7 +465,7 @@ export default function FixFlipCalculatorPage() {
         // Legacy behavior: down payment amount and percent stay in sync.
         if (key === "downPaymentAmount") {
           next.downPaymentPercent =
-            purchase > 0 ? Math.round((nextVal / purchase) * 100 * 10) / 10 : 0;
+            purchase > 0 ? (nextVal / purchase) * 100 : 0;
           return next;
         }
         if (key === "downPaymentPercent") {
@@ -441,7 +479,7 @@ export default function FixFlipCalculatorPage() {
               (purchase * (Number(prev.downPaymentPercent) || 0)) / 100;
           } else {
             next.downPaymentPercent =
-              Math.round(((Number(prev.downPaymentAmount) || 0) / purchase) * 100 * 10) / 10;
+              ((Number(prev.downPaymentAmount) || 0) / purchase) * 100;
           }
           return next;
         }
@@ -464,7 +502,9 @@ export default function FixFlipCalculatorPage() {
       type: "text" as const,
       inputMode: "decimal" as const,
       autoComplete: "off" as const,
-      value: numDrafts[key] ?? String(inputs[key] as number),
+      value: numDrafts[key] ?? (key === "projectMonths"
+        ? String(Math.round(Number(inputs[key]) || 0))
+        : (Number(inputs[key]) || 0).toFixed(2)),
       onChange: (e: { target: { value: string } }) =>
         handleNumChange(key, e.target.value),
       onBlur: () => handleNumBlur(key),
@@ -473,20 +513,36 @@ export default function FixFlipCalculatorPage() {
   );
 
   const handleSave = () => {
-    const list = loadProjects();
+    if (calculation.purchasePrice <= 0 || calculation.arv <= 0 || calculation.projectMonths <= 0) {
+      toast.error(lang === "es"
+        ? "Completa precio de compra, ARV y duración antes de guardar."
+        : "Enter purchase price, ARV, and project duration before saving.");
+      return;
+    }
+    const list = loadProjects(user?.id);
     const id = editingId ?? Date.now();
     const existing = list.find((p) => p.id === id);
     const saved: FixFlipProject = {
       ...calculation,
       id,
-      projectName: existing?.projectName ?? calculation.projectName,
+      projectName: existing?.projectName ?? (inputs.propertyAddress.trim() || calculation.projectName),
+      inventoryPropertyId: selectedInventoryId ?? existing?.inventoryPropertyId,
+      inventorySnapshot: selectedInventoryId
+        ? (() => {
+            const p = inventoryProperties.find((p) => p.id === selectedInventoryId);
+            return p ? { bedrooms: p.bedrooms, bathrooms: p.bathrooms, propertyType: p.property_type } : existing?.inventorySnapshot;
+          })()
+        : existing?.inventorySnapshot,
       date: new Date().toISOString(),
     };
     const idx = list.findIndex((p) => p.id === id);
     if (idx >= 0) list[idx] = saved;
     else list.push(saved);
-    saveProjects(list);
+    saveProjects(list, user?.id);
     setProjects(list);
+    if (user?.id) void saveCloudProject(saved, user.id).catch(() =>
+      toast.error(lang === "es" ? "Guardado local. No se pudo sincronizar con la nube." :
+        "Saved locally. Cloud synchronization failed."));
     setEditingId(null);
     toast.success(lang === "es" ? "Análisis guardado" : "Analysis saved");
   };
@@ -496,6 +552,7 @@ export default function FixFlipCalculatorPage() {
     setNumDrafts({});
     setEditingId(null);
     setLastField(null);
+    setSelectedInventoryId(null);
     toast.message(lang === "es" ? "Formulario reiniciado" : "Form reset");
   };
 
@@ -540,12 +597,12 @@ export default function FixFlipCalculatorPage() {
         <div>
           <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
             <Calculator className="h-7 w-7 text-primary" />
-            {lang === "es" ? "Calculadora Fix & Flip" : "Fix & Flip Calculator"}
+            {portal("title", lang === "es" ? "Calculadora Fix & Flip" : "Fix & Flip Calculator")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {lang === "es"
+            {portal("subtitle", lang === "es"
               ? "Paso 1: análisis de inversión"
-              : "Step 1: investment analysis"}
+              : "Step 1: investment analysis")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -579,9 +636,10 @@ export default function FixFlipCalculatorPage() {
                   </Label>
                   <Input
                     value={inputs.propertyAddress}
-                    onChange={(e) =>
-                      setInputs((p) => ({ ...p, propertyAddress: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setSelectedInventoryId(null);
+                      setInputs((p) => ({ ...p, propertyAddress: e.target.value }));
+                    }}
                     placeholder={lang === "es" ? "Escribe una dirección nueva" : "Enter a new address"}
                     className="bg-background"
                   />
@@ -692,6 +750,11 @@ export default function FixFlipCalculatorPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1.5">
+                    <HmlFieldLabel>{hmlI18n.cashAvailable}</HmlFieldLabel>
+                    <Input {...numInputProps("cashOnHand")} onFocus={() => setLastField("cashOnHand")} />
+                    <HmlHelper>{hmlI18n.cashAvailableHint}</HmlHelper>
+                  </div>
+                  <div className="space-y-1">
                     <HmlFieldLabel>{hmlI18n.down$}</HmlFieldLabel>
                     <Input
                       {...numInputProps("downPaymentAmount")}
@@ -949,6 +1012,25 @@ export default function FixFlipCalculatorPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Efectivo necesario (estimado)" : "Estimated required cash"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{formatCurrency(calculation.capitalRequired)}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Efectivo estimado al cierre" : "Estimated cash to close"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{formatCurrency(calculation.cashToClose ?? 0)}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Diferencia de liquidez" : "Cash shortfall"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{(calculation.cashOnHand ?? 0) > 0
+                    ? formatCurrency(calculation.liquidityShortfall ?? 0)
+                    : (lang === "es" ? "Sin verificar" : "Not provided")}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{lang === "es"
+                ? "Estimación: el préstamo HML cubre solo la compra; remodelación y reservas requieren fondos propios salvo financiamiento adicional confirmado."
+                : "Estimate: HML funds the purchase only; rehab and reserves require equity unless additional financing is confirmed."}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-violet-400/25 bg-violet-500/10 p-4 text-center shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-violet-200/80">

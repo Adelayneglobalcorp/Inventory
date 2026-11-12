@@ -1,6 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Landmark } from 'lucide-react';
+import { HandCoins, Search } from 'lucide-react';
+import { getProperties } from '@/lib/properties';
+import { usePortalContent } from '@/lib/portalContent';
+import type { Property } from '@/types/property';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -33,14 +36,58 @@ const initialValues = (email = ''): FinancingForm => ({
   amount: '', purchasePrice: '', rehabBudget: '', arv: '', estimatedValue: '', notes: '',
 });
 
+const parseMoney = (value: string): number => {
+  const raw = value.trim().replace(/\s/g, '').replace(/[$]/g, '');
+  if (!raw) return NaN;
+  const comma = raw.lastIndexOf(',');
+  const dot = raw.lastIndexOf('.');
+  const normal = comma > dot ? raw.replace(/\./g, '').replace(',', '.') : raw.replace(/,/g, '');
+  if (!/^-?\d+(?:\.\d*)?$/.test(normal)) return NaN;
+  return Number(normal);
+};
 const optionalAmount = (value: string): number | null =>
-  value.trim() === '' ? null : Number(value);
+  value.trim() === '' ? null : parseMoney(value);
+const moneyText = (value: number | null | undefined): string =>
+  value == null || !Number.isFinite(Number(value)) ? '' : Number(value).toFixed(2);
 
 export default function Financing() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language.startsWith("en") ? "en" : "es";
+  const portal = usePortalContent("financing", lang);
   const { user } = useAuth();
   const [form, setForm] = useState<FinancingForm>(() => initialValues(user?.email ?? ''));
   const [submitting, setSubmitting] = useState(false);
+  const [inventory, setInventory] = useState<Property[]>([]);
+  const [inventoryError, setInventoryError] = useState(false);
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [propertyMode, setPropertyMode] = useState<'inventory' | 'manual'>('inventory');
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+  useEffect(() => {
+    let active = true;
+    getProperties().then(({ data, error }) => {
+      if (!active) return;
+      setInventory(data ?? []);
+      setInventoryError(Boolean(error));
+    }).catch(() => { if (active) setInventoryError(true); });
+    return () => { active = false; };
+  }, []);
+  const filteredInventory = useMemo(() =>
+    inventory.filter(p => (p.address + ' ' + p.city + ' ' + p.state).toLowerCase().includes(inventorySearch.toLowerCase())),
+    [inventory, inventorySearch]);
+  const useInventoryProperty = (id: string) => {
+    const property = inventory.find(p => p.id === id);
+    if (!property) return;
+    setSelectedPropertyId(id);
+    setForm(prev => ({
+      ...prev, address: property.address, city: property.city, state: property.state,
+      postalCode: property.zip_code ?? '',
+      purchasePrice: moneyText(property.price),
+      arv: moneyText(property.arv),
+      rehabBudget: moneyText(property.rehab_cost),
+      estimatedValue: moneyText(property.arv),
+    }));
+  };
+
 
   const update = (field: keyof FinancingForm, value: string) => {
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -53,13 +100,13 @@ export default function Financing() {
       toast.error(t('financing.required'));
       return;
     }
-    const amount = Number(form.amount);
+    const amount = parseMoney(form.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error(t('financing.invalidAmount'));
       return;
     }
     const otherAmounts = [form.purchasePrice, form.rehabBudget, form.arv, form.estimatedValue];
-    if (otherAmounts.some((v) => v.trim() !== '' && (!Number.isFinite(Number(v)) || Number(v) < 0))) {
+    if (otherAmounts.some((v) => v.trim() !== '' && (!Number.isFinite(parseMoney(v)) || parseMoney(v) < 0))) {
       toast.error(t('financing.invalidAmount'));
       return;
     }
@@ -80,7 +127,7 @@ export default function Financing() {
       rehab_budget: optionalAmount(form.rehabBudget),
       after_repair_value: optionalAmount(form.arv),
       estimated_property_value: optionalAmount(form.estimatedValue),
-      notes: form.notes.trim() || null,
+      notes: [selectedPropertyId ? 'Inventory property ID: ' + selectedPropertyId : '', form.notes.trim()].filter(Boolean).join('\n') || null,
     });
     setSubmitting(false);
 
@@ -91,12 +138,13 @@ export default function Financing() {
     }
     toast.success(t('financing.success'));
     setForm(initialValues(user.email ?? ''));
+    setSelectedPropertyId('');
   };
 
   const field = (
     name: keyof FinancingForm,
     label: string,
-    opts: { type?: string; required?: boolean; min?: string; step?: string } = {},
+    opts: { type?: string; required?: boolean; min?: string; step?: string; money?: boolean } = {},
   ) => (
     <div className="min-w-0 space-y-2" key={name}>
       <Label htmlFor={'financing-' + name} className="text-xs font-semibold tracking-wide text-slate-200">{label}</Label>
@@ -105,7 +153,13 @@ export default function Financing() {
         name={name}
         value={form[name]}
         onChange={(event) => update(name, event.target.value)}
-        type={opts.type ?? 'text'}
+        onBlur={() => {
+          if (!opts.money || !form[name].trim()) return;
+          const parsed = parseMoney(form[name]);
+          if (Number.isFinite(parsed) && parsed >= 0) update(name, parsed.toFixed(2));
+        }}
+        inputMode={opts.money ? 'decimal' : undefined}
+        type={opts.money ? 'text' : opts.type ?? 'text'}
         required={opts.required}
         min={opts.min}
         step={opts.step}
@@ -115,7 +169,7 @@ export default function Financing() {
   );
 
   const money = (name: keyof FinancingForm, label: string, required = false) =>
-    field(name, label, { type: 'number', min: '0', step: '0.01', required });
+    field(name, label, { money: true, required });
 
   return (
     <div className="mx-auto max-w-5xl space-y-7 pb-8">
@@ -123,15 +177,15 @@ export default function Financing() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-72 w-72 rounded-full bg-gold-400/[0.07] blur-3xl" />
         <div className="relative space-y-3">
         <h1 className="flex items-center gap-3 text-2xl font-bold tracking-tight text-white sm:text-4xl">
-          <Landmark className="h-7 w-7 shrink-0 text-gold-400 sm:h-9 sm:w-9" aria-hidden="true" />
-          {t('financing.title')}
+          <HandCoins className="h-7 w-7 shrink-0 text-gold-400 sm:h-9 sm:w-9" aria-hidden="true" />
+          {portal('title', t('financing.title'))}
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">{t('financing.subtitle')}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">{portal('subtitle', t('financing.subtitle'))}</p>
         </div>
       </header>
       <Card className="overflow-hidden rounded-[24px] border-border/70 bg-card/90 shadow-[0_16px_50px_rgba(0,0,0,0.15)]">
         <CardHeader className="border-b border-border/60 bg-muted/20 py-6">
-          <CardTitle>{t('financing.title')}</CardTitle>
+          <CardTitle>{portal('title', t('financing.title'))}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-7">
@@ -147,6 +201,34 @@ export default function Financing() {
                 <option value="hard_money">{t('financing.hard_money')}</option>
                 <option value="dscr">{t('financing.dscr')}</option>
               </select>
+            </div>
+            <div className="space-y-3 rounded-2xl border border-border/70 bg-background/20 p-4 sm:p-6">
+              <p className="text-sm font-semibold">{t('financing.propertyAddress')}</p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="property-mode" checked={propertyMode === 'inventory'} onChange={() => setPropertyMode('inventory')}/>
+                  {t('financing.inventoryProperty', { defaultValue: 'Select from Inventory' })}
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="property-mode" checked={propertyMode === 'manual'} onChange={() => { setPropertyMode('manual'); setSelectedPropertyId(''); }}/>
+                  {t('financing.manualProperty', { defaultValue: 'Enter a new address' })}
+                </label>
+              </div>
+              {propertyMode === 'inventory' && (
+                <div className="space-y-2">
+                  <div className="relative"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"/>
+                    <Input value={inventorySearch} onChange={e => setInventorySearch(e.target.value)} className="pl-9"
+                      placeholder={t('financing.searchProperty', { defaultValue: 'Search by address or city' })}/>
+                  </div>
+                  <select value={selectedPropertyId} onChange={e => useInventoryProperty(e.target.value)}
+                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm">
+                    <option value="">{t('financing.chooseProperty', { defaultValue: 'Choose a property' })}</option>
+                    {filteredInventory.map(p => <option key={p.id} value={p.id}>{p.address}, {p.city}, {p.state}</option>)}
+                  </select>
+                  {inventoryError && <p className="text-xs text-amber-400">{t('financing.inventoryUnavailable', { defaultValue: 'Inventory could not be loaded. You may enter the address manually.' })}</p>}
+                  <p className="text-xs text-muted-foreground">{t('financing.autoFillHint', { defaultValue: 'Selecting a property fills in available values. You can edit them below.' })}</p>
+                </div>
+              )}
             </div>
             <div className="grid gap-5 rounded-2xl border border-border/70 bg-background/20 p-4 sm:grid-cols-2 sm:p-6">
               {field('fullName', t('financing.name'), { required: true })}
@@ -173,9 +255,9 @@ export default function Financing() {
               />
             </div>
             <div className="flex flex-col gap-4 border-t border-border/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{t('financing.privacy')}</p>
+              <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{portal('privacy', t('financing.privacy'))}</p>
               <Button type="submit" disabled={submitting} className="h-11 shrink-0 rounded-xl px-7 shadow-lg">
-                {submitting ? t('financing.sending') : t('financing.submit')}
+                {submitting ? t('financing.sending') : portal('submit', t('financing.submit'))}
               </Button>
             </div>
           </form>
