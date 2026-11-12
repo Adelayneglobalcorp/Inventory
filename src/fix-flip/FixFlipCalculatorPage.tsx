@@ -335,11 +335,15 @@ export default function FixFlipCalculatorPage() {
   const [lastField, setLastField] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [projects, setProjects] = useState<FixFlipProject[]>(() => []);
+  const [cloudHydrated, setCloudHydrated] = useState(false);
   useEffect(() => {
     if (!user?.id) return;
     let active = true;
+    setProjects(loadProjects(user.id));
+    setCloudHydrated(false);
     syncCloudProjects(user.id).then(all => { if (active) setProjects(all); })
-      .catch(() => { /* Browser copy remains available offline. */ });
+      .catch(() => { /* Browser copy remains available offline. */ })
+      .finally(() => { if (active) setCloudHydrated(true); });
     return () => { active = false; };
   }, [user?.id]);
 
@@ -404,6 +408,7 @@ export default function FixFlipCalculatorPage() {
     if (!Number.isFinite(id)) return;
     const list = loadProjects(user?.id);
     const p = list.find((x) => x.id === id);
+    if (!p && !cloudHydrated) return;
     if (p) {
       setInputs(projectToInputs(p));
       setNumDrafts({});
@@ -412,7 +417,7 @@ export default function FixFlipCalculatorPage() {
       toast.info(lang === "es" ? `Editando análisis` : `Editing analysis`);
     }
     setSearchParams({}, { replace: true });
-  }, [editId, lang, setSearchParams, user?.id, projects]);
+  }, [editId, lang, setSearchParams, user?.id, projects, cloudHydrated]);
 
   const calculation = useMemo(
     () =>
