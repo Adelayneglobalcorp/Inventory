@@ -421,7 +421,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       min="0"
                       step="0.01"
                       required
-                      placeholder="Cierre + Holding"
+                      placeholder={t('uiFixes.formHoldingCost')}
                     />
                   </div>
                   <div className="space-y-2">
@@ -446,7 +446,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       min="0"
                       step="0.01"
                       required
-                      placeholder="Mensuales"
+                      placeholder={t('uiFixes.formOperatingMonthly')}
                     />
                   </div>
                 </div>
