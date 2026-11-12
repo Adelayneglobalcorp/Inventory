@@ -214,7 +214,12 @@ export async function saveCloudPm(dealId: number, data: ProjectManagerData, user
 
 export async function importLocalDeals(userId: string): Promise<number> {
   const legacy = loadProjects();
-  for (const deal of legacy) await saveCloudProject(deal, userId);
+  for (const deal of legacy) {
+    await saveCloudProject(deal, userId);
+    // Legacy Project Manager data is copied only during explicit import.
+    const pm = loadPmData(deal.id);
+    if (pm) await saveCloudPm(deal.id, pm, userId);
+  }
   await syncCloudProjects(userId);
   return legacy.length;
 }
