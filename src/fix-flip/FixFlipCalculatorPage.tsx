@@ -510,7 +510,7 @@ export default function FixFlipCalculatorPage() {
     const saved: FixFlipProject = {
       ...calculation,
       id,
-      projectName: existing?.projectName ?? calculation.projectName,
+      projectName: existing?.projectName ?? (inputs.propertyAddress.trim() || calculation.projectName),
       inventoryPropertyId: selectedInventoryId ?? existing?.inventoryPropertyId,
       inventorySnapshot: selectedInventoryId
         ? (() => {
@@ -993,6 +993,25 @@ export default function FixFlipCalculatorPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Efectivo necesario (estimado)" : "Estimated required cash"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{formatCurrency(calculation.capitalRequired)}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Efectivo estimado al cierre" : "Estimated cash to close"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{formatCurrency(calculation.cashToClose ?? 0)}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                  <p className="text-xs text-muted-foreground">{lang === "es" ? "Diferencia de liquidez" : "Cash shortfall"}</p>
+                  <p className="mt-1 text-lg font-bold tabular-nums">{(calculation.cashOnHand ?? 0) > 0
+                    ? formatCurrency(calculation.liquidityShortfall ?? 0)
+                    : (lang === "es" ? "Sin verificar" : "Not provided")}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">{lang === "es"
+                ? "Estimación: el préstamo HML cubre solo la compra; remodelación y reservas requieren fondos propios salvo financiamiento adicional confirmado."
+                : "Estimate: HML funds the purchase only; rehab and reserves require equity unless additional financing is confirmed."}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-violet-400/25 bg-violet-500/10 p-4 text-center shadow-sm">
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-violet-200/80">
