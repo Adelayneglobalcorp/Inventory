@@ -323,9 +323,11 @@ export default function FixFlipCalculatorPage() {
   const [lastField, setLastField] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  const [selectedInventoryId, setSelectedInventoryId] = useState<string | null>(null);
   const [inventoryProperties, setInventoryProperties] = useState<Array<{
     id: string; address: string; city: string; state: string;
     price: number; arv: number | null; rehab_cost: number | null; status: string;
+    bedrooms: number; bathrooms: number; property_type?: string;
   }>>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [inventoryError, setInventoryError] = useState<string | null>(null);
@@ -343,6 +345,9 @@ export default function FixFlipCalculatorPage() {
         arv: p.arv == null ? null : Number(p.arv),
         rehab_cost: p.rehab_cost == null ? null : Number(p.rehab_cost),
         status: p.status,
+        bedrooms: Number(p.bedrooms) || 0,
+        bathrooms: Number(p.bathrooms) || 0,
+        property_type: p.property_type,
       })));
     }).catch((error: unknown) => {
       if (!active) return;
@@ -355,6 +360,7 @@ export default function FixFlipCalculatorPage() {
   const selectInventoryProperty = (id: string) => {
     const p = inventoryProperties.find((property) => property.id === id);
     if (!p) return;
+    setSelectedInventoryId(id);
     setInputs((prev) => ({
       ...prev,
       propertyAddress: [p.address, p.city, p.state].filter(Boolean).join(", "),
@@ -382,6 +388,7 @@ export default function FixFlipCalculatorPage() {
       setInputs(projectToInputs(p));
       setNumDrafts({});
       setEditingId(id);
+      setSelectedInventoryId(p.inventoryPropertyId ?? null);
       toast.info(lang === "es" ? `Editando análisis` : `Editing analysis`);
     }
     setSearchParams({}, { replace: true });
@@ -486,6 +493,13 @@ export default function FixFlipCalculatorPage() {
       ...calculation,
       id,
       projectName: existing?.projectName ?? calculation.projectName,
+      inventoryPropertyId: selectedInventoryId ?? existing?.inventoryPropertyId,
+      inventorySnapshot: selectedInventoryId
+        ? (() => {
+            const p = inventoryProperties.find((p) => p.id === selectedInventoryId);
+            return p ? { bedrooms: p.bedrooms, bathrooms: p.bathrooms, propertyType: p.property_type } : existing?.inventorySnapshot;
+          })()
+        : existing?.inventorySnapshot,
       date: new Date().toISOString(),
     };
     const idx = list.findIndex((p) => p.id === id);
@@ -502,6 +516,7 @@ export default function FixFlipCalculatorPage() {
     setNumDrafts({});
     setEditingId(null);
     setLastField(null);
+    setSelectedInventoryId(null);
     toast.message(lang === "es" ? "Formulario reiniciado" : "Form reset");
   };
 
