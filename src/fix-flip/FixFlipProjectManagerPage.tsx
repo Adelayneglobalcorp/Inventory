@@ -51,7 +51,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePortalContent } from "@/lib/portalContent";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
-import { defaultCategoryForArea } from "./pmDefaults";
+import { defaultCategoryForArea, pmDisplayArea } from "./pmDefaults";
 import { computePmItemTotals } from "./pmItemMath";
 import type {
   PMItem,
@@ -118,7 +118,7 @@ function exportScopePdf(data: ProjectManagerData, address: string, withValues: b
     line(category === "INTERIOR" ? (es ? "INTERIOR" : "INTERIOR") : (es ? "EXTERIOR" : "EXTERIOR"), true, 12);
     for (const task of group) {
       newPage(24);
-      line(task.area + "  -  " + (task.description || task.workType || "-"), true);
+      line(pmDisplayArea(task.area, !es) + "  -  " + (task.description || task.workType || "-"), true);
       line((es ? "Estado: " : "Status: ") + labels[task.status][es ? 0 : 1] +
         " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
       const phase = data.phaseMeta?.[task.category + "::" + task.area];
@@ -586,7 +586,7 @@ function PmAddItemDialog({
                   <SelectItem value="__none__">{pm("Seleccionar…", "Select…")}</SelectItem>
                   {areaOptions.map((a) => (
                     <SelectItem key={a} value={a}>
-                      {a}
+                      {pmDisplayArea(a, i18n.language.startsWith("en"))}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1159,7 +1159,7 @@ export default function FixFlipProjectManagerPage() {
                   return <Button type="button" key={space.id} variant="outline" className="h-auto min-h-14 flex-col gap-1 px-3 py-2 text-left" onClick={() => {
                     setEditItemId(null); setPresetArea(space.name); setAddCategory("INTERIOR"); setAddOpen(true);
                   }}>
-                    <span className="w-full truncate font-semibold">{space.name}</span>
+                    <span className="w-full truncate font-semibold">{pmDisplayArea(space.name, !es)}</span>
                     <span className="w-full text-xs text-muted-foreground">{count} {pm("tareas", "tasks")}</span>
                   </Button>;
                 })}
