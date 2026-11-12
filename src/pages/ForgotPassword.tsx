@@ -2,91 +2,71 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, MailCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AuthShell, IconInput, goldButton, outlineButton } from '@/components/auth/AuthUI';
 
 const ForgotPassword = () => {
-    const { t } = useTranslation();
-    const { resetPassword } = useAuth();
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [email, setEmail] = useState('');
+  const { t } = useTranslation();
+  const { resetPassword } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+  const send = async () => {
+    setLoading(true);
+    const { error } = await resetPassword(email);
+    setLoading(false);
+    if (error) {
+      toast.error(t('resetPassword.error') + error.message);
+      return;
+    }
+    setSent(true);
+    toast.success(t('resetPassword.success'));
+  };
 
-        const { error } = await resetPassword(email);
-        setLoading(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await send();
+  };
 
-        if (error) {
-            toast.error(t('resetPassword.error') + error.message);
-        } else {
-            toast.success(t('resetPassword.success'));
-        }
-    };
-
-    return (
-        <div
-            className="flex min-h-screen items-center justify-center bg-cover bg-center p-4 relative"
-            style={{ backgroundImage: 'linear-gradient(135deg, hsl(220 30% 8% / 0.95), hsl(220 25% 12% / 0.92)), url(/inventory-bg.png)' }}
-        >
-            <div className="absolute top-4 right-4 z-50">
-                <LanguageSwitcher />
-            </div>
-
-            <div className="w-full max-w-md space-y-6">
-                <div className="text-center">
-                    <img src="/logo.png" alt="Global 360 by Adelayne Global Corp" className="mx-auto mb-8 drop-shadow-lg rounded-lg bg-black/10 p-4 backdrop-blur-sm" style={{ width: 'calc(100% + 20px)', height: '288px' }} />
-                    <h1 className="font-[Montserrat] text-4xl font-bold text-white">
-                        {t('resetPassword.title')}
-                    </h1>
-                </div>
-
-                <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle>{t('resetPassword.title')}</CardTitle>
-                        <CardDescription>{t('resetPassword.description')}</CardDescription>
-                    </CardHeader>
-                    <form onSubmit={handleSubmit}>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">{t('resetPassword.emailLabel')}</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder={t('uiFixes.emailExample')}
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col gap-4">
-                            <Button type="submit" className="w-full gap-2 gold-gradient text-primary-foreground hover:opacity-90 transition-opacity" disabled={loading}>
-                                <Mail className="h-4 w-4" />
-                                {loading ? t('resetPassword.sending') : t('resetPassword.sendButton')}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                className="w-full gap-2 text-muted-foreground"
-                                onClick={() => navigate('/login')}
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                {t('login.backToLogin')}
-                            </Button>
-                        </CardFooter>
-                    </form>
-                </Card>
-            </div>
+  return (
+    <AuthShell>
+      {!sent ? (
+        <>
+          <div className="text-center">
+            <h1 className="font-[Montserrat] text-2xl font-bold sm:text-3xl">{t('resetPassword.title')}</h1>
+            <p className="mt-2 text-white/75">{t('resetPassword.description')}</p>
+          </div>
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+            <IconInput icon={Mail} id="email" type="email" autoComplete="email" placeholder={t('resetPassword.emailLabel')}
+              value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Button type="submit" disabled={loading} className={goldButton}>
+              <Mail className="h-5 w-5" />
+              {loading ? t('resetPassword.sending') : t('resetPassword.sendButton')}
+            </Button>
+          </form>
+        </>
+      ) : (
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold-500/15 text-gold-400">
+            <MailCheck className="h-7 w-7" />
+          </div>
+          <h1 className="font-[Montserrat] text-2xl font-bold">{t('resetPassword.sentTitle')}</h1>
+          <p className="mt-2 text-white/75">{t('resetPassword.sentDescription', { email })}</p>
+          <Button type="button" variant="outline" disabled={loading} onClick={() => void send()} className={`${outlineButton} mt-6`}>
+            {loading ? t('resetPassword.sending') : t('resetPassword.resend')}
+          </Button>
         </div>
-    );
+      )}
+      <div className="my-6 h-px bg-white/15" />
+      <button type="button" onClick={() => navigate('/login')} className="mx-auto flex items-center gap-2 text-sm font-semibold text-gold-400 hover:text-gold-300">
+        <ArrowLeft className="h-4 w-4" />{t('login.backToLogin')}
+      </button>
+    </AuthShell>
+  );
 };
 
 export default ForgotPassword;

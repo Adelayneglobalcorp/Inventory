@@ -2,67 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Calculator, ClipboardList, Eye, EyeOff, Home, Lock, LogIn, Mail, User, UserPlus } from 'lucide-react';
+import { Calculator, ClipboardList, Home, LogIn, Mail, User, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PhoneInputField } from '@/components/PhoneInputField';
 import type { PhoneFieldValue } from '@/components/PhoneInputField';
 import { isValidPhoneNumber } from 'libphonenumber-js';
 import { cn } from '@/lib/utils';
+import { AuthBackground, AuthCard, IconInput, PasswordInput, goldButton, outlineButton } from '@/components/auth/AuthUI';
 
 type Lang = 'es' | 'en';
-
-/** Selector ES | EN de la esquina superior (cambia el idioma de la interfaz). */
-function LangPill() {
-  const { i18n } = useTranslation();
-  const current: Lang = i18n.resolvedLanguage === 'en' ? 'en' : 'es';
-  return (
-    <div className="flex items-center gap-1 rounded-full border border-gold-500/60 bg-black/20 px-1.5 py-1 text-sm font-bold backdrop-blur">
-      {(['es', 'en'] as Lang[]).map((l, i) => (
-        <span key={l} className="flex items-center">
-          {i > 0 && <span className="mx-0.5 h-4 w-px bg-white/30" aria-hidden="true" />}
-          <button
-            type="button"
-            onClick={() => void i18n.changeLanguage(l)}
-            aria-pressed={current === l}
-            className={cn('rounded-full px-2.5 py-1 transition-colors', current === l ? 'text-gold-400' : 'text-white/80 hover:text-white')}
-          >
-            {l.toUpperCase()}
-          </button>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function IconInput({ icon: Icon, className, ...props }: React.ComponentProps<typeof Input> & { icon: typeof Mail }) {
-  return (
-    <div className="relative">
-      <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-white/60" aria-hidden="true" />
-      <Input {...props} className={cn('h-12 rounded-xl border-white/15 bg-white/5 pl-11 text-white placeholder:text-white/55 focus-visible:ring-gold-500/60', className)} />
-    </div>
-  );
-}
-
-function PasswordInput(props: React.ComponentProps<typeof Input>) {
-  const { t } = useTranslation();
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative">
-      <IconInput icon={Lock} {...props} type={show ? 'text' : 'password'} className="pr-11" />
-      <button
-        type="button"
-        onClick={() => setShow((v) => !v)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/60 hover:text-white"
-        aria-label={show ? t('login.hidePassword') : t('login.showPassword')}
-      >
-        {show ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
-      </button>
-    </div>
-  );
-}
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -131,16 +81,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#071226] text-white">
-      {/* Fondo */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-60"
-        style={{ background: 'radial-gradient(60% 50% at 20% 10%, rgba(217,173,79,.18), transparent 70%), radial-gradient(50% 60% at 90% 80%, rgba(56,104,186,.22), transparent 70%), linear-gradient(180deg,#0a1a38 0%,#071226 100%)' }}
-      />
-      <div className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-[120%] rotate-[-6deg] bg-gradient-to-r from-transparent via-gold-500/25 to-transparent blur-2xl" />
-
-      <div className="absolute right-4 top-4 z-20 sm:right-8 sm:top-6"><LangPill /></div>
-
+    <AuthBackground>
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 items-center gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1.25fr_1fr] lg:py-10">
         {/* Columna izquierda: marca y propuesta */}
         <section className="order-2 lg:order-1">
@@ -172,7 +113,7 @@ const Login = () => {
         {/* Columna derecha: tarjeta de acceso */}
         <section className="order-1 lg:order-2">
           <img src="/global360-dark.png" alt="Global 360 by Adelayne Global Corp" className="mx-auto mb-6 h-28 w-auto drop-shadow-xl lg:hidden" />
-          <div className="mx-auto w-full max-w-md rounded-[28px] border border-gold-500/40 bg-white/[0.06] p-7 shadow-[0_0_60px_-15px_rgba(217,173,79,0.45)] backdrop-blur-xl sm:p-9">
+          <AuthCard>
             {mode === 'login' ? (
               <>
                 <div className="text-center">
@@ -194,13 +135,13 @@ const Login = () => {
                       {t('login.forgotPassword')}
                     </button>
                   </div>
-                  <Button type="submit" disabled={loading} className="h-12 w-full gap-2 rounded-full gold-gradient text-base font-bold text-[#0b1730] hover:opacity-90">
+                  <Button type="submit" disabled={loading} className={goldButton}>
                     <LogIn className="h-5 w-5" />{loading ? t('login.signingIn') : t('login.signIn')}
                   </Button>
                 </form>
                 <div className="my-6 h-px bg-white/15" />
                 <Button type="button" variant="outline" onClick={() => setMode('signup')}
-                  className="h-12 w-full gap-2 rounded-full border-gold-500/70 bg-transparent text-base font-semibold text-white hover:bg-gold-500/10 hover:text-white">
+                  className={outlineButton}>
                   <UserPlus className="h-5 w-5" />{t('login.signUp')}
                 </Button>
               </>
@@ -236,7 +177,7 @@ const Login = () => {
                   </div>
                   <PasswordInput id="signup-password" autoComplete="new-password" placeholder={t('uiFixes.passwordMin')} minLength={6}
                     value={signUpForm.password} onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })} required />
-                  <Button type="submit" disabled={loading} className="h-12 w-full gap-2 rounded-full gold-gradient text-base font-bold text-[#0b1730] hover:opacity-90">
+                  <Button type="submit" disabled={loading} className={goldButton}>
                     <UserPlus className="h-5 w-5" />{loading ? t('login.creating') : t('login.signUp')}
                   </Button>
                 </form>
@@ -246,10 +187,10 @@ const Login = () => {
                 </p>
               </>
             )}
-          </div>
+          </AuthCard>
         </section>
       </div>
-    </div>
+    </AuthBackground>
   );
 };
 
