@@ -25,11 +25,12 @@ interface PropertyDetailProps {
   pureContent?: boolean;
 }
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-
 const PropertyDetail = ({ property, open, onClose, id, pureContent = false }: PropertyDetailProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const fmt = (n: number) =>
+    new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+    }).format(n);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const { sharePdf, isGenerating } = usePdfShare();
