@@ -207,26 +207,26 @@ export default function Financing() {
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center gap-2">
                   <input type="radio" name="property-mode" checked={propertyMode === 'inventory'} onChange={() => setPropertyMode('inventory')}/>
-                  {t('financing.inventoryProperty', { defaultValue: 'Select from Inventory' })}
+                  {t('financing.inventoryProperty')}
                 </label>
                 <label className="flex items-center gap-2">
                   <input type="radio" name="property-mode" checked={propertyMode === 'manual'} onChange={() => { setPropertyMode('manual'); setSelectedPropertyId(''); }}/>
-                  {t('financing.manualProperty', { defaultValue: 'Enter a new address' })}
+                  {t('financing.manualProperty')}
                 </label>
               </div>
               {propertyMode === 'inventory' && (
                 <div className="space-y-2">
                   <div className="relative"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"/>
                     <Input value={inventorySearch} onChange={e => setInventorySearch(e.target.value)} className="pl-9"
-                      placeholder={t('financing.searchProperty', { defaultValue: 'Search by address or city' })}/>
+                      placeholder={t('financing.searchProperty')}/>
                   </div>
                   <select value={selectedPropertyId} onChange={e => useInventoryProperty(e.target.value)}
                     className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm">
-                    <option value="">{t('financing.chooseProperty', { defaultValue: 'Choose a property' })}</option>
+                    <option value="">{t('financing.chooseProperty')}</option>
                     {filteredInventory.map(p => <option key={p.id} value={p.id}>{p.address}, {p.city}, {p.state}</option>)}
                   </select>
-                  {inventoryError && <p className="text-xs text-amber-400">{t('financing.inventoryUnavailable', { defaultValue: 'Inventory could not be loaded. You may enter the address manually.' })}</p>}
-                  <p className="text-xs text-muted-foreground">{t('financing.autoFillHint', { defaultValue: 'Selecting a property fills in available values. You can edit them below.' })}</p>
+                  {inventoryError && <p className="text-xs text-amber-400">{t('financing.inventoryUnavailable')}</p>}
+                  <p className="text-xs text-muted-foreground">{t('financing.autoFillHint')}</p>
                 </div>
               )}
             </div>
