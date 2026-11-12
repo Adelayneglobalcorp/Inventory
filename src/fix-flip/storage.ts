@@ -57,38 +57,37 @@ const PROJECTS_KEY = "fixFlipProjects";
 
 export function loadProjects(userId?: string): FixFlipProject[] {
   try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    if (!raw && !userId) return [];
-    const data = JSON.parse(raw);
-    const legacy = Array.isArray(data) ? data : [];
-    if (!userId) return legacy;
-    const cached = JSON.parse(localStorage.getItem("fixFlipCloudCache:" + userId) || "[]");
-    if (!Array.isArray(cached)) return legacy;
-    return [...new Map([...legacy, ...cached].map((p: FixFlipProject) => [p.id, p])).values()];
+    const raw = userId
+      ? localStorage.getItem("fixFlipCloudCache:" + userId)
+      : localStorage.getItem(PROJECTS_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data.filter((p): p is FixFlipProject =>
+      p != null && Number.isFinite(p.id)) : [];
   } catch {
     return [];
   }
 }
 
+/** Legacy values are never mixed into another account implicitly. */
 export function saveProjects(projects: FixFlipProject[], userId?: string): void {
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-  if (userId) localStorage.setItem("fixFlipCloudCache:" + userId, JSON.stringify(projects));
+  const key = userId ? "fixFlipCloudCache:" + userId : PROJECTS_KEY;
+  localStorage.setItem(key, JSON.stringify(projects));
 }
 
 export function loadPmData(dealId: number, userId?: string): ProjectManagerData | null {
   try {
-    const raw = (userId ? localStorage.getItem("fixFlipPmCloud:" + userId + ":" + dealId) : null) ||
-      localStorage.getItem(`pm_${dealId}`);
-    if (!raw) return null;
-    return JSON.parse(raw) as ProjectManagerData;
+    const raw = localStorage.getItem(userId
+      ? "fixFlipPmCloud:" + userId + ":" + dealId
+      : `pm_${dealId}`);
+    return raw ? JSON.parse(raw) as ProjectManagerData : null;
   } catch {
     return null;
   }
 }
 
 export function savePmData(dealId: number, data: ProjectManagerData, userId?: string): void {
-  localStorage.setItem(`pm_${dealId}`, JSON.stringify(data));
-  if (userId) localStorage.setItem("fixFlipPmCloud:" + userId + ":" + dealId, JSON.stringify(data));
+  const key = userId ? "fixFlipPmCloud:" + userId + ":" + dealId : `pm_${dealId}`;
+  localStorage.setItem(key, JSON.stringify(data));
 }
 
 export function buildPropertySpaces(snapshot?: FixFlipProject["inventorySnapshot"]): PMSpace[] {
