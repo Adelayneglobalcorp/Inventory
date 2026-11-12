@@ -686,7 +686,7 @@ const resources = {
             "admin": {
                 "title": "Panel de Administración",
                 "subtitle": "Gestiona usuarios y propiedades del sistema",
-                "roleBadge": "Admin: {{email}}",
+                "roleBadge": "Administrador: {{email}}",
                 "tabs": {
                     "overview": "Resumen",
                     "users": "Gestión de Usuarios",
@@ -815,11 +815,11 @@ const resources = {
                     "total": "Total: {{count}} usuarios",
                     "table": {
                         "user": "Usuario",
-                        "email": "Email",
+                        "email": "Correo electrónico",
                         "role": "Rol",
                         "status": "Estado",
-                        "emailConfirmed": "Email Confirmado",
-                        "lastLogin": "Último Login",
+                        "emailConfirmed": "Correo confirmado",
+                        "lastLogin": "Último acceso",
                         "actions": "Acciones"
                     },
                     "status": {
@@ -829,7 +829,7 @@ const resources = {
                         "noName": "Sin nombre"
                     },
                     "actions": {
-                        "confirmEmail": "Confirmar Email",
+                        "confirmEmail": "Confirmar correo",
                         "quickApprove": "Aprobar Rápido",
                         "changeRole": "Cambiar Rol",
                         "generateCode": "Generar Código",
@@ -845,7 +845,7 @@ const resources = {
                             "update": "Actualizar Rol"
                         },
                         "code": {
-                            "title": "Generar Código de Admin",
+                            "title": "Generar código de administrador",
                             "description": "Genera un código para que {{name}} pueda registrarse como administrador",
                             "generatedLabel": "Código generado:",
                             "copyHint": "Copia este código y compártelo con el usuario",
@@ -856,16 +856,16 @@ const resources = {
                     "messages": {
                         "roleUpdated": "Rol de {{name}} actualizado a {{role}}",
                         "approved": "Usuario {{name}} aprobado exitosamente",
-                        "approvedWithEmail": "✅ Usuario {{name}} aprobado exitosamente. Email confirmado: {{status}}",
+                        "approvedWithEmail": "Usuario {{name}} aprobado correctamente. Correo confirmado: {{status}}",
                         "rejected": "Usuario {{name}} rechazado",
-                        "emailConfirmed": "Email confirmado exitosamente",
+                        "emailConfirmed": "Correo confirmado correctamente",
                         "codeGenerated": "Código generado para {{name}}: {{code}}",
                         "deleteConfirm": "¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.",
                         "deleted": "Usuario eliminado exitosamente",
                         "partial": "Parcialmente",
                         "yes": "Sí",
-                        "sendReset": "Enviar Reset Email",
-                        "resetSent": "Email de restablecimiento enviado a {{email}}"
+                        "sendReset": "Enviar enlace de restablecimiento",
+                        "resetSent": "Correo de restablecimiento enviado a {{email}}"
                     }
                 }
             },
