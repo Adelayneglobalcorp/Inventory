@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { formatCurrency } from "./calculations";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePortalContent } from "@/lib/portalContent";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
@@ -64,6 +65,9 @@ import {
   loadPmData,
   loadProjects,
   buildPropertySpaces,
+  syncCloudProjects,
+  syncCloudPm,
+  saveCloudPm,
   recalcPmBudget,
   savePmData,
 } from "./storage";
@@ -854,7 +858,10 @@ export default function FixFlipProjectManagerPage() {
   const pm = (s: string, e: string) => (es ? s : e);
   const { dealId: dealIdParam } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const dealId = Number(dealIdParam);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudRevision, setCloudRevision] = useState(0);
 
   const [data, setData] = useState<ProjectManagerData | null>(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -863,10 +870,22 @@ export default function FixFlipProjectManagerPage() {
   const [presetArea, setPresetArea] = useState<string | undefined>(undefined);
   const [completeTargetItem, setCompleteTargetItem] = useState<PMItem | null>(null);
 
+  useEffect(() => {
+    let active = true;
+    setCloudReady(false);
+    if (!user?.id) { setCloudReady(true); return; }
+    void syncCloudProjects(user.id).then(() => {
+      if (active) setCloudRevision(value => value + 1);
+    }).catch(() => {
+      // Existing browser data remain available if the connection fails.
+    }).finally(() => { if (active) setCloudReady(true); });
+    return () => { active = false; };
+  }, [user?.id]);
+
   const deal = useMemo(() => {
     if (!Number.isFinite(dealId)) return null;
-    return loadProjects().find((p) => p.id === dealId) ?? null;
-  }, [dealId]);
+    return loadProjects(user?.id).find((p) => p.id === dealId) ?? null;
+  }, [dealId, user?.id, cloudRevision]);
 
   useEffect(() => {
     if (!Number.isFinite(dealId) || dealId <= 0) {
@@ -874,25 +893,44 @@ export default function FixFlipProjectManagerPage() {
       return;
     }
     if (!deal) {
+      if (!cloudReady) return;
       toast.error(pm("Inversión no encontrada", "Investment not found"));
       navigate("/project-manager", { replace: true });
       return;
     }
-    const existing = loadPmData(dealId);
+    const existing = loadPmData(dealId, user?.id);
     const base =
       existing ||
       createDefaultPmData(dealId, deal.rehabBudget || 0, deal.inventorySnapshot);
     setData(recalcPmBudget(hydrateProjectManagerData(base)));
-  }, [dealId, deal, navigate]);
+    if (!user?.id) return;
+    let active = true;
+    // Compare original timestamps, before recomputing UI totals.
+    const localUpdated = existing?.lastUpdated ?? "";
+    void syncCloudPm(dealId, user.id).then(remote => {
+      if (!active || !remote) return;
+      if (!existing || String(remote.lastUpdated || "") > String(localUpdated)) {
+        setData(recalcPmBudget(hydrateProjectManagerData(remote)));
+      }
+    }).catch(() => {
+      // Existing browser project remains accessible offline.
+    });
+    return () => { active = false; };
+  }, [dealId, deal, navigate, user?.id, cloudReady]);
 
   const persist = useCallback(
     (next: ProjectManagerData) => {
       const hydrated = hydrateProjectManagerData(next);
       const merged = recalcPmBudget(hydrated);
       setData(merged);
-      savePmData(dealId, merged);
+      savePmData(dealId, merged, user?.id);
+      if (user?.id) void saveCloudPm(dealId, merged, user.id).catch(() =>
+        toast.error(es
+          ? "Cambios guardados en este navegador, pero no se sincronizaron."
+          : "Changes saved in this browser but cloud sync failed."
+        ));
     },
-    [dealId],
+    [dealId, user?.id, es],
   );
 
   const reopenPhase = useCallback(
