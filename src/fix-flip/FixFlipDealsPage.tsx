@@ -26,7 +26,7 @@ export default function FixFlipDealsPage() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language.startsWith("en") ? "en" : "es";
   const portal = usePortalContent("deals", lang);
-  const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  const [projects, setProjects] = useState<FixFlipProject[]>(() => []);
   const [syncing, setSyncing] = useState(false);
 
   const refresh = useCallback(() => setProjects(loadProjects(user?.id)), [user?.id]);
