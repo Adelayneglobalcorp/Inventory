@@ -235,7 +235,7 @@ export function evaluateDeal(
   lang: FixFlipLanguage,
 ): DealEvaluation {
   const t = (key: string) => ffT(lang, key);
-  const empty = calculation.arv <= 0 || calculation.purchasePrice <= 0;
+  const empty = calculation.arv <= 0 || calculation.purchasePrice <= 0 || calculation.projectMonths <= 0;
   if (empty) return {
     score: 0, level: "poor", levelText: t("evaluateNoData"),
     recommendation: t("evaluateNoDataRec"), icon: "ℹ️", risk: "-",
@@ -372,81 +372,66 @@ export type StudentAnalysisView = {
 export function buildStudentAnalysis(
   calc: FixFlipCalculation,
   evaluation: DealEvaluation | null,
+  lang: FixFlipLanguage = "es",
 ): StudentAnalysisView {
   const invested = Number(calc.tpcPlusCost) || 0;
-  const netSale = Number(calc.netSalePrice) || 0;
   const profit = Number(calc.profit) || 0;
   const roi = Number(calc.roi) || 0;
   const arv = Number(calc.arv) || 0;
   const months = Math.max(1, Number(calc.projectMonths) || 1);
   const minRoi = Number(calc.profitMinPercent) || 0;
   const minProfit = Number(calc.profitMinAmount) || 0;
-  const commissionRate = (Number(calc.reCommissions) || 0) / 100;
-  const resaleClosing = Number(calc.resaleClosingCosts) || 0;
-  const denominator = 1 - commissionRate;
-  const breakEvenArv =
-    denominator <= 0 ? 0 : (invested + resaleClosing) / denominator;
+  const commissionFactor = 1 - ((Number(calc.reCommissions) || 0) / 100);
+  const breakEvenArv = commissionFactor <= 0 ? 0 :
+    (invested + (Number(calc.resaleClosingCosts) || 0)) / commissionFactor;
   const safetyMargin = arv > 0 ? ((arv - breakEvenArv) / arv) * 100 : 0;
   const monthlyProfit = profit / months;
-  const investVsArvPct = arv > 0 ? (invested / arv) * 100 : 0;
-
-  let signalText = "Sin datos";
+  const ready = arv > 0 && Number(calc.purchasePrice) > 0 && Number(calc.projectMonths) > 0;
+  const meetsRoi = roi >= minRoi;
+  const meetsProfit = profit >= minProfit;
+  let signalText = lang === "es" ? "Datos insuficientes" : "Insufficient data";
+  let signalNote = lang === "es"
+    ? "Completa precio, ARV y duración para analizar la inversión."
+    : "Enter purchase price, ARV and duration to analyze the deal.";
+  let confidenceText = lang === "es" ? "Sin evaluar" : "Not evaluated";
   let signalClass = "bg-amber-500/20 text-amber-400";
-  let signalNote = "Carga datos para evaluar";
-  let confidenceText = "Sin validar";
-  let confidenceClass = "bg-amber-500/20 text-amber-400";
-
-  if (invested > 0 || netSale > 0 || profit !== 0) {
-    const meetsRoi = roi >= minRoi;
-    const meetsProfit = profit >= minProfit;
+  let confidenceClass = signalClass;
+  if (ready) {
     if (meetsRoi && meetsProfit) {
-      confidenceText = "Cumple los objetivos";
-      confidenceClass = "bg-emerald-500/20 text-emerald-400";
-      if (roi >= 20 && investVsArvPct <= 75) {
-        signalText = "Cumple y se ve fuerte";
-        signalClass = "bg-emerald-500/20 text-emerald-400";
-        signalNote =
-          "Cumple tus objetivos y además muestra buen margen.";
-      } else {
-        signalText = "Cumple los objetivos";
-        signalClass = "bg-emerald-500/20 text-emerald-400";
-        signalNote =
-          "Cumple ROI y ganancia minima definidos por ti.";
-      }
-    } else if (!meetsRoi && !meetsProfit) {
-      confidenceText = "No cumple los objetivos";
-      confidenceClass = "bg-red-500/20 text-red-400";
-      signalText = "No cumple los objetivos";
+      signalText = lang === "es" ? "Ambos objetivos cumplidos" : "Both targets met";
+      confidenceText = signalText;
+      signalNote = lang === "es"
+        ? "Alcanza ROI y ganancia objetivo. Verifica financiamiento, liquidez y ARV antes de decidir."
+        : "Meets ROI and profit targets. Verify financing, liquidity and ARV before deciding.";
+      signalClass = "bg-emerald-500/20 text-emerald-400";
+    } else if (meetsProfit) {
+      signalText = lang === "es" ? "Cumple ganancia objetivo" : "Profit target met";
+      confidenceText = lang === "es" ? "ROI ligeramente/por debajo" : "ROI below target";
+      signalNote = (lang === "es" ? "Ganancia " : "Profit ") + formatCurrency(profit) +
+        (lang === "es" ? " supera el mínimo " : " exceeds the minimum ") +
+        formatCurrency(minProfit) + "; ROI " + formatPercentage(roi) +
+        (lang === "es" ? " frente a " : " vs ") + formatPercentage(minRoi) + ".";
+    } else if (meetsRoi) {
+      signalText = lang === "es" ? "Cumple ROI objetivo" : "ROI target met";
+      confidenceText = lang === "es" ? "Ganancia inferior" : "Profit below target";
+      signalNote = "ROI " + formatPercentage(roi) +
+        (lang === "es" ? " cumple; ganancia " : " meets target; profit ") +
+        formatCurrency(profit) +
+        (lang === "es" ? " frente al mínimo " : " vs minimum ") + formatCurrency(minProfit) + ".";
+    } else {
+      signalText = lang === "es" ? "Objetivos no alcanzados" : "Targets not met";
+      confidenceText = signalText;
+      signalNote = (lang === "es" ? "ROI " : "ROI ") + formatPercentage(roi) +
+        (lang === "es" ? " y ganancia " : " and profit ") + formatCurrency(profit) +
+        (lang === "es" ? " están por debajo de los objetivos indicados." : " fall below the specified targets.");
       signalClass = "bg-red-500/20 text-red-400";
-      signalNote = `No alcanza ROI mínimo (${formatPercentage(minRoi, 2)}) ni ganancia minima (${formatCurrency(minProfit)}).`;
-    } else if (!meetsRoi) {
-      confidenceText = "ROI inferior al objetivo";
-      confidenceClass = "bg-amber-500/20 text-amber-400";
-      signalText = "ROI inferior al objetivo";
-      signalClass = "bg-amber-500/20 text-amber-400";
-      signalNote = `ROI actual ${formatPercentage(roi, 2)} frente al mínimo ${formatPercentage(minRoi, 2)}.`;
-    } else if (!meetsProfit) {
-      confidenceText = "Ganancia inferior al objetivo";
-      confidenceClass = "bg-amber-500/20 text-amber-400";
-      signalText = "Ganancia por debajo";
-      signalClass = "bg-amber-500/20 text-amber-400";
-      signalNote = `Ganancia actual ${formatCurrency(profit)} frente al mínimo ${formatCurrency(minProfit)}.`;
     }
+    confidenceClass = signalClass;
   }
-
-  const insightFactors = (evaluation?.factors || []).slice(0, 3);
-
   return {
-    signalText,
-    signalClass,
-    signalNote,
-    confidenceText,
-    confidenceClass,
-    breakEvenArv,
-    safetyMargin,
-    monthlyProfit,
-    months,
-    insightFactors,
+    signalText, signalClass, signalNote, confidenceText, confidenceClass,
+    breakEvenArv, safetyMargin, monthlyProfit, months,
+    insightFactors: (evaluation?.factors || []).slice(0, 3),
   };
 }
 
@@ -454,31 +439,22 @@ export function buildRoiScenarios(
   calculation: FixFlipCalculation,
   lang: FixFlipLanguage,
 ): ScenarioRow[] {
-  const t = (k: string) => ffT(lang, k);
-  const targetRoi = Number(calculation.profitMinPercent) || 0;
-  const reComRate = Number(calculation.reCommissions) || 0;
-  const closingSell = Number(calculation.resaleClosingCosts) || 0;
-  const tpc = Number(calculation.tpcPlusCost) || 0;
-  const commissionFactor = 1 - reComRate / 100;
-  if (tpc <= 0 || commissionFactor <= 0) return [];
-
-  const template: { delta: number; labelKey: string }[] = [
-    { delta: -3, labelKey: "scenarioConservative" },
-    { delta: 0, labelKey: "scenarioTarget" },
-    { delta: 3, labelKey: "scenarioAggressive" },
+  if (calculation.arv <= 0 || calculation.purchasePrice <= 0 || calculation.projectMonths <= 0) return [];
+  const assumptions = [
+    { label: lang === "es" ? "Conservador (venta -5%, obra +10%, +2 meses)" : "Conservative (sale -5%, rehab +10%, +2 months)", sale: -0.05, rehab: 0.10, months: 2 },
+    { label: lang === "es" ? "Base (valores actuales)" : "Base (current assumptions)", sale: 0, rehab: 0, months: 0 },
+    { label: lang === "es" ? "Optimista (venta +5%, obra -5%, -1 mes)" : "Optimistic (sale +5%, rehab -5%, -1 month)", sale: 0.05, rehab: -0.05, months: -1 },
   ];
-
-  return template.map(({ delta, labelKey }) => {
-    const roiPct = Math.max(0, targetRoi + delta);
-    const targetProfit = tpc * (roiPct / 100);
-    const targetNetSale = tpc + targetProfit;
-    const targetArv = (targetNetSale + closingSell) / commissionFactor;
-    return {
-      label: t(labelKey),
-      arv: targetArv,
-      netSale: targetNetSale,
-      profit: targetProfit,
-      roi: roiPct,
-    };
+  return assumptions.map(scenario => {
+    const arv = calculation.arv * (1 + scenario.sale);
+    const months = Math.max(1, calculation.projectMonths + scenario.months);
+    const rehabBudget = Math.max(0, calculation.rehabBudget * (1 + scenario.rehab));
+    const selling = arv * (calculation.reCommissions / 100) + calculation.resaleClosingCosts;
+    const netSale = arv - selling;
+    const hmlInterest = calculation.hmlLoanAmount * (calculation.hmlInterestRate / 100) * (months / 12);
+    const cost = calculation.purchasePrice + rehabBudget + calculation.closingCosts +
+      calculation.holdingCosts * months + calculation.hmlPointsCost + hmlInterest + calculation.hmlAdminFees;
+    const profit = netSale - cost;
+    return { label: scenario.label, arv, netSale, profit, roi: cost > 0 ? profit / cost * 100 : 0 };
   });
 }
