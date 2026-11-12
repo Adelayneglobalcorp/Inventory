@@ -671,8 +671,8 @@ function PmAddItemDialog({
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                Con subcategorías marcadas, materiales y mano de obra se suman automáticamente
-                (como en la app anterior). Sin marcar, puedes ingresar montos manualmente.
+                {pm("Al seleccionar trabajos, sus costos se suman automáticamente. También puedes escribir montos manualmente.",
+                  "Selected work items automatically add costs. You can also enter amounts manually.")}
               </p>
             </div>
           ) : null}
@@ -754,19 +754,19 @@ function PmAddItemDialog({
               <Label>{pm("Materiales", "Materials")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={materials}
                 onChange={(e) => setMaterials(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Manual o suma automática de subcategorías
+{pm("Ingreso manual o suma automática", "Manual entry or automatic total")}
               </p>
             </div>
             <div className="space-y-1.5">
               <Label>{pm("Mano de obra", "Labor")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={labor}
                 onChange={(e) => setLabor(parseFloat(e.target.value) || 0)}
               />
@@ -778,24 +778,24 @@ function PmAddItemDialog({
               <Label>{pm("Otros costos", "Other Costs")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 value={other}
                 onChange={(e) => setOther(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Permisos, impuestos, etc.
+{pm("Permisos, tasas y otros gastos", "Permits, fees and other costs")}
               </p>
             </div>
             <div className="space-y-1.5">
               <Label>{pm("Margen (%)", "Markup (%)")}</Label>
               <Input
                 type="number"
-                step={5}
+                step={0.01}
                 value={markup}
                 onChange={(e) => setMarkup(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                % para ganancia del contratista
+{pm("Porcentaje del contratista", "Contractor markup percentage")}
               </p>
             </div>
           </div>
@@ -806,8 +806,8 @@ function PmAddItemDialog({
               {formatCurrency(preview.totalEstimated)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Subtotal {(materials + labor + other) * quantity} + margen{" "}
-              {formatCurrency(preview.markupAmount)} (misma lógica que el modelo viejo)
+              {pm("Subtotal", "Subtotal")} {formatCurrency((materials + labor + other) * quantity)} + {pm("margen", "markup")}{" "}
+              {formatCurrency(preview.markupAmount)}
             </p>
           </div>
 
@@ -816,13 +816,13 @@ function PmAddItemDialog({
               <Label>{pm("Gasto real", "Actual Cost")}</Label>
               <Input
                 type="number"
-                step={100}
+                step={0.01}
                 min={0}
                 value={totalActual}
                 onChange={(e) => setTotalActual(parseFloat(e.target.value) || 0)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Costo real ejecutado para comparar con el estimado
+{pm("Gasto real para comparar con el estimado", "Actual spending compared with the estimate")}
               </p>
             </div>
           ) : null}
