@@ -33,7 +33,7 @@ const statusConfig = {
 };
 
 const PropertyInterests = ({ propertyId, propertyTitle }: PropertyInterestsProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [interests, setInterests] = useState<InterestWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -138,7 +138,7 @@ const PropertyInterests = ({ propertyId, propertyTitle }: PropertyInterestsProps
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>{t('admin.interests.registeredOn', { date: new Date(interest.created_at).toLocaleDateString() })}</span>
+                  <span>{t('admin.interests.registeredOn', { date: new Date(interest.created_at).toLocaleDateString(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US') })}</span>
                 </div>
                 {interest.notes && (
                   <p className="text-sm bg-muted p-2 rounded">

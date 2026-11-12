@@ -38,7 +38,7 @@ export const AuthForm: React.FC = () => {
     if (error) {
       setError(error.message);
     } else {
-      setMessage(t('login.success'));
+      setMessage(t('login.loginSuccess'));
     }
 
     setLoading(false);
@@ -60,7 +60,7 @@ export const AuthForm: React.FC = () => {
     if (error) {
       setError(error.message);
     } else {
-      setMessage(t('signup.success'));
+      setMessage(t('login.signUpSuccess'));
       setRegisterEmail('');
       setRegisterPassword('');
       setRegisterFullName('');
@@ -74,16 +74,16 @@ export const AuthForm: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Property Manager</CardTitle>
+          <CardTitle>{t('uiFixes.authPropertyManager')}</CardTitle>
           <CardDescription>
-            {t('login.description')}
+            {t('uiFixes.authDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">{t('login.tabs.login')}</TabsTrigger>
-              <TabsTrigger value="register">{t('login.tabs.register')}</TabsTrigger>
+              <TabsTrigger value="login">{t('login.signIn')}</TabsTrigger>
+              <TabsTrigger value="register">{t('login.signUp')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -93,7 +93,7 @@ export const AuthForm: React.FC = () => {
                   <Input
                     id="login-email"
                     type="email"
-                    placeholder="tu@email.com"
+                    placeholder={t('uiFixes.emailExample')}
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     required
@@ -119,22 +119,22 @@ export const AuthForm: React.FC = () => {
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="register-name">{t('signup.fullName')}</Label>
+                  <Label htmlFor="register-name">{t('login.fullName')}</Label>
                   <Input
                     id="register-name"
                     type="text"
-                    placeholder="Juan Pérez"
+                    placeholder={t('uiFixes.nameExample')}
                     value={registerFullName}
                     onChange={(e) => setRegisterFullName(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-email">{t('signup.email')}</Label>
+                  <Label htmlFor="register-email">{t('login.email')}</Label>
                   <Input
                     id="register-email"
                     type="email"
-                    placeholder="tu@email.com"
+                    placeholder={t('uiFixes.emailExample')}
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
                     required
@@ -151,7 +151,7 @@ export const AuthForm: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">{t('signup.password')}</Label>
+                  <Label htmlFor="register-password">{t('login.password')}</Label>
                   <Input
                     id="register-password"
                     type="password"
@@ -163,7 +163,7 @@ export const AuthForm: React.FC = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? t('signup.signingUp') : t('signup.signUp')}
+                  {loading ? t('login.creating') : t('login.createAccount')}
                 </Button>
               </form>
             </TabsContent>

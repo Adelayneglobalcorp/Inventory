@@ -5,6 +5,77 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
     en: {
         translation: {
+            "uiFixes": {
+                "breadcrumbMore": "More",
+                "breadcrumbAria": "Breadcrumb",
+                "carouselPrevious": "Previous slide",
+                "carouselNext": "Next slide",
+                "close": "Close",
+                "paginationAria": "Pagination",
+                "paginationPrevious": "Previous",
+                "paginationNext": "Next",
+                "paginationPrevAria": "Go to previous page",
+                "paginationNextAria": "Go to next page",
+                "paginationMore": "More pages",
+                "sidebarToggle": "Toggle sidebar",
+    "sortBy": "Sort by",
+                "perMonth": "per month",
+                "bedroomsShort": "beds",
+                "bathroomsShort": "baths",
+    "sortNewest": "Newest first",
+    "sortLow": "Lowest price",
+    "sortHigh": "Highest price",
+    "priceRange": "Price range",
+    "propertyLoadFailed": "Unable to load properties. Please try again.",
+    "propertyStatusSaved": "Property status updated.",
+    "propertyStatusFailed": "Unable to update property status.",
+    "propertyDeleted": "Property deleted successfully.",
+    "gallery": "Photo gallery",
+    "rolePending": "Pending approval",
+    "roleUser": "Approved user",
+    "roleInvestor": "Investor",
+    "roleAgent": "Agent",
+    "roleAdmin": "Administrator",
+    "sendReset": "Send password reset email",
+    "propertyFilterSearch": "Search properties...",
+    "propertyFilterStatus": "Status",
+    "propertyFilterAllStatuses": "All statuses",
+    "propertyFilterType": "Property type",
+    "propertyFilterAllTypes": "All property types",
+    "typeSingleFamily": "Single-family home",
+    "typeMultiFamily": "Multifamily property",
+    "typeCondo": "Condominium",
+    "typeTownhouse": "Townhouse",
+    "notFound": "Page not found",
+    "returnHome": "Return to the home page",
+    "portalSettings": "Portal settings",
+    "emailExample": "name@example.com",
+    "nameExample": "Jane Smith",
+    "passwordMin": "At least 6 characters",
+    "formHoldingCost": "Closing and holding costs",
+    "formOperatingMonthly": "Monthly expenses",
+    "adminSetupTitle": "Administrator setup",
+    "adminRegistrationTitle": "Administrator registration",
+    "adminSetupDescription": "Create the system's primary administrator account.",
+    "adminRegistrationDescription": "Create an administrator account to manage the system.",
+    "adminCreatedRedirect": "Administrator account created. Redirecting to sign in...",
+    "adminCreated": "Administrator account created. You can now sign in.",
+    "adminWarning": "This page is only for initial setup. Only the primary administrator can create other administrator accounts.",
+    "adminNote": "This account has administrator privileges and can access all system functions.",
+    "adminCreateButton": "Create administrator account",
+    "adminBack": "Back to sign in",
+    "adminCreating": "Creating account...",
+    "warning": "Warning:",
+    "note": "Note:",
+    "authDescription": "Sign in or create an account to access the property platform.",
+    "authPropertyManager": "Property management",
+    "pmMaterialsShort": "Materials",
+    "pmType": "Type",
+    "budgetPctDone": "% Complete",
+    "budgetUsed": "Spent",
+    "budgetPctMaterials": "% Materials",
+    "budgetSummary": "PM vs. Deal: {{estimated}}% estimated · Spending vs. Deal: {{spent}}%"
+},
             "nav": {
                 "dashboard": "Dashboard",
                 "properties": "Inventory",
@@ -62,7 +133,13 @@ const resources = {
                 "submit": "Submit Request", "sending": "Submitting...", "success": "Your financing request has been received.",
                 "error": "We could not submit your request. Please try again.", "required": "Complete all required fields.",
                 "invalidAmount": "Enter a valid loan amount greater than zero.",
-                "privacy": "Your request is visible only to you and authorized administrators."
+                "privacy": "Your request is visible only to you and authorized administrators.",
+                "inventoryProperty": "Select from inventory",
+                "manualProperty": "Enter a new address",
+                "searchProperty": "Search by address or city",
+                "chooseProperty": "Choose a property",
+                "inventoryUnavailable": "The property inventory could not be loaded. You can enter the address manually.",
+                "autoFillHint": "Selecting a property fills in available information. You can edit the fields below."
             },
             "dashboard": {
                 "title": "My Investment Portfolio",
@@ -388,6 +465,77 @@ const resources = {
     },
     es: {
         translation: {
+            "uiFixes": {
+                "breadcrumbMore": "Más opciones",
+                "breadcrumbAria": "Ruta de navegación",
+                "carouselPrevious": "Diapositiva anterior",
+                "carouselNext": "Diapositiva siguiente",
+                "close": "Cerrar",
+                "paginationAria": "Paginación",
+                "paginationPrevious": "Anterior",
+                "paginationNext": "Siguiente",
+                "paginationPrevAria": "Ir a la página anterior",
+                "paginationNextAria": "Ir a la página siguiente",
+                "paginationMore": "Más páginas",
+                "sidebarToggle": "Mostrar u ocultar el menú lateral",
+    "sortBy": "Ordenar por",
+                "perMonth": "al mes",
+                "bedroomsShort": "hab.",
+                "bathroomsShort": "baños",
+    "sortNewest": "Más recientes primero",
+    "sortLow": "Precio más bajo",
+    "sortHigh": "Precio más alto",
+    "priceRange": "Rango de precios",
+    "propertyLoadFailed": "No se pudieron cargar las propiedades. Inténtalo nuevamente.",
+    "propertyStatusSaved": "Estado de la propiedad actualizado.",
+    "propertyStatusFailed": "No se pudo actualizar el estado de la propiedad.",
+    "propertyDeleted": "Propiedad eliminada correctamente.",
+    "gallery": "Galería de fotos",
+    "rolePending": "Pendiente de aprobación",
+    "roleUser": "Usuario aprobado",
+    "roleInvestor": "Inversionista",
+    "roleAgent": "Agente",
+    "roleAdmin": "Administrador",
+    "sendReset": "Enviar correo para restablecer la contraseña",
+    "propertyFilterSearch": "Buscar propiedades...",
+    "propertyFilterStatus": "Estado",
+    "propertyFilterAllStatuses": "Todos los estados",
+    "propertyFilterType": "Tipo de propiedad",
+    "propertyFilterAllTypes": "Todos los tipos de propiedad",
+    "typeSingleFamily": "Casa unifamiliar",
+    "typeMultiFamily": "Propiedad multifamiliar",
+    "typeCondo": "Condominio",
+    "typeTownhouse": "Casa adosada",
+    "notFound": "Página no encontrada",
+    "returnHome": "Volver a la página principal",
+    "portalSettings": "Configuración del portal",
+    "emailExample": "nombre@ejemplo.com",
+    "nameExample": "María García",
+    "passwordMin": "Mínimo 6 caracteres",
+    "formHoldingCost": "Costos de cierre y mantenimiento",
+    "formOperatingMonthly": "Gastos mensuales",
+    "adminSetupTitle": "Configuración del administrador",
+    "adminRegistrationTitle": "Registro de administrador",
+    "adminSetupDescription": "Crea la cuenta de administrador principal del sistema.",
+    "adminRegistrationDescription": "Crea una cuenta de administrador para gestionar el sistema.",
+    "adminCreatedRedirect": "Cuenta de administrador creada. Redirigiendo al inicio de sesión...",
+    "adminCreated": "Cuenta de administrador creada. Ya puedes iniciar sesión.",
+    "adminWarning": "Esta página es solo para la configuración inicial. Únicamente el administrador principal puede crear otras cuentas de administrador.",
+    "adminNote": "Esta cuenta tendrá permisos de administrador y acceso a todas las funciones del sistema.",
+    "adminCreateButton": "Crear cuenta de administrador",
+    "adminBack": "Volver al inicio de sesión",
+    "adminCreating": "Creando cuenta...",
+    "warning": "Advertencia:",
+    "note": "Nota:",
+    "authDescription": "Inicia sesión o crea una cuenta para acceder a la plataforma de propiedades.",
+    "authPropertyManager": "Gestión de propiedades",
+    "pmMaterialsShort": "Materiales",
+    "pmType": "Tipo",
+    "budgetPctDone": "% Completado",
+    "budgetUsed": "Gastado",
+    "budgetPctMaterials": "% Materiales",
+    "budgetSummary": "Presupuesto del proyecto frente a la operación: {{estimated}}% estimado · Gastos frente a la operación: {{spent}}%"
+},
             "nav": {
                 "dashboard": "Panel de control",
                 "properties": "Inventario",
@@ -445,7 +593,13 @@ const resources = {
                 "submit": "Enviar solicitud", "sending": "Enviando...", "success": "Hemos recibido tu solicitud de financiamiento.",
                 "error": "No pudimos enviar tu solicitud. Inténtalo nuevamente.", "required": "Completa todos los campos obligatorios.",
                 "invalidAmount": "Ingresa un monto solicitado válido y mayor que cero.",
-                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud."
+                "privacy": "Solo tú y los administradores autorizados pueden consultar tu solicitud.",
+                "inventoryProperty": "Seleccionar del inventario",
+                "manualProperty": "Ingresar una dirección nueva",
+                "searchProperty": "Buscar por dirección o ciudad",
+                "chooseProperty": "Selecciona una propiedad",
+                "inventoryUnavailable": "No se pudo cargar el inventario de propiedades. Puedes ingresar la dirección manualmente.",
+                "autoFillHint": "Al seleccionar una propiedad, se completarán los datos disponibles. Puedes modificarlos abajo."
             },
             "dashboard": {
                 "title": "Mi Portafolio de Inversión",
@@ -538,7 +692,7 @@ const resources = {
             "admin": {
                 "title": "Panel de Administración",
                 "subtitle": "Gestiona usuarios y propiedades del sistema",
-                "roleBadge": "Admin: {{email}}",
+                "roleBadge": "Administrador: {{email}}",
                 "tabs": {
                     "overview": "Resumen",
                     "users": "Gestión de Usuarios",
@@ -667,11 +821,11 @@ const resources = {
                     "total": "Total: {{count}} usuarios",
                     "table": {
                         "user": "Usuario",
-                        "email": "Email",
+                        "email": "Correo electrónico",
                         "role": "Rol",
                         "status": "Estado",
-                        "emailConfirmed": "Email Confirmado",
-                        "lastLogin": "Último Login",
+                        "emailConfirmed": "Correo confirmado",
+                        "lastLogin": "Último acceso",
                         "actions": "Acciones"
                     },
                     "status": {
@@ -681,7 +835,7 @@ const resources = {
                         "noName": "Sin nombre"
                     },
                     "actions": {
-                        "confirmEmail": "Confirmar Email",
+                        "confirmEmail": "Confirmar correo",
                         "quickApprove": "Aprobar Rápido",
                         "changeRole": "Cambiar Rol",
                         "generateCode": "Generar Código",
@@ -697,7 +851,7 @@ const resources = {
                             "update": "Actualizar Rol"
                         },
                         "code": {
-                            "title": "Generar Código de Admin",
+                            "title": "Generar código de administrador",
                             "description": "Genera un código para que {{name}} pueda registrarse como administrador",
                             "generatedLabel": "Código generado:",
                             "copyHint": "Copia este código y compártelo con el usuario",
@@ -708,16 +862,16 @@ const resources = {
                     "messages": {
                         "roleUpdated": "Rol de {{name}} actualizado a {{role}}",
                         "approved": "Usuario {{name}} aprobado exitosamente",
-                        "approvedWithEmail": "✅ Usuario {{name}} aprobado exitosamente. Email confirmado: {{status}}",
+                        "approvedWithEmail": "Usuario {{name}} aprobado correctamente. Correo confirmado: {{status}}",
                         "rejected": "Usuario {{name}} rechazado",
-                        "emailConfirmed": "Email confirmado exitosamente",
+                        "emailConfirmed": "Correo confirmado correctamente",
                         "codeGenerated": "Código generado para {{name}}: {{code}}",
                         "deleteConfirm": "¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.",
                         "deleted": "Usuario eliminado exitosamente",
                         "partial": "Parcialmente",
                         "yes": "Sí",
-                        "sendReset": "Enviar Reset Email",
-                        "resetSent": "Email de restablecimiento enviado a {{email}}"
+                        "sendReset": "Enviar enlace de restablecimiento",
+                        "resetSent": "Correo de restablecimiento enviado a {{email}}"
                     }
                 }
             },
@@ -785,5 +939,13 @@ i18n
             escapeValue: false
         }
     });
+
+if (typeof document !== 'undefined') {
+    const setDocumentLanguage = (language: string) => {
+        document.documentElement.lang = language.startsWith('es') ? 'es' : 'en';
+    };
+    setDocumentLanguage(i18n.resolvedLanguage || i18n.language || 'en');
+    i18n.on('languageChanged', setDocumentLanguage);
+}
 
 export default i18n;

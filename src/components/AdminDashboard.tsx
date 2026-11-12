@@ -162,7 +162,7 @@ export const AdminDashboard: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            {t('admin.actions.systemSettings', { defaultValue: 'Portal settings' })}
+            {t('uiFixes.portalSettings')}
           </TabsTrigger>
         </TabsList>
 

@@ -231,20 +231,20 @@ export function PmBudgetPanel({
           </div>
           <div className="mt-4 space-y-2">
             <p className="text-xs text-muted-foreground">
-              PM vs Deal: {pctEstVsDeal}% estimado · Gastado vs Deal: {pctActVsDeal}%
+              {pm(`Presupuesto del proyecto frente a la operación: ${pctEstVsDeal}% estimado · Gastos: ${pctActVsDeal}%`, `Project budget vs. Deal: ${pctEstVsDeal}% estimated · Spent: ${pctActVsDeal}%`)}
             </p>
             <div className="flex h-7 w-full overflow-hidden rounded-md bg-muted">
               <div
                 className="flex items-center justify-center bg-amber-500/90 text-[10px] font-medium text-black"
                 style={{ width: `${pctEstVsDeal}%`, minWidth: pctEstVsDeal > 0 ? "2rem" : 0 }}
-                title="Presupuesto PM"
+                title={pm("Presupuesto del proyecto", "Project budget")}
               >
                 {pctEstVsDeal > 12 ? `${pctEstVsDeal}%` : ""}
               </div>
               <div
                 className="flex items-center justify-center bg-sky-500/90 text-[10px] font-medium text-black"
                 style={{ width: `${pctActVsDeal}%`, minWidth: pctActVsDeal > 0 ? "2rem" : 0 }}
-                title="Gastado"
+                title={pm("Gastado", "Spent")}
               >
                 {pctActVsDeal > 12 ? `${pctActVsDeal}%` : ""}
               </div>
@@ -330,7 +330,7 @@ export function PmBudgetPanel({
                 <TableHead className="text-right">{pm("Presupuesto", "Budget")}</TableHead>
                 <TableHead className="text-right">{pm("Real", "Actual")}</TableHead>
                 <TableHead className="text-right">{pm("Diferencia", "Difference")}</TableHead>
-                <TableHead className="text-center">% Hecho</TableHead>
+                <TableHead className="text-center">{pm("% Completado", "% Complete")}</TableHead>
                 <TableHead>{pm("Estado", "Status")}</TableHead>
                 <TableHead className="w-[70px] text-right">{pm("Acciones", "Actions")}</TableHead>
               </TableRow>
@@ -466,7 +466,7 @@ export function PmBudgetPanel({
                 <div className="font-bold text-amber-500">
                   {totalEstimated > 0 ? Math.round((totalMaterials / totalEstimated) * 100) : 0}%
                 </div>
-                <p className="text-[11px] text-muted-foreground">% Materiales</p>
+                <p className="text-[11px] text-muted-foreground">{pm("% Materiales", "% Materials")}</p>
               </div>
               <div>
                 <div className="font-bold text-blue-400">

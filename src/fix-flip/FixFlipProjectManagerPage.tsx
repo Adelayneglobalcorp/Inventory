@@ -627,7 +627,7 @@ function PmAddItemDialog({
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs">
                           <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">Mat</span>
+                            <span className="text-muted-foreground">{pm("Materiales", "Materials")}</span>
                             <Input
                               type="number"
                               className="h-8 w-24"
@@ -642,7 +642,7 @@ function PmAddItemDialog({
                             />
                           </div>
                           <div className="flex items-center gap-1">
-                            <span className="text-muted-foreground">MO</span>
+                            <span className="text-muted-foreground">{pm("Mano de obra", "Labor")}</span>
                             <Input
                               type="number"
                               className="h-8 w-24"
@@ -663,7 +663,7 @@ function PmAddItemDialog({
                       </div>
                       {checked ? (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className="text-xs text-muted-foreground">Tipo</span>
+                          <span className="text-xs text-muted-foreground">{pm("Tipo", "Type")}</span>
                           <Select
                             value={wt}
                             onValueChange={(v) => updateSubWorkType(subName, v)}

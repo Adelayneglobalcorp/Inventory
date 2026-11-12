@@ -570,7 +570,17 @@ function PhaseNotesDialog({
 }) {
   const [draft, setDraft] = useState<PMPhaseMeta>(meta);
   const [newNote, setNewNote] = useState("");
-  const [priority, setPriority] = useState("Alta");
+  const [priority, setPriority] = useState(t("Alta", "High"))
+  const { i18n } = useTranslation();
+  const noteLocale = i18n.resolvedLanguage === "es" ? localeEs : localeEn;
+  const displayPriority = (value: string) => {
+    switch (value.toLowerCase()) {
+      case "alta": case "high": return t("Alta", "High");
+      case "media": case "medium": return t("Media", "Medium");
+      case "baja": case "low": return t("Baja", "Low");
+      default: return value;
+    }
+  };
   useEffect(() => setDraft(meta), [meta]);
 
   return (
@@ -601,7 +611,7 @@ function PhaseNotesDialog({
                   const note: PMPhaseNote = {
                     id: crypto.randomUUID(),
                     text: txt,
-                    priority: priority.trim() || "Alta",
+                    priority: priority.trim() || t("Alta", "High"),
                     createdAt: new Date().toISOString(),
                   };
                   setDraft((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
@@ -621,7 +631,7 @@ function PhaseNotesDialog({
                   <div>
                     <p className="text-sm text-zinc-100">{n.text}</p>
                     <p className="text-xs text-zinc-500">
-                      {n.priority} · {format(parseISO(n.createdAt), "Pp")}
+                      {displayPriority(n.priority)} · {format(parseISO(n.createdAt), "Pp", { locale: noteLocale })}
                     </p>
                   </div>
                   <Button

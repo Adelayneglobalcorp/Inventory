@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, UserPlus, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const AdminSetup: React.FC = () => {
   const { signUp } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,7 @@ export const AdminSetup: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('¡Cuenta de administrador creada exitosamente! Redirigiendo al login...');
+        setSuccess(t('uiFixes.adminCreatedRedirect'));
         setTimeout(() => {
           navigate('/login');
         }, 3000);
@@ -52,9 +54,9 @@ export const AdminSetup: React.FC = () => {
           <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Shield className="w-6 h-6 text-red-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Configuración de Administrador</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('uiFixes.adminSetupTitle')}</CardTitle>
           <CardDescription>
-            Crea la cuenta de administrador principal del sistema
+            {t('uiFixes.adminSetupDescription')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -72,31 +74,31 @@ export const AdminSetup: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('login.email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="tu@email.com"
+                placeholder={t('uiFixes.emailExample')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nombre Completo</Label>
+              <Label htmlFor="fullName">{t('login.fullName')}</Label>
               <Input
                 id="fullName"
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Tu nombre completo"
+                placeholder={t('uiFixes.nameExample')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t('login.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -110,15 +112,14 @@ export const AdminSetup: React.FC = () => {
 
             <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>⚠️ Advertencia:</strong> Esta página es solo para la configuración inicial. 
-                Solo el administrador principal podrá crear otras cuentas de administrador.
+                <strong>⚠️ {t('uiFixes.warning')}</strong> {t('uiFixes.adminWarning')}
               </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <Button type="submit" className="w-full" disabled={loading}>
               <UserPlus className="w-4 h-4 mr-2" />
-              {loading ? 'Creando cuenta...' : 'Crear Cuenta de Admin'}
+              {loading ? t('uiFixes.adminCreating') : t('uiFixes.adminCreateButton')}
             </Button>
             <Button 
               type="button" 
@@ -127,7 +128,7 @@ export const AdminSetup: React.FC = () => {
               onClick={() => navigate('/login')}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver al Login
+              {t('uiFixes.adminBack')}
             </Button>
           </CardFooter>
         </form>

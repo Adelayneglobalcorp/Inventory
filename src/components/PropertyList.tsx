@@ -30,7 +30,7 @@ export const PropertyList = forwardRef<
   { refreshProperties: () => void },
   PropertyListProps
 >(({ onEdit, onView, adminMode = false, showAdminActions = false }, ref) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, role } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ export const PropertyList = forwardRef<
       setProperties(data || []);
     } catch (err: any) {
       setError(err.message);
-      toast.error('Error al cargar propiedades: ' + err.message);
+      toast.error(t('uiFixes.propertyLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -78,14 +78,14 @@ export const PropertyList = forwardRef<
       const { error } = await updateProperty(propertyId, { status: newStatus as any });
       if (error) throw new Error(typeof error === 'string' ? error : 'Error desconocido');
       
-      toast.success(t('admin.properties.interests.messages.updateSuccess', 'Estado actualizado exitosamente'));
+      toast.success(t('uiFixes.propertyStatusSaved'));
       
       // Update local state without full reload
       setProperties(prev => prev.map(p => 
         p.id === propertyId ? { ...p, status: newStatus as any } : p
       ));
     } catch (err: any) {
-      toast.error('Error al actualizar estado: ' + (err.message || err));
+      toast.error(t('uiFixes.propertyStatusFailed'));
     }
   };
 
@@ -96,7 +96,7 @@ export const PropertyList = forwardRef<
       const { error } = await deleteProperty(propertyToDelete.id);
       if (error) throw error;
 
-      toast.success('Propiedad eliminada exitosamente');
+      toast.success(t('uiFixes.propertyDeleted'));
       setDeleteDialogOpen(false);
       loadProperties();
     } catch (err: any) {
@@ -221,7 +221,7 @@ export const PropertyList = forwardRef<
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
@@ -291,12 +291,12 @@ export const PropertyList = forwardRef<
               <div className="min-w-[170px]">
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Ordenar por" />
+                    <SelectValue placeholder={t('uiFixes.sortBy')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Más recientes</SelectItem>
-                    <SelectItem value="price_asc">Menor precio</SelectItem>
-                    <SelectItem value="price_desc">Mayor precio</SelectItem>
+                    <SelectItem value="newest">{t('uiFixes.sortNewest')}</SelectItem>
+                    <SelectItem value="price_asc">{t('uiFixes.sortLow')}</SelectItem>
+                    <SelectItem value="price_desc">{t('uiFixes.sortHigh')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -304,7 +304,7 @@ export const PropertyList = forwardRef<
 
             <div className="space-y-4 max-w-xl">
               <div className="flex justify-between items-center text-sm font-medium">
-                <span className="text-muted-foreground">Rango de Precio</span>
+                <span className="text-muted-foreground">{t('uiFixes.priceRange')}</span>
                 <span className="text-primary font-bold">
                   {formatCurrency(priceRange[0])} - {formatCurrency(priceRange[1])}
                 </span>
@@ -431,7 +431,7 @@ export const PropertyList = forwardRef<
                           <Square className="w-4 h-4" />
                           <span className="text-sm font-bold">{property.sqft}</span>
                         </div>
-                        <span className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground/70">SQFT</span>
+                        <span className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground/70">ft²</span>
                       </div>
                     </div>
 
@@ -439,7 +439,7 @@ export const PropertyList = forwardRef<
                     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                       <div className="space-y-0.5">
                         <span className="text-muted-foreground/60">{t('properties.list.labels.rent')}</span>
-                        <p className="text-sm font-black text-emerald-600">{formatCurrency(property.monthly_rent)}/mo</p>
+                        <p className="text-sm font-black text-emerald-600">{formatCurrency(property.monthly_rent)} {t('uiFixes.perMonth')}</p>
                       </div>
                       <div className="text-right space-y-0.5">
                         <span className="text-muted-foreground/60">ARV</span>

@@ -25,11 +25,12 @@ interface PropertyDetailProps {
   pureContent?: boolean;
 }
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
-
 const PropertyDetail = ({ property, open, onClose, id, pureContent = false }: PropertyDetailProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const fmt = (n: number) =>
+    new Intl.NumberFormat(i18n.resolvedLanguage === 'es' ? 'es-US' : 'en-US', {
+      style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+    }).format(n);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const { sharePdf, isGenerating } = usePdfShare();
@@ -283,7 +284,7 @@ const PropertyDetail = ({ property, open, onClose, id, pureContent = false }: Pr
         {/* PDF ONLY GALLERY - Hidden in UI, visible in PDF */}
         {hasImages && images.length > 1 && (
           <div className="hidden pt-10 border-t border-border/40" data-pdf-only="true">
-            <h4 className="text-2xl font-extrabold text-foreground mb-6">Galería de Fotos</h4>
+            <h4 className="text-2xl font-extrabold text-foreground mb-6">{t('uiFixes.gallery')}</h4>
             <div className="grid grid-cols-2 gap-4">
               {images.slice(1).map((image, idx) => (
                 <div key={idx} className="aspect-video rounded-xl overflow-hidden border border-border/50">

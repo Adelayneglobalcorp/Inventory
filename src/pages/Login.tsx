@@ -113,7 +113,7 @@ const Login = () => {
                     <Input
                       id="login-email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('uiFixes.emailExample')}
                       value={loginForm.email}
                       onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                       required
@@ -155,7 +155,7 @@ const Login = () => {
                     <Label htmlFor="signup-name">{t('login.fullName')}</Label>
                     <Input
                       id="signup-name"
-                      placeholder="John Doe"
+                      placeholder={t('uiFixes.nameExample')}
                       value={signUpForm.fullName}
                       onChange={(e) => setSignUpForm({ ...signUpForm, fullName: e.target.value })}
                       required
@@ -166,7 +166,7 @@ const Login = () => {
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t('uiFixes.emailExample')}
                       value={signUpForm.email}
                       onChange={(e) => setSignUpForm({ ...signUpForm, email: e.target.value })}
                       required
@@ -187,7 +187,7 @@ const Login = () => {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="Min. 6 characters"
+                      placeholder={t('uiFixes.passwordMin')}
                       value={signUpForm.password}
                       onChange={(e) => setSignUpForm({ ...signUpForm, password: e.target.value })}
                       required

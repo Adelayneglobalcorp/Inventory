@@ -421,7 +421,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       min="0"
                       step="0.01"
                       required
-                      placeholder="Cierre + Holding"
+                      placeholder={t('uiFixes.formHoldingCost')}
                     />
                   </div>
                   <div className="space-y-2">
@@ -446,7 +446,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       min="0"
                       step="0.01"
                       required
-                      placeholder="Mensuales"
+                      placeholder={t('uiFixes.formOperatingMonthly')}
                     />
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               <div className="space-y-4 pt-4 border-t border-border/40">
                 <h4 className="font-bold text-amber-600 flex items-center gap-2 text-sm uppercase tracking-wider">
                   <span className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-xs">C</span>
-                  Renta (🏢 {t('admin.properties.form.sections.rent')})
+                  🏢 {t('admin.properties.form.sections.rent')}
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 shadow-inner">

@@ -60,7 +60,7 @@ const ForgotPassword = () => {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="your@email.com"
+                                    placeholder={t('uiFixes.emailExample')}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required

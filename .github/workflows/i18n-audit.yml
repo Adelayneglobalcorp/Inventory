@@ -1,0 +1,24 @@
+name: Verify bilingual interface (no deployment)
+
+on:
+  push:
+    branches:
+      - fix/i18n-complete-audit-20261112
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Unit tests and production build (no publishing)
+        run: npm run validate
