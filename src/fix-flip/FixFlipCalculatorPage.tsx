@@ -4,7 +4,6 @@ import {
   useMemo,
   useState,
   type ReactNode,
-  type ComponentProps,
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -61,6 +60,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getProperties } from "@/lib/properties";
 import { usePortalContent } from "@/lib/portalContent";
 import { parseCalculatorNumber, displayCalculatorNumber, editingCalculatorNumber, type CalculatorNumberKind } from "./calculatorNumberInput";
+import { CalculatorNumberInput } from "./CalculatorNumberInput";
 
 /** Campos numéricos del formulario (excl. texto y select). */
 type NumericInputKey = Exclude<
@@ -74,54 +74,6 @@ const PERCENTAGE_KEYS = new Set<NumericInputKey>([
 ]);
 const calculatorInputKind = (key: NumericInputKey): CalculatorNumberKind =>
   key === "projectMonths" ? "integer" : PERCENTAGE_KEYS.has(key) ? "percent" : "currency";
-
-type CalculatorNumberInputProps = ComponentProps<typeof Input> & {
-  kind: CalculatorNumberKind;
-  onBeginEdit?: () => void;
-};
-
-/** Show the unit automatically while leaving only the number editable. */
-function CalculatorNumberInput({
-  kind,
-  onBeginEdit,
-  onFocus,
-  className,
-  ...props
-}: CalculatorNumberInputProps) {
-  return (
-    <div className="relative">
-      {kind === "currency" && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-semibold text-foreground/80"
-        >
-          $
-        </span>
-      )}
-      <Input
-        {...props}
-        onFocus={(event) => {
-          onBeginEdit?.();
-          onFocus?.(event);
-        }}
-        className={cn(
-          "bg-background tabular-nums",
-          kind === "currency" && "pl-8",
-          kind === "percent" && "pr-8",
-          className,
-        )}
-      />
-      {kind === "percent" && (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-semibold text-foreground/80"
-        >
-          %
-        </span>
-      )}
-    </div>
-  );
-}
 
 function HmlFieldLabel({ children }: { children: ReactNode }) {
   return (
