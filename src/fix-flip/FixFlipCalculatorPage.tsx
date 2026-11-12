@@ -156,7 +156,7 @@ function projectToInputs(p: FixFlipProject): UnderwritingInputs {
 export default function FixFlipCalculatorPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const lang: FixFlipLanguage = i18n.language.startsWith("en") ? "en" : "es";
   const portal = usePortalContent("calculator", lang);
   const hmlI18n = useMemo(
@@ -662,13 +662,19 @@ export default function FixFlipCalculatorPage() {
                           .filter((p) => (p.address + " " + p.city + " " + p.state).toLowerCase().includes(propertySearch.toLowerCase()))
                           .map((p) => (
                             <SelectItem key={p.id} value={p.id}>
-                              {p.address}, {p.city} · {formatCurrency(p.price)} · {p.status}
+                              {p.address}, {p.city} · {formatCurrency(p.price)} · {p.status === 'available'
+                                ? t('properties.list.status.available')
+                                : p.status === 'on_sale'
+                                  ? t('properties.list.status.onSale')
+                                  : p.status === 'sold'
+                                    ? t('properties.list.status.sold')
+                                    : p.status}
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
                     {inventoryLoading && <p className="text-xs text-muted-foreground">{lang === "es" ? "Cargando propiedades..." : "Loading properties..."}</p>}
-                    {inventoryError && <p className="text-xs text-destructive">{inventoryError}</p>}
+                    {inventoryError && <p className="text-xs text-destructive">{t('uiFixes.propertyLoadFailed')}</p>}
                     <p className="text-xs text-muted-foreground">
                       {lang === "es"
                         ? inventoryProperties.length + " propiedades cargadas. Selecciona una para completar precio, ARV y rehab, o escribe una dirección nueva arriba."
