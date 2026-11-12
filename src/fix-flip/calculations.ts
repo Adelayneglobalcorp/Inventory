@@ -28,7 +28,7 @@ const RULES: Record<string, { min?: number; max?: number }> = {
 
 function clampField(key: string, value: number): number {
   const rule = RULES[key];
-  let v = value;
+  let v = Number.isFinite(value) ? value : 0;
   if (rule?.min != null) v = Math.max(rule.min, v);
   if (rule?.max != null) v = Math.min(rule.max, v);
   return v;
@@ -131,6 +131,12 @@ export function computeUnderwriting(
       calculatedDownPaymentPercent = expectedPercent;
     }
   }
+
+  // An equity contribution cannot exceed the full property purchase price.
+  calculatedDownPaymentAmount = Math.min(purchasePrice, calculatedDownPaymentAmount);
+  calculatedDownPaymentPercent = purchasePrice > 0
+    ? (calculatedDownPaymentAmount / purchasePrice) * 100
+    : 0;
 
   let calculatedHmlLoanAmount = purchasePrice - calculatedDownPaymentAmount;
   let calculatedHmlLoanPercent = 0;
@@ -406,7 +412,7 @@ export function buildStudentAnalysis(
       signalClass = "bg-emerald-500/20 text-emerald-400";
     } else if (meetsProfit) {
       signalText = lang === "es" ? "Cumple ganancia objetivo" : "Profit target met";
-      confidenceText = lang === "es" ? "ROI ligeramente/por debajo" : "ROI below target";
+      confidenceText = lang === "es" ? "ROI por debajo del objetivo" : "ROI below target";
       signalNote = (lang === "es" ? "Ganancia " : "Profit ") + formatCurrency(profit) +
         (lang === "es" ? " supera el mínimo " : " exceeds the minimum ") +
         formatCurrency(minProfit) + "; ROI " + formatPercentage(roi) +
