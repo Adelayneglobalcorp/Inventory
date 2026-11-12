@@ -26,7 +26,7 @@ const AppLayout = () => {
   }
 
   return (
-    <div className="inventory-shell min-h-screen bg-background">
+    <div className="inventory-shell g360-app min-h-screen bg-background">
       <Navbar />
       <main
         className={
