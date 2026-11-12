@@ -65,16 +65,24 @@ type NumericInputKey = Exclude<
   "propertyAddress" | "interestType"
 >;
 
-function numericValueFromRaw(raw: string): number {
-  const value = raw.trim().replace(/\s/g, "");
+const PERCENTAGE_KEYS = new Set<NumericInputKey>([
+  "downPaymentPercent", "hmlPointsRate", "hmlInterestRate",
+  "reCommissions", "profitMinPercent",
+]);
+function numericValueFromRaw(raw: string, key: NumericInputKey): number {
+  const value = raw.trim().replace(/\s/g, "").replace(/[$%]/g, "");
   if (value === "" || value === "-" || value === "." || value === "-.") return 0;
   const comma = value.lastIndexOf(",");
   const dot = value.lastIndexOf(".");
-  // If both separators exist, treat the last one as the decimal separator.
-  const decimal = comma > dot ? "," : ".";
-  const normalized = decimal === ","
-    ? value.replace(/\./g, "").replace(",", ".")
-    : value.replace(/,/g, "");
+  const isFractional = PERCENTAGE_KEYS.has(key);
+  // For money, a single separator followed by exactly three digits
+  // is a grouping separator: 1,234 or 1.234 both mean 1234.
+  const grouping = !isFractional && ((comma >= 0 && dot < 0 &&
+    /^-?\d{1,3}(,\d{3})+$/.test(value)) || (dot >= 0 && comma < 0 &&
+    /^-?\d{1,3}(\.\d{3})+$/.test(value)));
+  const normalized = grouping ? value.replace(/[,.]/g, "") :
+    comma > dot ? value.replace(/\./g, "").replace(",", ".") :
+    value.replace(/,/g, "");
   if (!/^-?\d*(?:\.\d*)?$/.test(normalized)) return NaN;
   const number = Number(normalized);
   return Number.isFinite(number) ? number : NaN;
@@ -431,7 +439,7 @@ export default function FixFlipCalculatorPage() {
 
   const handleNumChange = useCallback(
     (key: NumericInputKey, raw: string) => {
-      const nextVal = numericValueFromRaw(raw);
+      const nextVal = numericValueFromRaw(raw, key);
       setNumDrafts((d) => ({ ...d, [key]: raw }));
       // Keep the user's draft visible without propagating an invalid number into financial formulas.
       if (!Number.isFinite(nextVal)) return;
@@ -479,7 +487,9 @@ export default function FixFlipCalculatorPage() {
       type: "text" as const,
       inputMode: "decimal" as const,
       autoComplete: "off" as const,
-      value: numDrafts[key] ?? String(inputs[key] as number),
+      value: numDrafts[key] ?? (key === "projectMonths"
+        ? String(Math.round(Number(inputs[key]) || 0))
+        : (Number(inputs[key]) || 0).toFixed(2)),
       onChange: (e: { target: { value: string } }) =>
         handleNumChange(key, e.target.value),
       onBlur: () => handleNumBlur(key),
@@ -488,6 +498,12 @@ export default function FixFlipCalculatorPage() {
   );
 
   const handleSave = () => {
+    if (calculation.purchasePrice <= 0 || calculation.arv <= 0 || calculation.projectMonths <= 0) {
+      toast.error(lang === "es"
+        ? "Completa precio de compra, ARV y duración antes de guardar."
+        : "Enter purchase price, ARV, and project duration before saving.");
+      return;
+    }
     const list = loadProjects();
     const id = editingId ?? Date.now();
     const existing = list.find((p) => p.id === id);
@@ -566,9 +582,9 @@ export default function FixFlipCalculatorPage() {
             {portal("title", lang === "es" ? "Calculadora Fix & Flip" : "Fix & Flip Calculator")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {lang === "es"
+            {portal("subtitle", lang === "es"
               ? "Paso 1: análisis de inversión"
-              : "Step 1: investment analysis"}
+              : "Step 1: investment analysis")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
