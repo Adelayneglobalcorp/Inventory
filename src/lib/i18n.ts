@@ -20,6 +20,8 @@ const resources = {
                 "sidebarToggle": "Toggle sidebar",
     "sortBy": "Sort by",
                 "perMonth": "per month",
+                "bedroomsShort": "beds",
+                "bathroomsShort": "baths",
     "sortNewest": "Newest first",
     "sortLow": "Lowest price",
     "sortHigh": "Highest price",
@@ -478,6 +480,8 @@ const resources = {
                 "sidebarToggle": "Mostrar u ocultar el menú lateral",
     "sortBy": "Ordenar por",
                 "perMonth": "al mes",
+                "bedroomsShort": "hab.",
+                "bathroomsShort": "baños",
     "sortNewest": "Más recientes primero",
     "sortLow": "Precio más bajo",
     "sortHigh": "Precio más alto",
@@ -935,5 +939,13 @@ i18n
             escapeValue: false
         }
     });
+
+if (typeof document !== 'undefined') {
+    const setDocumentLanguage = (language: string) => {
+        document.documentElement.lang = language.startsWith('es') ? 'es' : 'en';
+    };
+    setDocumentLanguage(i18n.resolvedLanguage || i18n.language || 'en');
+    i18n.on('languageChanged', setDocumentLanguage);
+}
 
 export default i18n;
