@@ -95,7 +95,19 @@ function exportScopePdf(data: ProjectManagerData, address: string, withValues: b
   line(address, true, 11);
   line((es ? "Proyecto " : "Project ") + data.projectId + " | " + new Date().toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
   line(es ? "Documento de planificación; sujeto a inspección y presupuesto final." : "Planning document; subject to inspection and final budget.", false, 9);
+  if (data.timeline?.startDate) line(
+    (es ? "Inicio estimado: " : "Planned start: ") +
+    new Date(data.timeline.startDate).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
+  if (data.timeline?.estimatedCompletion) line(
+    (es ? "Finalización estimada: " : "Planned finish: ") +
+    new Date(data.timeline.estimatedCompletion).toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
   y += 3;
+  const labels: Record<PMItem["status"], [string, string]> = {
+    PLANNING: ["Pendiente", "Planned"],
+    IN_PROGRESS: ["En progreso", "In progress"],
+    COMPLETED: ["Completado", "Completed"],
+    ON_HOLD: ["En espera", "On hold"],
+  };
   const rows = [...(data.items ?? [])].sort((a,b)=>
     (a.category + a.area).localeCompare(b.category + b.area));
   if (!rows.length) line(es ? "Todavía no hay tareas asignadas." : "No tasks assigned yet.");
@@ -107,8 +119,11 @@ function exportScopePdf(data: ProjectManagerData, address: string, withValues: b
     for (const task of group) {
       newPage(24);
       line(task.area + "  -  " + (task.description || task.workType || "-"), true);
-      line((es ? "Estado: " : "Status: ") + task.status +
+      line((es ? "Estado: " : "Status: ") + labels[task.status][es ? 0 : 1] +
         " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
+      const phase = data.phaseMeta?.[task.category + "::" + task.area];
+      if (phase?.coordinator) line((es ? "Responsable: " : "Coordinator: ") + phase.coordinator, false, 9);
+      if (phase?.estimatedDays) line((es ? "Días previstos: " : "Estimated days: ") + phase.estimatedDays, false, 9);
       if (task.notes) line((es ? "Notas: " : "Notes: ") + task.notes, false, 9);
       if (withValues) line((es ? "Estimado: " : "Estimated: ") + money(task.totalEstimated) +
         " | " + (es ? "Real: " : "Actual: ") + money(task.totalActual ?? 0), false, 9);
