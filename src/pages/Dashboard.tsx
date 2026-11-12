@@ -13,9 +13,11 @@ import { notifyLeadConnectorPropertyInterest } from '@/lib/propertyInterestWebho
 import type { Property } from '@/types/property';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { usePortalContent } from '@/lib/portalContent';
 
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
+  const portal = usePortalContent('dashboard', i18n.language.startsWith('en') ? 'en' : 'es');
   const { user, role, loading: authLoading } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,9 +183,9 @@ const Dashboard = () => {
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Inventory by Cash2Day</span>
             </div>
             <div>
-              <h1 className="font-[Montserrat] text-3xl font-bold tracking-tight text-white sm:text-4xl">{t('dashboard.title')}</h1>
+              <h1 className="font-[Montserrat] text-3xl font-bold tracking-tight text-white sm:text-4xl">{portal('title', t('dashboard.title'))}</h1>
               <p className="mt-3 max-w-2xl break-words text-sm leading-relaxed text-slate-300 sm:text-base">
-                {t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email })}
+                {portal('subtitle', t('dashboard.welcome', { name: user?.user_metadata?.full_name || user?.email }))}
               </p>
             </div>
             <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-gold-400/25 bg-gold-400/10 px-3 py-1.5 text-xs font-medium text-gold-300">
@@ -198,10 +200,10 @@ const Dashboard = () => {
         </div>
       </section>
 
-      <section aria-label={t('dashboard.title')} className="space-y-4">
+      <section aria-label={portal('title', t('dashboard.title'))} className="space-y-4">
         <div className="flex items-center gap-3">
           <span className="h-6 w-1 rounded-full bg-gold-400" aria-hidden="true" />
-          <h2 className="font-[Montserrat] text-lg font-semibold tracking-tight text-foreground sm:text-xl">{t('dashboard.title')}</h2>
+          <h2 className="font-[Montserrat] text-lg font-semibold tracking-tight text-foreground sm:text-xl">{portal('title', t('dashboard.title'))}</h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {statCards.map((stat, index) => (
