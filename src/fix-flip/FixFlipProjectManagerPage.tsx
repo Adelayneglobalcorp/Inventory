@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { formatCurrency } from "./calculations";
+import { usePortalContent } from "@/lib/portalContent";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
 import { defaultCategoryForArea } from "./pmDefaults";
@@ -849,6 +850,7 @@ function PmAddItemDialog({
 export default function FixFlipProjectManagerPage() {
   const { i18n } = useTranslation();
   const es = i18n.language.startsWith("es");
+  const portal = usePortalContent("pm", es ? "es" : "en");
   const pm = (s: string, e: string) => (es ? s : e);
   const { dealId: dealIdParam } = useParams<{ dealId: string }>();
   const navigate = useNavigate();
@@ -973,7 +975,7 @@ export default function FixFlipProjectManagerPage() {
         <div className="flex items-center gap-2">
           <HardHat className="h-6 w-6 text-primary" />
           <div>
-            <h1 className="font-[Montserrat] text-xl font-bold">{pm("Gestión de proyectos", "Project Management")}</h1>
+            <h1 className="font-[Montserrat] text-xl font-bold">{portal("title", pm("Gestión de proyectos", "Project Management"))}</h1>
             <p className="text-sm text-muted-foreground line-clamp-1">
               {deal.propertyAddress}
             </p>
