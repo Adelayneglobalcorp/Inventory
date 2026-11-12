@@ -173,14 +173,14 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-7 pb-8">
-      <section className="relative isolate overflow-hidden rounded-[28px] border border-gold-500/20 bg-gradient-to-br from-[#1e3559] via-[#152742] to-[#101b30] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.2)] sm:p-8 lg:p-10">
+      <section className="relative isolate overflow-hidden rounded-[28px] border border-gold-500/20 bg-gradient-to-br from-[#112e50] via-[#0a1e38] to-[#07162c] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.2)] sm:p-8 lg:p-10">
         <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-36 h-96 w-96 rounded-full border border-gold-400/10 bg-gold-500/[0.07] blur-3xl" />
         <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-8 h-40 w-40 rounded-full bg-blue-400/[0.07] blur-3xl" />
         <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0 space-y-4">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-7 rounded-full bg-gold-400" />
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Inventory by Cash2Day</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">GLOBAL 360 <span className="text-white/60">/ FIX &amp; FLIP</span></span>
             </div>
             <div>
               <h1 className="font-[Montserrat] text-3xl font-bold tracking-tight text-white sm:text-4xl">{portal('title', t('dashboard.title'))}</h1>
