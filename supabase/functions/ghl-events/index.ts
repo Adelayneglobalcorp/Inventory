@@ -69,9 +69,9 @@ async function onRegistration(userId: string) {
   const contactId = await upsertContact({
     email: user.email, fullName: name, phone, lang,
     tags: ["inventory-registrado", fromLanding ? "inventory-origen-landing" : "inventory-origen-app"],
-    source: fromLanding ? "Inventory · Landing" : "Inventory · App",
+    source: fromLanding ? "Global 360 · Landing" : "Global 360 · App",
   });
-  await advanceOpportunity(contactId, GHL.stages.registrado, `Inventory · ${name || user.email}`);
+  await advanceOpportunity(contactId, GHL.stages.registrado, `Global 360 · ${name || user.email}`);
 
   // Registro desde el landing: la persona aún no tiene contraseña → enlace seguro para crearla.
   let setPasswordLink: string | undefined;
@@ -106,12 +106,12 @@ async function onInterest(interestId: string) {
     email, fullName: name, phone, lang: langOf(profile?.preferred_language), tags: ["inventory-registrado", "inventory-interes"],
   });
   await addNote(contactId, [
-    "🏠 Interés en propiedad (Inventory)",
+    "🏠 Interés en propiedad (Global 360)",
     `Propiedad: ${prop.title ?? "—"}`, `Dirección: ${address || "—"}`,
     `Precio: ${money(prop.price)} · ARV: ${money(prop.arv)} · ROI: ${prop.roi != null ? prop.roi + "%" : "—"}`,
     `Fecha: ${new Date(it.created_at).toLocaleString("es-US", { timeZone: "America/New_York" })}`,
   ].join("\n"));
-  await advanceOpportunity(contactId, GHL.stages.interes, `Inventory · ${name || email}`, Number(prop.price) || undefined);
+  await advanceOpportunity(contactId, GHL.stages.interes, `Global 360 · ${name || email}`, Number(prop.price) || undefined);
   const adm = adminInterest({ name, email, phone, title: prop.title, address, price: prop.price, arv: prop.arv, roi: prop.roi, status: prop.status });
   await notifyAdmin(adm.subject, adm.html);
   return { contactId };
@@ -127,13 +127,13 @@ async function onFinancing(requestId: string) {
     email: f.email, fullName: f.full_name, phone: f.phone, lang, tags: ["inventory-registrado", "inventory-financiamiento"],
   });
   await addNote(contactId, [
-    "💰 Solicitud de financiamiento (Inventory)",
+    "💰 Solicitud de financiamiento (Global 360)",
     `Tipo: ${loanLabel(f.loan_type, "es")} · Monto solicitado: ${money(f.requested_amount)}`,
     `Propiedad: ${[f.property_address, f.city, f.state, f.postal_code].filter(Boolean).join(", ")}`,
     `Precio de compra: ${money(f.purchase_price)} · Reparación: ${money(f.rehab_budget)} · ARV: ${money(f.after_repair_value)} · Valor estimado: ${money(f.estimated_property_value)}`,
     `Notas: ${f.notes || "—"}`,
   ].join("\n"));
-  await advanceOpportunity(contactId, GHL.stages.financiamiento, `Inventory · ${f.full_name}`, Number(f.requested_amount) || undefined);
+  await advanceOpportunity(contactId, GHL.stages.financiamiento, `Global 360 · ${f.full_name}`, Number(f.requested_amount) || undefined);
 
   const mail = financingClientEmail(lang, f);
   await sendEmail(contactId, mail.subject, mail.html);

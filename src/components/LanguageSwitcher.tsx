@@ -7,6 +7,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Check, ChevronDown, Languages } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+
+/** Cambia el idioma de la interfaz y, si hay sesión, lo guarda como idioma de preferencia del usuario. */
+async function setLanguage(changeLanguage: (l: string) => Promise<unknown>, lang: 'es' | 'en') {
+  await changeLanguage(lang);
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) await supabase.from('profiles').update({ preferred_language: lang }).eq('id', data.user.id);
+  } catch {
+    /* sin sesión o sin permisos: solo cambia la interfaz */
+  }
+}
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
@@ -29,7 +41,7 @@ export function LanguageSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[165px] rounded-xl">
         <DropdownMenuItem
-          onSelect={() => void i18n.changeLanguage('es')}
+          onSelect={() => void setLanguage(i18n.changeLanguage.bind(i18n), 'es')}
           className="flex items-center justify-between gap-3"
           aria-current={currentLanguage === 'es' ? 'true' : undefined}
         >
@@ -37,7 +49,7 @@ export function LanguageSwitcher() {
           {currentLanguage === 'es' && <Check className="h-4 w-4 text-gold-500" aria-hidden="true" />}
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => void i18n.changeLanguage('en')}
+          onSelect={() => void setLanguage(i18n.changeLanguage.bind(i18n), 'en')}
           className="flex items-center justify-between gap-3"
           aria-current={currentLanguage === 'en' ? 'true' : undefined}
         >

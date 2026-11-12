@@ -1,10 +1,9 @@
-// Plantillas de correo de Inventory (ES/EN). Diseño claro, tablas y estilos en línea,
+// Plantillas de correo de Global 360 (ES/EN). Diseño claro, tablas y estilos en línea,
 // botón "bulletproof" (relleno en la celda) para que se vea igual en Gmail, Outlook y móvil.
 import type { Lang } from "./ghl.ts";
 
 export const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://inventoryapp.buycash2day.com").replace(/\/$/, "");
-const BANNER = "https://files.leadconnectorhq.com/file/698e13f600076172f2c90ffb/listado.png";
-const LOGO = "https://storage.googleapis.com/funnel-ai-production/chat/d9ywc9jnJ91bEk3uYHfg/inventry.png";
+const LOGO = "https://files.leadconnectorhq.com/file/6af63a7b9b3d448d8097c581/global-360-fondos-claros.png";
 
 const C = { navy: "#0b1730", gold: "#d9ad4f", goldDark: "#b8862d", text: "#4a5468", muted: "#8a93a6", soft: "#f6f7fa", line: "#e6e9f0" };
 const FONT = "Arial,Helvetica,sans-serif";
@@ -42,15 +41,13 @@ ${rows.map(([k, v], i) => `<tr><td style="padding:11px 16px;font-family:${FONT};
 }
 
 function layout(o: { lang: Lang; preheader: string; eyebrow: string; title: string; body: string; footerNote: string; banner?: boolean }): string {
-  const team = o.lang === "en" ? "The Inventory team" : "El equipo de Inventory";
+  const team = o.lang === "en" ? "The Global 360 team" : "El equipo de Global 360";
   return `<div style="margin:0;padding:0;background-color:#eef1f6;">
 <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${esc(o.preheader)}</span>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef1f6" style="background-color:#eef1f6;"><tr><td align="center" style="padding:28px 12px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;border-radius:16px;overflow:hidden;">
-${o.banner === false
-    ? `<tr><td align="center" style="padding:28px 24px 8px 24px;"><img src="${LOGO}" width="150" alt="Inventory" style="display:block;width:150px;height:auto;border:0;"></td></tr>`
-    : `<tr><td style="padding:0;line-height:0;font-size:0;"><a href="${SITE_URL}" target="_blank"><img src="${BANNER}" width="600" alt="Inventory by Buy Cash 2day" style="display:block;width:100%;max-width:600px;height:auto;border:0;"></a></td></tr>
-<tr><td style="height:4px;line-height:4px;font-size:0;background-color:${C.gold};">&nbsp;</td></tr>`}
+<tr><td align="center" style="padding:30px 24px 22px 24px;background-color:#ffffff;"><a href="${SITE_URL}" target="_blank"><img src="${LOGO}" width="${o.banner === false ? 120 : 160}" alt="Global 360 by Adelayne Global Corp" style="display:block;width:${o.banner === false ? 120 : 160}px;height:auto;border:0;"></a></td></tr>
+<tr><td style="height:4px;line-height:4px;font-size:0;background-color:${C.gold};">&nbsp;</td></tr>
 <tr><td style="padding:36px 40px 8px 40px;font-family:${FONT};">
 <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:${C.goldDark};font-weight:bold;">${esc(o.eyebrow)}</p>
 <h1 style="margin:0 0 18px 0;font-size:26px;line-height:1.25;color:${C.navy};font-weight:bold;">${esc(o.title)}</h1>
@@ -58,10 +55,10 @@ ${o.body}
 </td></tr>
 <tr><td style="padding:22px 40px 36px 40px;font-family:${FONT};">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="middle" style="padding:0 14px 0 0;"><img src="${LOGO}" width="92" alt="Inventory" style="display:block;width:92px;height:auto;border:0;"></td>
-<td style="border-left:3px solid ${C.gold};padding:2px 0 2px 14px;font-family:${FONT};"><p style="margin:0;font-size:15px;line-height:1.5;color:${C.navy};font-weight:bold;">${team}</p><p style="margin:0;font-size:13px;line-height:1.5;color:${C.muted};">by Buy Cash 2day</p></td>
+<td valign="middle" style="padding:0 14px 0 0;"><img src="${LOGO}" width="64" alt="Global 360" style="display:block;width:64px;height:auto;border:0;"></td>
+<td style="border-left:3px solid ${C.gold};padding:2px 0 2px 14px;font-family:${FONT};"><p style="margin:0;font-size:15px;line-height:1.5;color:${C.navy};font-weight:bold;">${team}</p><p style="margin:0;font-size:13px;line-height:1.5;color:${C.muted};">by Adelayne Global Corp</p></td>
 </tr></table></td></tr>
-<tr><td align="center" style="padding:20px 30px;background-color:${C.navy};font-family:${FONT};font-size:12px;line-height:1.7;color:${C.muted};">${esc(o.footerNote)}<br>Inventory by Buy Cash 2day &middot; Fort Lauderdale, FL &middot; <a href="mailto:info@buycash2day.com" style="color:${C.gold};text-decoration:none;">info@buycash2day.com</a></td></tr>
+<tr><td align="center" style="padding:20px 30px;background-color:${C.navy};font-family:${FONT};font-size:12px;line-height:1.7;color:${C.muted};">${esc(o.footerNote)}<br>Global 360 by Adelayne Global Corp &middot; Fort Lauderdale, FL &middot; <a href="mailto:info@buycash2day.com" style="color:${C.gold};text-decoration:none;">info@buycash2day.com</a></td></tr>
 </table></td></tr></table></div>`;
 }
 
@@ -86,15 +83,15 @@ export function registrationEmail(lang: Lang, name: string, setPasswordLink?: st
         { title: "Evaluate for 7 days.", text: "Your evaluation period has no cost." },
       ];
     return {
-      subject: `Welcome to Inventory, ${(name || "").split(" ")[0] || "investor"} — your access is ready`,
+      subject: `Welcome to Global 360, ${(name || "").split(" ")[0] || "investor"} — your access is ready`,
       html: layout({
-        lang, preheader: "Your Inventory account is active. Sign in now.", eyebrow: "Registration confirmed",
-        title: `Welcome to Inventory, ${first}`,
+        lang, preheader: "Your Global 360 account is active. Sign in now.", eyebrow: "Registration confirmed",
+        title: `Welcome to Global 360, ${first}`,
         body: p("Your account is active and you have <strong style=\"color:#0b1730;\">immediate access</strong> to the private portal for off-market Fix &amp; Flip opportunities.") +
           spacer(8) + steps(s, "Next steps") + spacer() +
-          button(setPasswordLink ? "Create my password" : "Sign in to Inventory", setPasswordLink ?? `${SITE_URL}/login`) + spacer(20) +
+          button(setPasswordLink ? "Create my password" : "Sign in to Global 360", setPasswordLink ?? `${SITE_URL}/login`) + spacer(20) +
           p("If you have any questions, simply reply to this email. We are happy to help."),
-        footerNote: "You are receiving this email because you registered for Inventory.",
+        footerNote: "You are receiving this email because you registered for Global 360.",
       }),
     };
   }
@@ -110,15 +107,15 @@ export function registrationEmail(lang: Lang, name: string, setPasswordLink?: st
       { title: "Evalúa durante 7 días.", text: "Tu periodo de evaluación no tiene ningún costo." },
     ];
   return {
-    subject: `Bienvenido a Inventory, ${(name || "").split(" ")[0] || "inversionista"}: tu acceso está listo`,
+    subject: `Bienvenido a Global 360, ${(name || "").split(" ")[0] || "inversionista"}: tu acceso está listo`,
     html: layout({
-      lang, preheader: "Tu cuenta de Inventory está activa. Ingresa ahora.", eyebrow: "Registro confirmado",
-      title: `Bienvenido a Inventory, ${first}`,
+      lang, preheader: "Tu cuenta de Global 360 está activa. Ingresa ahora.", eyebrow: "Registro confirmado",
+      title: `Bienvenido a Global 360, ${first}`,
       body: p("Tu cuenta está activa y ya tienes <strong style=\"color:#0b1730;\">acceso inmediato</strong> al portal privado de oportunidades Fix &amp; Flip fuera del mercado.") +
         spacer(8) + steps(s, "Próximos pasos") + spacer() +
-        button(setPasswordLink ? "Crear mi contraseña" : "Ingresar a Inventory", setPasswordLink ?? `${SITE_URL}/login`) + spacer(20) +
+        button(setPasswordLink ? "Crear mi contraseña" : "Ingresar a Global 360", setPasswordLink ?? `${SITE_URL}/login`) + spacer(20) +
         p("Si tienes alguna pregunta, simplemente responde a este correo. Será un gusto ayudarte."),
-      footerNote: "Recibes este correo porque te registraste en Inventory.",
+      footerNote: "Recibes este correo porque te registraste en Global 360.",
     }),
   };
 }
@@ -130,20 +127,20 @@ export function authActionEmail(lang: Lang, action: string, link: string, name?:
   const kind = action === "recovery" ? "recovery" : action === "invite" ? "invite" : action === "email_change" ? "email_change" : action === "magiclink" ? "magiclink" : "signup";
   const copy = {
     recovery: en
-      ? { subject: "Reset your Inventory password", eyebrow: "Password recovery", title: "Reset your password", text: "We received a request to reset the password for your Inventory account. Use the button below to choose a new one. The link expires in 1 hour.", cta: "Reset my password", note: "If you did not request this, you can ignore this email; your password will not change." }
-      : { subject: "Restablece tu contraseña de Inventory", eyebrow: "Recuperación de contraseña", title: "Restablece tu contraseña", text: "Recibimos una solicitud para restablecer la contraseña de tu cuenta de Inventory. Usa el botón para elegir una nueva. El enlace vence en 1 hora.", cta: "Restablecer mi contraseña", note: "Si no solicitaste este cambio, ignora este correo; tu contraseña no cambiará." },
+      ? { subject: "Reset your Global 360 password", eyebrow: "Password recovery", title: "Reset your password", text: "We received a request to reset the password for your Global 360 account. Use the button below to choose a new one. The link expires in 1 hour.", cta: "Reset my password", note: "If you did not request this, you can ignore this email; your password will not change." }
+      : { subject: "Restablece tu contraseña de Global 360", eyebrow: "Recuperación de contraseña", title: "Restablece tu contraseña", text: "Recibimos una solicitud para restablecer la contraseña de tu cuenta de Global 360. Usa el botón para elegir una nueva. El enlace vence en 1 hora.", cta: "Restablecer mi contraseña", note: "Si no solicitaste este cambio, ignora este correo; tu contraseña no cambiará." },
     invite: en
-      ? { subject: "Your access to Inventory is ready", eyebrow: "Invitation", title: "Create your password", text: "Your access to Inventory is ready. Create your password to sign in to the portal.", cta: "Create my password", note: "This link is personal; please do not share it." }
-      : { subject: "Tu acceso a Inventory está listo", eyebrow: "Invitación", title: "Crea tu contraseña", text: "Tu acceso a Inventory está listo. Crea tu contraseña para ingresar al portal.", cta: "Crear mi contraseña", note: "Este enlace es personal; no lo compartas." },
+      ? { subject: "Your access to Global 360 is ready", eyebrow: "Invitation", title: "Create your password", text: "Your access to Global 360 is ready. Create your password to sign in to the portal.", cta: "Create my password", note: "This link is personal; please do not share it." }
+      : { subject: "Tu acceso a Global 360 está listo", eyebrow: "Invitación", title: "Crea tu contraseña", text: "Tu acceso a Global 360 está listo. Crea tu contraseña para ingresar al portal.", cta: "Crear mi contraseña", note: "Este enlace es personal; no lo compartas." },
     email_change: en
-      ? { subject: "Confirm your new email for Inventory", eyebrow: "Email change", title: "Confirm your new email", text: "Confirm the email change for your Inventory account.", cta: "Confirm email", note: "If you did not request this change, contact us." }
-      : { subject: "Confirma tu nuevo correo en Inventory", eyebrow: "Cambio de correo", title: "Confirma tu nuevo correo", text: "Confirma el cambio de correo de tu cuenta de Inventory.", cta: "Confirmar correo", note: "Si no solicitaste este cambio, escríbenos." },
+      ? { subject: "Confirm your new email for Global 360", eyebrow: "Email change", title: "Confirm your new email", text: "Confirm the email change for your Global 360 account.", cta: "Confirm email", note: "If you did not request this change, contact us." }
+      : { subject: "Confirma tu nuevo correo en Global 360", eyebrow: "Cambio de correo", title: "Confirma tu nuevo correo", text: "Confirma el cambio de correo de tu cuenta de Global 360.", cta: "Confirmar correo", note: "Si no solicitaste este cambio, escríbenos." },
     magiclink: en
-      ? { subject: "Your Inventory sign-in link", eyebrow: "Sign in", title: "Your sign-in link", text: "Use the button to sign in to Inventory. The link expires in 1 hour.", cta: "Sign in", note: "If you did not request this, ignore this email." }
-      : { subject: "Tu enlace para ingresar a Inventory", eyebrow: "Ingreso", title: "Tu enlace de acceso", text: "Usa el botón para ingresar a Inventory. El enlace vence en 1 hora.", cta: "Ingresar", note: "Si no lo solicitaste, ignora este correo." },
+      ? { subject: "Your Global 360 sign-in link", eyebrow: "Sign in", title: "Your sign-in link", text: "Use the button to sign in to Global 360. The link expires in 1 hour.", cta: "Sign in", note: "If you did not request this, ignore this email." }
+      : { subject: "Tu enlace para ingresar a Global 360", eyebrow: "Ingreso", title: "Tu enlace de acceso", text: "Usa el botón para ingresar a Global 360. El enlace vence en 1 hora.", cta: "Ingresar", note: "Si no lo solicitaste, ignora este correo." },
     signup: en
-      ? { subject: "Confirm your Inventory account", eyebrow: "Confirm your email", title: "Confirm your account", text: "Confirm your email to activate your Inventory account.", cta: "Confirm my account", note: "If you did not create this account, ignore this email." }
-      : { subject: "Confirma tu cuenta de Inventory", eyebrow: "Confirma tu correo", title: "Confirma tu cuenta", text: "Confirma tu correo para activar tu cuenta de Inventory.", cta: "Confirmar mi cuenta", note: "Si no creaste esta cuenta, ignora este correo." },
+      ? { subject: "Confirm your Global 360 account", eyebrow: "Confirm your email", title: "Confirm your account", text: "Confirm your email to activate your Global 360 account.", cta: "Confirm my account", note: "If you did not create this account, ignore this email." }
+      : { subject: "Confirma tu cuenta de Global 360", eyebrow: "Confirma tu correo", title: "Confirma tu cuenta", text: "Confirma tu correo para activar tu cuenta de Global 360.", cta: "Confirmar mi cuenta", note: "Si no creaste esta cuenta, ignora este correo." },
   }[kind];
   return {
     subject: copy.subject,
@@ -152,7 +149,7 @@ export function authActionEmail(lang: Lang, action: string, link: string, name?:
       title: first ? `${copy.title}, ${first}` : copy.title,
       body: p(copy.text) + spacer(10) + button(copy.cta, link) + spacer(22) +
         `<p style="margin:0;font-size:13px;line-height:1.6;color:${C.muted};">${esc(copy.note)}</p>`,
-      footerNote: en ? "Security email from your Inventory account." : "Correo de seguridad de tu cuenta de Inventory.",
+      footerNote: en ? "Security email from your Global 360 account." : "Correo de seguridad de tu cuenta de Global 360.",
     }),
   };
 }
@@ -186,7 +183,7 @@ export function financingClientEmail(lang: Lang, f: Financing) {
   const en = lang === "en";
   const first = esc((f.full_name || "").split(" ")[0]);
   return {
-    subject: en ? "We received your financing request — Inventory" : "Recibimos tu solicitud de financiamiento — Inventory",
+    subject: en ? "We received your financing request — Global 360" : "Recibimos tu solicitud de financiamiento — Global 360",
     html: layout({
       lang, preheader: en ? "Our team will review your request and contact you." : "Nuestro equipo revisará tu solicitud y te contactará.",
       eyebrow: en ? "Financing request" : "Solicitud de financiamiento",
@@ -198,7 +195,7 @@ export function financingClientEmail(lang: Lang, f: Financing) {
         dataTable(financingRows(f, lang)) + spacer() +
         button(en ? "View my request" : "Ver mi solicitud", `${SITE_URL}/financing`) + spacer(20) +
         p(en ? "If you need to add information, simply reply to this email." : "Si necesitas agregar información, simplemente responde a este correo."),
-      footerNote: en ? "You are receiving this email because you submitted a financing request in Inventory." : "Recibes este correo porque enviaste una solicitud de financiamiento en Inventory.",
+      footerNote: en ? "You are receiving this email because you submitted a financing request in Global 360." : "Recibes este correo porque enviaste una solicitud de financiamiento en Global 360.",
     }),
   };
 }
@@ -207,16 +204,16 @@ export function financingClientEmail(lang: Lang, f: Financing) {
 
 function internal(title: string, intro: string, rows: [string, string][], cta?: { label: string; href: string }) {
   return layout({
-    lang: "es", banner: false, preheader: intro, eyebrow: "Aviso interno · Inventory", title,
+    lang: "es", banner: false, preheader: intro, eyebrow: "Aviso interno · Global 360", title,
     body: p(intro) + dataTable(rows) + (cta ? spacer(24) + button(cta.label, cta.href) : ""),
-    footerNote: "Notificación automática de la plataforma Inventory.",
+    footerNote: "Notificación automática de la plataforma Global 360.",
   });
 }
 
 export function adminNewUser(u: { name: string; email: string; phone?: string | null; lang: Lang; source: string }) {
   return {
     subject: `Tienes un nuevo registrado en tu plataforma: ${u.name || u.email}`,
-    html: internal("Nuevo registrado en Inventory", "Tienes un nuevo registrado en tu plataforma.", [
+    html: internal("Nuevo registrado en Global 360", "Tienes un nuevo registrado en tu plataforma.", [
       ["Nombre", u.name || "—"], ["Correo", u.email], ["Teléfono", u.phone || "—"],
       ["Idioma", u.lang === "en" ? "English" : "Español"], ["Origen", u.source],
     ], { label: "Ver usuarios", href: `${SITE_URL}/admin` }),

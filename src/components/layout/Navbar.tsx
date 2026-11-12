@@ -53,8 +53,8 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 border-b border-border/70 bg-card/95 shadow-[0_3px_24px_rgba(0,0,0,0.12)] backdrop-blur-xl" aria-label={t('nav.navigation')}>
       <div className="mx-auto flex h-[84px] w-full max-w-[1600px] items-center justify-between gap-3 px-3 sm:px-5 lg:px-7">
-        <Link to="/properties" className="flex min-w-0 shrink-0 items-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Inventory by Cash2Day">
-          <img src="/logo.png" alt="Inventory by Cash2Day" className="h-[60px] w-auto max-w-[130px] object-contain sm:max-w-[160px]" />
+        <Link to="/properties" className="flex min-w-0 shrink-0 items-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Global 360 by Adelayne Global Corp">
+          <img src="/logo.png" alt="Global 360 by Adelayne Global Corp" className="h-[60px] w-auto max-w-[130px] object-contain sm:max-w-[160px]" />
         </Link>
 
         {/* Compact on laptops; icons and readable labels on larger screens. */}

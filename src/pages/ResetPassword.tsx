@@ -70,7 +70,7 @@ const ResetPassword = () => {
 
             <div className="w-full max-w-md space-y-6">
                 <div className="text-center">
-                    <img src="/logo.png" alt="Inventory by Cash2Day" className="mx-auto mb-8 drop-shadow-lg rounded-lg bg-black/10 p-4 backdrop-blur-sm" style={{ width: 'calc(100% + 20px)', height: '288px' }} />
+                    <img src="/logo.png" alt="Global 360 by Adelayne Global Corp" className="mx-auto mb-8 drop-shadow-lg rounded-lg bg-black/10 p-4 backdrop-blur-sm" style={{ width: 'calc(100% + 20px)', height: '288px' }} />
                     <h1 className="font-[Montserrat] text-4xl font-bold text-white">
                         {t('resetPassword.newPasswordTitle')}
                     </h1>

@@ -8,7 +8,20 @@ import { notifySignupWebhook } from '@/lib/signupWebhook';
 export type SignUpOptions = {
   isAdmin?: boolean;
   phone?: string;
+  /** Idioma de preferencia elegido en el registro (obligatorio para usuarios generales). */
+  language?: 'es' | 'en';
 };
+
+/** Aplica a la interfaz el idioma guardado en el perfil del usuario. */
+async function applyProfileLanguage(userId: string) {
+  try {
+    const { data } = await supabase.from('profiles').select('preferred_language').eq('id', userId).maybeSingle();
+    const lang = (data as { preferred_language?: string } | null)?.preferred_language;
+    if ((lang === 'es' || lang === 'en') && i18n.resolvedLanguage !== lang) await i18n.changeLanguage(lang);
+  } catch {
+    /* sin idioma guardado: se mantiene el del navegador */
+  }
+}
 
 interface AuthContextType {
   user: User | null;
@@ -37,6 +50,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initAuth = async () => {
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+
+        // «Recordarme» desmarcado: la sesión no sobrevive al cerrar el navegador.
+        let notRemembered = false;
+        try { notRemembered = localStorage.getItem('g360_remember') === '0' && !sessionStorage.getItem('g360_session_alive'); } catch { /* noop */ }
+        if (currentSession?.user && notRemembered) {
+          await supabase.auth.signOut();
+          return;
+        }
+        if (currentSession?.user) void applyProfileLanguage(currentSession.user.id);
 
         if (currentSession?.user) {
           setSession(currentSession);
@@ -130,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Verificar si el usuario está aprobado en la tabla profiles
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('role, is_approved, full_name')
+        .select('role, is_approved, full_name, preferred_language')
         .eq('id', data.user.id)
         .single();
 
@@ -166,6 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      const preferred = (profile as { preferred_language?: string }).preferred_language;
+      if (preferred === 'es' || preferred === 'en') await i18n.changeLanguage(preferred);
+
       console.log('✅ Sign in successful for approved user');
       return { error: null };
     } catch (err: any) {
@@ -177,6 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string, options?: SignUpOptions): Promise<{ error: Error | null }> => {
     const isAdmin = options?.isAdmin ?? false;
     const phone = options?.phone?.trim() || undefined;
+    const language = options?.language ?? (i18n.resolvedLanguage === 'en' ? 'en' : 'es');
 
     console.log('🔵 SignUp started:', { email, fullName, isAdmin, hasPhone: Boolean(phone) });
 
@@ -189,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailRedirectTo: window.location.origin,
           data: {
             full_name: fullName,
+            language,
             role: isAdmin ? 'admin' : 'pendiente',
             ...(phone ? { phone } : {}),
           },
@@ -212,6 +239,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...(phone ? { phone } : {}),
           role: isAdmin ? 'admin' : 'pendiente',
           is_approved: false,
+          preferred_language: language,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }, {

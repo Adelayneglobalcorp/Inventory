@@ -6,7 +6,7 @@ const GHL_BASE = "https://services.leadconnectorhq.com";
 export const GHL = {
   locationId: Deno.env.get("GHL_LOCATION_ID") ?? "d9ywc9jnJ91bEk3uYHfg",
   adminContactId: Deno.env.get("GHL_ADMIN_CONTACT_ID") ?? "muTjlvcnhpLsKwqz4poM",
-  emailFrom: Deno.env.get("GHL_EMAIL_FROM") ?? "Inventory · Buy Cash 2day <Hello@info.buycash2day.com>",
+  emailFrom: Deno.env.get("GHL_EMAIL_FROM") ?? "Global 360 · Adelayne Global Corp <Hello@info.buycash2day.com>",
   pipelineId: Deno.env.get("GHL_PIPELINE_ID") ?? "r6xWZWU7zBV9xvzexMCe",
   stages: {
     registrado: "1ba856fa-8125-4f0b-bd50-633fe77856bb",

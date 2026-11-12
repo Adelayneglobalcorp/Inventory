@@ -180,7 +180,7 @@ const Dashboard = () => {
           <div className="min-w-0 space-y-4">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-7 rounded-full bg-gold-400" />
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Inventory by Cash2Day</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-300">Global 360</span>
             </div>
             <div>
               <h1 className="font-[Montserrat] text-3xl font-bold tracking-tight text-white sm:text-4xl">{portal('title', t('dashboard.title'))}</h1>
