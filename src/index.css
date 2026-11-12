@@ -212,3 +212,64 @@
     animation-duration: 0.01ms !important;
   }
 }
+
+
+/* Global 360 brand system — navy, champagne-gold, careful contrast and quiet motion. */
+.g360-login {
+  background:
+    radial-gradient(ellipse at 24% 38%, rgba(16, 75, 123, .34), transparent 49%),
+    radial-gradient(ellipse at 93% 4%, rgba(3, 22, 46, .75), transparent 47%),
+    linear-gradient(135deg, #09223d 0%, #07172d 53%, #041023 100%);
+}
+.g360-login::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: .3;
+  background: linear-gradient(115deg, transparent 0 46%, rgba(209, 163, 68, .08) 49%, transparent 52%);
+}
+.g360-entrance-left { animation: g360-rise .7s both ease-out; }
+.g360-entrance-card { animation: g360-rise .9s .12s both ease-out; }
+.g360-before-after img { transition: transform .8s cubic-bezier(.22,.61,.36,1); }
+.g360-before-after:hover img { transform: scale(1.035); }
+.g360-auth-input { color-scheme: dark; }
+.g360-login .app-phone-input.PhoneInput {
+  border-color: rgba(255,255,255,.17);
+  background: rgba(40,67,95,.65);
+  color: #fff;
+}
+.g360-login .app-phone-input .PhoneInputInput { color: #fff; }
+.g360-login .app-phone-input .PhoneInputInput::placeholder { color: #9aa9bf; }
+.g360-header-brand > span:last-child { display: none; }
+.g360-topbar .g360-header-brand { color: #fff; }
+.g360-app {
+  background:
+    radial-gradient(circle at 90% 4%, rgba(31, 68, 106, .18), transparent 37rem),
+    radial-gradient(circle at 8% 86%, rgba(179, 135, 42, .045), transparent 28rem),
+    hsl(var(--background));
+}
+.g360-app main > section,
+.g360-app main > div > section {
+  animation: g360-rise .45s both ease-out;
+}
+.g360-app main .rounded-2xl {
+  transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+.g360-app main .rounded-2xl:hover {
+  border-color: rgba(225,174,74,.23);
+}
+@keyframes g360-rise {
+  from { opacity: 0; transform: translateY(11px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (min-width: 1280px) {
+  .g360-header-brand > span:last-child { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .g360-entrance-left, .g360-entrance-card,
+  .g360-app main > section, .g360-app main > div > section {
+    animation: none !important;
+  }
+  .g360-before-after img { transition: none !important; }
+}
