@@ -631,9 +631,10 @@ export default function FixFlipCalculatorPage() {
                   </Label>
                   <Input
                     value={inputs.propertyAddress}
-                    onChange={(e) =>
-                      setInputs((p) => ({ ...p, propertyAddress: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setSelectedInventoryId(null);
+                      setInputs((p) => ({ ...p, propertyAddress: e.target.value }));
+                    }}
                     placeholder={lang === "es" ? "Escribe una dirección nueva" : "Enter a new address"}
                     className="bg-background"
                   />
