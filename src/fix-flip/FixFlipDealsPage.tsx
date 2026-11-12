@@ -73,13 +73,14 @@ export default function FixFlipDealsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <header className="g360-section-header flex flex-col gap-4 rounded-[26px] border border-[#d4aa56]/20 bg-gradient-to-br from-[#183958] to-[#07182f] p-6 shadow-[0_16px_50px_rgba(0,0,0,.12)] sm:p-8 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[.22em] text-[#e7bf63]">Global 360 / Fix &amp; Flip</p>
+          <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2 text-white sm:text-3xl">
             <FolderKanban className="h-7 w-7 text-primary" />
             {portal('title', t('dealsPage.title'))}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-slate-200/80">
             {portal('subtitle', t('dealsPage.subtitle'))}
           </p>
         </div>
@@ -93,9 +94,9 @@ export default function FixFlipDealsPage() {
           {t('dealsPage.new')}
         </Button>
         </div>
-      </div>
+      </header>
 
-      <Card>
+      <Card className="overflow-hidden rounded-2xl border-[#d4aa56]/15 bg-gradient-to-br from-[#162840] to-[#101f35] shadow-lg">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">{t('dealsPage.list')}</CardTitle>
         </CardHeader>
