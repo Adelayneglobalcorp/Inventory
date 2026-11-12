@@ -57,6 +57,7 @@ import {
 import type { FixFlipLanguage, FixFlipProject, UnderwritingInputs } from "./types";
 import { loadProjects, saveProjects } from "./storage";
 import { getProperties } from "@/lib/properties";
+import { usePortalContent } from "@/lib/portalContent";
 
 /** Campos numéricos del formulario (excl. texto y select). */
 type NumericInputKey = Exclude<
@@ -147,6 +148,7 @@ export default function FixFlipCalculatorPage() {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const lang: FixFlipLanguage = i18n.language.startsWith("en") ? "en" : "es";
+  const portal = usePortalContent("calculator", lang);
   const hmlI18n = useMemo(
     () =>
       lang === "es"
@@ -561,7 +563,7 @@ export default function FixFlipCalculatorPage() {
         <div>
           <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
             <Calculator className="h-7 w-7 text-primary" />
-            {lang === "es" ? "Calculadora Fix & Flip" : "Fix & Flip Calculator"}
+            {portal("title", lang === "es" ? "Calculadora Fix & Flip" : "Fix & Flip Calculator")}
           </h1>
           <p className="text-sm text-muted-foreground">
             {lang === "es"
