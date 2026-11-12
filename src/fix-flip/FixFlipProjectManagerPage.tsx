@@ -43,7 +43,9 @@ import {
   Trash2,
   HardHat,
   Trees,
+  FileDown,
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { formatCurrency } from "./calculations";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
@@ -60,9 +62,61 @@ import {
   hydrateProjectManagerData,
   loadPmData,
   loadProjects,
+  buildPropertySpaces,
   recalcPmBudget,
   savePmData,
 } from "./storage";
+
+/** Export only selected project tasks; no costs in the contractor-facing version. */
+function exportScopePdf(data: ProjectManagerData, address: string, withValues: boolean, es: boolean): void {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const money = (n: number) => formatCurrency(Number(n) || 0);
+  let y = 22;
+  const newPage = (needed = 14) => {
+    if (y + needed > 275) { doc.addPage(); y = 22; }
+  };
+  const line = (value: string, bold = false, size = 10) => {
+    doc.setFont("helvetica", bold ? "bold" : "normal");
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(value || "-", 168) as string[];
+    newPage(lines.length * 5 + 4);
+    doc.text(lines, 20, y);
+    y += lines.length * 5 + 3;
+  };
+  doc.setFillColor(22, 40, 65);
+  doc.rect(0, 0, 210, 14, "F");
+  doc.setTextColor(24, 42, 69);
+  line("ADELAYNE GLOBAL CORP | " + (es ? "ALCANCE DE TRABAJO" : "SCOPE OF WORK"), true, 15);
+  line(address, true, 11);
+  line((es ? "Proyecto " : "Project ") + data.projectId + " | " + new Date().toLocaleDateString(es ? "es-US" : "en-US"), false, 9);
+  line(es ? "Documento de planificación; sujeto a inspección y presupuesto final." : "Planning document; subject to inspection and final budget.", false, 9);
+  y += 3;
+  const rows = [...(data.items ?? [])].sort((a,b)=>
+    (a.category + a.area).localeCompare(b.category + b.area));
+  if (!rows.length) line(es ? "Todavía no hay tareas asignadas." : "No tasks assigned yet.");
+  for (const category of ["INTERIOR", "EXTERIOR"] as const) {
+    const group = rows.filter((t) => t.category === category);
+    if (!group.length) continue;
+    newPage(18);
+    line(category === "INTERIOR" ? (es ? "INTERIOR" : "INTERIOR") : (es ? "EXTERIOR" : "EXTERIOR"), true, 12);
+    for (const task of group) {
+      newPage(24);
+      line(task.area + "  -  " + (task.description || task.workType || "-"), true);
+      line((es ? "Estado: " : "Status: ") + task.status +
+        " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
+      if (task.notes) line((es ? "Notas: " : "Notes: ") + task.notes, false, 9);
+      if (withValues) line((es ? "Estimado: " : "Estimated: ") + money(task.totalEstimated) +
+        " | " + (es ? "Real: " : "Actual: ") + money(task.totalActual ?? 0), false, 9);
+    }
+  }
+  if (withValues) {
+    y += 5;
+    line((es ? "Presupuesto original: " : "Original budget: ") + money(data.dealRepairBudget), true);
+    line((es ? "Presupuesto detallado: " : "Detailed budget: ") + money(data.budget.total));
+    line((es ? "Costo real: " : "Actual spent: ") + money(data.budget.used));
+  }
+  doc.save("adelayne-scope-" + data.projectId + (withValues ? "-budget" : "-tasks") + ".pdf");
+}
 
 const STATUSES: PMItem["status"][] = [
   "PLANNING",
@@ -217,6 +271,7 @@ function PmAddItemDialog({
   baseData,
   onSaved,
   editItemId,
+  initialArea,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -224,6 +279,7 @@ function PmAddItemDialog({
   baseData: ProjectManagerData;
   onSaved: (next: ProjectManagerData) => void;
   editItemId: string | null;
+  initialArea?: string;
 }) {
   const { i18n } = useTranslation();
   const pm = (spanish: string, english: string) => i18n.resolvedLanguage === "es" ? spanish : english;
@@ -267,7 +323,7 @@ function PmAddItemDialog({
       setNotes(existing.notes || "");
       setTotalActual(Number(existing.totalActual) || 0);
     } else {
-      setSelectedArea("");
+      setSelectedArea(initialArea || "");
       setSelectedSubs([]);
       setMaterials(0);
       setLabor(0);
@@ -281,7 +337,7 @@ function PmAddItemDialog({
       setNotes("");
       setTotalActual(0);
     }
-  }, [open, baseData, editItemId]);
+  }, [open, baseData, editItemId, initialArea]);
 
   const db = working.subcategoryDatabase ?? {};
   const areaMap = working.areaCategoryMap ?? {};
@@ -802,6 +858,7 @@ export default function FixFlipProjectManagerPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [addCategory, setAddCategory] = useState<"INTERIOR" | "EXTERIOR">("INTERIOR");
   const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [presetArea, setPresetArea] = useState<string | undefined>(undefined);
   const [completeTargetItem, setCompleteTargetItem] = useState<PMItem | null>(null);
 
   const deal = useMemo(() => {
@@ -822,7 +879,7 @@ export default function FixFlipProjectManagerPage() {
     const existing = loadPmData(dealId);
     const base =
       existing ||
-      createDefaultPmData(dealId, deal.rehabBudget || 0);
+      createDefaultPmData(dealId, deal.rehabBudget || 0, deal.inventorySnapshot);
     setData(recalcPmBudget(hydrateProjectManagerData(base)));
   }, [dealId, deal, navigate]);
 
@@ -876,6 +933,7 @@ export default function FixFlipProjectManagerPage() {
 
   const openEditItem = useCallback((item: PMItem) => {
     setEditItemId(item.id);
+    setPresetArea(undefined);
     setAddCategory(item.category);
     setAddOpen(true);
   }, []);
@@ -970,6 +1028,20 @@ export default function FixFlipProjectManagerPage() {
         </Card>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card/60 p-3">
+        <span className="mr-auto text-sm font-medium">{pm("Documentos de obra / Scope of Work", "Construction scope / Scope of Work")}</span>
+        <Button type="button" size="sm" variant="outline" onClick={() => exportScopePdf(data, deal.propertyAddress, false, es)}>
+          <FileDown className="mr-2 h-4 w-4" />{pm("PDF sin valores", "PDF without costs")}
+        </Button>
+        <Button type="button" size="sm" onClick={() => exportScopePdf(data, deal.propertyAddress, true, es)}>
+          <FileDown className="mr-2 h-4 w-4" />{pm("PDF con valores", "PDF with costs")}
+        </Button>
+        {(!data.spaces || data.spaces.length === 0) && deal.inventorySnapshot && (
+          <Button type="button" size="sm" variant="secondary" onClick={() => persist({
+            ...data, spaces: buildPropertySpaces(deal.inventorySnapshot),
+          })}>{pm("Cargar espacios de Inventory", "Load Inventory spaces")}</Button>
+        )}
+      </div>
       <Tabs defaultValue="interior">
         <TabsList className="grid h-auto w-full max-w-3xl grid-cols-2 gap-1 rounded-lg border border-border/60 bg-muted/30 p-1 sm:grid-cols-4">
           <TabsTrigger
@@ -1012,6 +1084,7 @@ export default function FixFlipProjectManagerPage() {
               size="sm"
               onClick={() => {
                 setEditItemId(null);
+                setPresetArea(undefined);
                 setAddCategory("INTERIOR");
                 setAddOpen(true);
               }}
@@ -1020,6 +1093,23 @@ export default function FixFlipProjectManagerPage() {
               {pm("Agregar ítem", "Add item")}
             </Button>
           </div>
+          {(data.spaces ?? []).filter((space) => space.category === "INTERIOR").length > 0 && (
+            <div className="rounded-xl border border-border/70 bg-card/60 p-4">
+              <p className="mb-3 text-sm font-semibold">{pm("Espacios disponibles para remodelar", "Spaces available for renovation")}</p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {(data.spaces ?? []).filter((space) => space.category === "INTERIOR").map((space) => {
+                  const count = data.items.filter((item) => item.area === space.name).length;
+                  return <Button type="button" key={space.id} variant="outline" className="h-auto min-h-14 flex-col gap-1 px-3 py-2 text-left" onClick={() => {
+                    setEditItemId(null); setPresetArea(space.name); setAddCategory("INTERIOR"); setAddOpen(true);
+                  }}>
+                    <span className="w-full truncate font-semibold">{space.name}</span>
+                    <span className="w-full text-xs text-muted-foreground">{count} {pm("tareas", "tasks")}</span>
+                  </Button>;
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">{pm("Solo los trabajos añadidos generan costos.", "Only assigned work creates costs.")}</p>
+            </div>
+          )}
           <ItemsTable
             items={interiorItems}
             onDelete={removeItem}
@@ -1037,6 +1127,7 @@ export default function FixFlipProjectManagerPage() {
               size="sm"
               onClick={() => {
                 setEditItemId(null);
+                setPresetArea(undefined);
                 setAddCategory("EXTERIOR");
                 setAddOpen(true);
               }}
@@ -1093,6 +1184,7 @@ export default function FixFlipProjectManagerPage() {
         baseData={data}
         onSaved={persist}
         editItemId={editItemId}
+        initialArea={presetArea}
       />
 
       <PmCompleteItemDialog
