@@ -17,14 +17,22 @@ const ResetPassword = () => {
     const [loading, setLoading] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    // 'checking' mientras Supabase procesa el enlace; 'ready' con sesión de recuperación; 'invalid' si venció o ya se usó.
+    const [linkState, setLinkState] = useState<'checking' | 'ready' | 'invalid'>(() => {
+        const params = new URLSearchParams(window.location.hash.replace(/^#/, '') || window.location.search.replace(/^\?/, ''));
+        return params.get('error') || params.get('error_code') ? 'invalid' : 'checking';
+    });
 
-    // If there is no session, we might not have come from a reset link
-    // But Supabase typically handles the session establishment from the reset link hash
     useEffect(() => {
-        if (!session) {
-            console.log('No active session found during password reset');
+        if (linkState === 'invalid') return;
+        if (session) {
+            setLinkState('ready');
+            return;
         }
-    }, [session]);
+        // El enlace puede tardar un instante en convertirse en sesión.
+        const timer = window.setTimeout(() => setLinkState((s) => (s === 'checking' ? 'invalid' : s)), 4000);
+        return () => window.clearTimeout(timer);
+    }, [session, linkState]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -68,6 +76,21 @@ const ResetPassword = () => {
                     </h1>
                 </div>
 
+                {linkState !== 'ready' ? (
+                <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle>{linkState === 'checking' ? t('resetPassword.checkingLink') : t('resetPassword.linkInvalidTitle')}</CardTitle>
+                        {linkState === 'invalid' && <CardDescription>{t('resetPassword.linkInvalidDescription')}</CardDescription>}
+                    </CardHeader>
+                    {linkState === 'invalid' && (
+                        <CardFooter>
+                            <Button type="button" onClick={() => navigate('/forgot-password')} className="w-full gold-gradient text-primary-foreground hover:opacity-90 transition-opacity">
+                                {t('resetPassword.requestNewLink')}
+                            </Button>
+                        </CardFooter>
+                    )}
+                </Card>
+                ) : (
                 <Card className="border-0 shadow-2xl bg-card/95 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle>{t('resetPassword.newPasswordTitle')}</CardTitle>
@@ -108,6 +131,7 @@ const ResetPassword = () => {
                         </CardFooter>
                     </form>
                 </Card>
+                )}
             </div>
         </div>
     );
