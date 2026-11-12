@@ -20,6 +20,10 @@ export interface FixFlipCalculation {
   hmlTotalInterest: number;
   hmlTotalFees: number;
   gapLoanAmount: number;
+  cashOnHand?: number;
+  cashToClose?: number;
+  liquidityShortfall?: number;
+  financingAssumptions?: string;
   reCommissions: number;
   resaleClosingCosts: number;
   resaleCommissions: number;
@@ -128,6 +132,7 @@ export interface UnderwritingInputs {
   rehabBudget: number;
   closingCosts: number;
   holdingCosts: number;
+  cashOnHand: number;
   downPaymentAmount: number;
   downPaymentPercent: number;
   hmlPointsRate: number;
