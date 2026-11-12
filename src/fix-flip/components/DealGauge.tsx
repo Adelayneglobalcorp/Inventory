@@ -92,6 +92,14 @@ export function DealGauge({ evaluation, lang }: Props) {
           <div className="font-[Montserrat] text-4xl font-black text-primary">{score}</div>
           <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("gaugePoints")}</div>
           <div className="mt-1 text-sm font-semibold">{evaluation.levelText}</div>
+          {!noData && <div className="mt-2 space-y-1 text-[11px]">
+            <p className={evaluation.meetsProfitTarget ? "text-emerald-400" : "text-amber-400"}>
+              {evaluation.meetsProfitTarget ? "✓" : "!"} {lang === "es" ? "Objetivo de ganancia" : "Profit target"}
+            </p>
+            <p className={evaluation.meetsRoiTarget ? "text-emerald-400" : "text-amber-400"}>
+              {evaluation.meetsRoiTarget ? "✓" : "!"} {lang === "es" ? "Objetivo de ROI" : "ROI target"}
+            </p>
+          </div>}
         </div>
       </div>
       <p className="mt-3 text-center text-sm text-muted-foreground sm:text-left">
