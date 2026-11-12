@@ -25,15 +25,16 @@ export default function FixFlipProjectManagerHub() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
-          <HardHat className="h-7 w-7 text-primary" />
+      <header className="g360-section-header rounded-[26px] border border-[#d4aa56]/20 bg-gradient-to-br from-[#183958] to-[#07182f] p-6 shadow-[0_16px_50px_rgba(0,0,0,.12)] sm:p-8">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[.22em] text-[#e7bf63]">Global 360 / Fix &amp; Flip</p>
+        <h1 className="flex items-center gap-2 font-[Montserrat] text-2xl font-bold text-white sm:text-3xl">
+          <HardHat className="h-7 w-7 text-[#e7bf63]" />
           {portal('title', t('pmHub.title'))}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-slate-200/80">
           {portal('subtitle', t('pmHub.subtitle'))}
         </p>
-      </div>
+      </header>
 
       {projects.length === 0 ? (
         <Card>
@@ -52,7 +53,7 @@ export default function FixFlipProjectManagerHub() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <Card key={p.id} className="border-border/80 hover:border-primary/40 transition-colors">
+            <Card key={p.id} className="overflow-hidden rounded-2xl border border-[#d4aa56]/15 bg-gradient-to-br from-[#192c47] to-[#101f35] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e7b95b]/40">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base line-clamp-1">{p.projectName}</CardTitle>
                 <p className="text-xs text-muted-foreground line-clamp-2">{p.propertyAddress}</p>
