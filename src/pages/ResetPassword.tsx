@@ -1,4 +1,5 @@
-import { Global360Brand } from '@/components/branding/Global360Brand';\nimport { useState, useEffect } from 'react';
+import { Global360Brand } from '@/components/branding/Global360Brand';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
