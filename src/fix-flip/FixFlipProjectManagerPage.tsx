@@ -51,7 +51,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePortalContent } from "@/lib/portalContent";
 import { PmBudgetPanel } from "./PmBudgetPanel";
 import { PmTimelinePanel } from "./PmTimelinePanel";
-import { defaultCategoryForArea, pmDisplayArea } from "./pmDefaults";
+import { defaultCategoryForArea, pmDisplayArea, pmDisplayWork } from "./pmDefaults";
 import { computePmItemTotals } from "./pmItemMath";
 import type {
   PMItem,
@@ -118,7 +118,7 @@ function exportScopePdf(data: ProjectManagerData, address: string, withValues: b
     line(category === "INTERIOR" ? (es ? "INTERIOR" : "INTERIOR") : (es ? "EXTERIOR" : "EXTERIOR"), true, 12);
     for (const task of group) {
       newPage(24);
-      line(pmDisplayArea(task.area, !es) + "  -  " + (task.description || task.workType || "-"), true);
+      line(pmDisplayArea(task.area, !es) + "  -  " + pmDisplayWork(task.description || task.workType || "-", !es), true);
       line((es ? "Estado: " : "Status: ") + labels[task.status][es ? 0 : 1] +
         " | " + (es ? "Cantidad: " : "Quantity: ") + (task.quantity ?? 1) + " " + (task.unit ?? ""), false, 9);
       const phase = data.phaseMeta?.[task.category + "::" + task.area];
@@ -623,7 +623,7 @@ function PmAddItemDialog({
                               toggleSub(subName, costs, c === true, wt)
                             }
                           />
-                          <span className="text-sm font-medium">{subName}</span>
+                          <span className="text-sm font-medium">{pmDisplayWork(subName, i18n.language.startsWith("en"))}</span>
                         </div>
                         <div className="flex flex-wrap gap-2 text-xs">
                           <div className="flex items-center gap-1">
@@ -1313,9 +1313,9 @@ function ItemsTable({
       <TableBody>
         {items.map((item) => (
           <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.area}</TableCell>
+            <TableCell className="font-medium">{pmDisplayArea(item.area, i18n.language.startsWith("en"))}</TableCell>
             <TableCell className="max-w-[220px] truncate text-muted-foreground">
-              {item.description}
+              {pmDisplayWork(item.description, i18n.language.startsWith("en"))}
             </TableCell>
             {showBreakdown ? (
               <>
