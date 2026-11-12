@@ -84,12 +84,22 @@ export async function upsertContact(input: {
   const id = data?.contact?.id;
   if (!id) throw new Error("GHL no devolvió el id del contacto");
   // upsert reemplaza etiquetas en algunos casos: se agregan explícitamente para no perder las anteriores.
-  if (input.tags?.length) await addTags(id, input.tags);
+  // Etiqueta de idioma (idioma-es / idioma-en): deja solo la del idioma actual.
+  const tags = [...(input.tags ?? [])];
+  if (input.lang) {
+    tags.push(`idioma-${input.lang}`);
+    await removeTags(id, [`idioma-${input.lang === "en" ? "es" : "en"}`]).catch(() => undefined);
+  }
+  if (tags.length) await addTags(id, tags);
   return id;
 }
 
 export async function addTags(contactId: string, tags: string[]): Promise<void> {
   await ghl(`/contacts/${contactId}/tags`, { method: "POST", body: JSON.stringify({ tags }) });
+}
+
+export async function removeTags(contactId: string, tags: string[]): Promise<void> {
+  await ghl(`/contacts/${contactId}/tags`, { method: "DELETE", body: JSON.stringify({ tags }) });
 }
 
 export async function addNote(contactId: string, body: string): Promise<void> {
