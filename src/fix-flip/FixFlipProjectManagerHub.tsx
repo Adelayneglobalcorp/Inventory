@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HardHat, ArrowRight } from "lucide-react";
 import { loadProjects } from "./storage";
 import { formatCurrency } from "./calculations";
+import { usePortalContent } from "@/lib/portalContent";
 
 export default function FixFlipProjectManagerHub() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const portal = usePortalContent("pm", i18n.language.startsWith("en") ? "en" : "es");
   const projects = loadProjects();
 
   return (
@@ -16,10 +18,10 @@ export default function FixFlipProjectManagerHub() {
       <div>
         <h1 className="font-[Montserrat] text-2xl font-bold flex items-center gap-2">
           <HardHat className="h-7 w-7 text-primary" />
-          {t('pmHub.title')}
+          {portal('title', t('pmHub.title'))}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {t('pmHub.subtitle')}
+          {portal('subtitle', t('pmHub.subtitle'))}
         </p>
       </div>
 
