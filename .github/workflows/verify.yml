@@ -20,4 +20,5 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci
+      - run: npx tsc --noEmit -p tsconfig.app.json
       - run: npm run validate
