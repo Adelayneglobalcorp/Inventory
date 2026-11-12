@@ -29,9 +29,10 @@ export function Global360Brand({ variant = 'dark', compact = false, className, i
           src={variant === 'dark' ? GLOBAL360_LOGO_DARK : GLOBAL360_LOGO_LIGHT}
           alt=""
           aria-hidden="true"
+          onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/global360-icon.svg'; }}
           className={cn(
             'absolute left-1/2 top-[-1%] h-auto max-w-none -translate-x-1/2 object-contain',
-            compact ? 'w-[76px]' : 'w-[122px]',
+            compact ? 'w-[71px]' : 'w-[106px]',
             imageClassName,
           )}
         />
