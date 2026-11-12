@@ -244,7 +244,7 @@ export const PropertyList = forwardRef<
             <Building2 className="w-6 h-6" />
             {t('properties.list.title')}
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {t('properties.list.total', { count: filteredProperties.length })}
           </p>
         </div>
@@ -330,7 +330,7 @@ export const PropertyList = forwardRef<
             <p className="text-muted-foreground font-medium">{t('properties.list.noProperties')}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProperties.map((property) => {
               const mainImage = property.property_images?.find(img => img.is_primary)?.url ||
                 property.property_images?.[0]?.url ||
