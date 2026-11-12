@@ -95,7 +95,7 @@ export const UserManagement: React.FC = () => {
       const { error } = await updateUserRole(selectedUser.id, newRole);
       if (error) throw error;
 
-      setSuccess(t('admin.users.messages.roleUpdated', { name: selectedUser.full_name, role: newRole }));
+      setSuccess(t('admin.users.messages.roleUpdated', { name: selectedUser.full_name, role: roleLabel(newRole) }));
       setRoleDialogOpen(false);
       loadUsers();
     } catch (err: any) {
@@ -201,6 +201,17 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const roleLabel = (value: string) => {
+    switch (value) {
+      case 'pendiente': return t('uiFixes.rolePending');
+      case 'usuario': return t('uiFixes.roleUser');
+      case 'investor': return t('uiFixes.roleInvestor');
+      case 'agent': return t('uiFixes.roleAgent');
+      case 'admin': return t('uiFixes.roleAdmin');
+      default: return value;
+    }
+  };
+
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin': return 'bg-red-500';
@@ -282,7 +293,7 @@ export const UserManagement: React.FC = () => {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
                     <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role}
+                      {roleLabel(user.role)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -333,11 +344,11 @@ export const UserManagement: React.FC = () => {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="pendiente">Pendiente (Usuario no aprobado)</SelectItem>
-                                  <SelectItem value="usuario">Usuario (Aprobado)</SelectItem>
-                                  <SelectItem value="investor">Investor</SelectItem>
-                                  <SelectItem value="agent">Agent</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="pendiente">{t('uiFixes.rolePending')}</SelectItem>
+                                  <SelectItem value="usuario">{t('uiFixes.roleUser')}</SelectItem>
+                                  <SelectItem value="investor">{t('uiFixes.roleInvestor')}</SelectItem>
+                                  <SelectItem value="agent">{t('uiFixes.roleAgent')}</SelectItem>
+                                  <SelectItem value="admin">{t('uiFixes.roleAdmin')}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -369,7 +380,7 @@ export const UserManagement: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleSendReset(user.email)}
-                        title={t('admin.users.actions.sendReset')}
+                        title={t('uiFixes.sendReset')}
                       >
                         <Key className="w-4 h-4" />
                       </Button>
