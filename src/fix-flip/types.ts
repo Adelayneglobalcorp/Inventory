@@ -43,7 +43,18 @@ export interface FixFlipCalculation {
   interestType: "monthly" | "annual";
 }
 
-export type FixFlipProject = FixFlipCalculation & { id: number };
+export type FixFlipProject = FixFlipCalculation & {
+  id: number;
+  inventoryPropertyId?: string;
+  inventorySnapshot?: { bedrooms: number; bathrooms: number; propertyType?: string };
+};
+
+export type PMSpace = {
+  id: string;
+  name: string;
+  category: "INTERIOR" | "EXTERIOR";
+  templateArea: string;
+};
 
 /** Línea seleccionada desde la base de subcategorías (legacy `selectedSubcategories`). */
 export interface PMSubcategorySelection {
@@ -117,6 +128,7 @@ export interface ProjectManagerData {
     phases: unknown[];
   };
   items: PMItem[];
+  spaces?: PMSpace[];
   subcategoryDatabase?: PmSubcategoryDatabase;
   /** Sobrescribe interior/exterior por área personalizada. */
   areaCategoryMap?: Record<string, "INTERIOR" | "EXTERIOR">;
