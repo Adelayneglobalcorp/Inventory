@@ -6,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const AdminRegistration: React.FC = () => {
   const { signUp } = useAuth();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export const AdminRegistration: React.FC = () => {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('¡Cuenta de administrador creada exitosamente! Ahora puedes iniciar sesión.');
+        setSuccess(t('uiFixes.adminCreated'));
         setFormData(prev => ({ ...prev, password: '' }));
       }
     } catch (err: any) {
@@ -48,9 +50,9 @@ export const AdminRegistration: React.FC = () => {
           <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Shield className="w-6 h-6 text-red-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">Registro de Administrador</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t('uiFixes.adminRegistrationTitle')}</CardTitle>
           <CardDescription>
-            Crea tu cuenta de administrador para gestionar el sistema
+            {t('uiFixes.adminRegistrationDescription')}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -68,31 +70,31 @@ export const AdminRegistration: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('login.email')}</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="tu@email.com"
+                placeholder={t('uiFixes.emailExample')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nombre Completo</Label>
+              <Label htmlFor="fullName">{t('login.fullName')}</Label>
               <Input
                 id="fullName"
                 type="text"
                 value={formData.fullName}
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-                placeholder="Tu nombre completo"
+                placeholder={t('uiFixes.nameExample')}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t('login.password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -106,14 +108,14 @@ export const AdminRegistration: React.FC = () => {
 
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Nota:</strong> Esta cuenta tendrá privilegios de administrador y podrá acceder a todas las funciones del sistema.
+                <strong>{t('uiFixes.note')}</strong> {t('uiFixes.adminNote')}
               </p>
             </div>
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={loading}>
               <UserPlus className="w-4 h-4 mr-2" />
-              {loading ? 'Creando cuenta...' : 'Crear Cuenta de Admin'}
+              {loading ? t('uiFixes.adminCreating') : t('uiFixes.adminCreateButton')}
             </Button>
           </CardFooter>
         </form>
