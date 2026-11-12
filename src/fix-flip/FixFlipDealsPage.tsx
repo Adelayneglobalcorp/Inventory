@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -16,24 +16,59 @@ import { Badge } from "@/components/ui/badge";
 import { FolderKanban, Pencil, Trash2, Wrench, Calculator } from "lucide-react";
 import { formatCurrency, formatPercentage } from "./calculations";
 import type { FixFlipProject } from "./types";
-import { loadProjects, saveProjects } from "./storage";
+import { loadProjects, saveProjects, syncCloudProjects, deleteCloudProject, importLocalDeals } from "./storage";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePortalContent } from "@/lib/portalContent";
 
 export default function FixFlipDealsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const lang = i18n.language.startsWith("en") ? "en" : "es";
   const portal = usePortalContent("deals", lang);
   const [projects, setProjects] = useState<FixFlipProject[]>(() => loadProjects());
+  const [syncing, setSyncing] = useState(false);
 
-  const refresh = useCallback(() => setProjects(loadProjects()), []);
+  const refresh = useCallback(() => setProjects(loadProjects(user?.id)), [user?.id]);
 
-  const handleDelete = (id: number) => {
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    syncCloudProjects(user.id).then(all => { if (active) setProjects(all); })
+      .catch(() => { /* Keep local records available. */ });
+    return () => { active = false; };
+  }, [user?.id]);
+
+  const handleDelete = async (id: number) => {
     if (!confirm(t('dealsPage.deleteConfirm'))) return;
-    const next = loadProjects().filter((p) => p.id !== id);
-    saveProjects(next);
+    if (user?.id) {
+      try { await deleteCloudProject(id, user.id); }
+      catch {
+        toast.error(lang === "es" ? "No se pudo eliminar el registro en la nube." : "Could not delete cloud record.");
+        return;
+      }
+    }
+    const next = loadProjects(user?.id).filter((p) => p.id !== id);
+    saveProjects(next, user?.id);
     refresh();
     toast.success(t('dealsPage.deleted'));
+  };
+
+  const handleImport = async () => {
+    if (!user || syncing) return;
+    if (!confirm(lang === "es"
+      ? "¿Importar a tu cuenta los Deals guardados en este navegador? Hazlo solo si te pertenecen."
+      : "Import the Deals saved in this browser to your account? Only proceed if they are yours.")) return;
+    setSyncing(true);
+    try {
+      const count = await importLocalDeals(user.id);
+      refresh();
+      toast.success(lang === "es" ? count + " inversiones sincronizadas." : count + " deals synchronized.");
+    } catch {
+      toast.error(lang === "es" ? "No se pudo completar la importación." : "Import failed.");
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
@@ -48,10 +83,16 @@ export default function FixFlipDealsPage() {
             {portal('subtitle', t('dealsPage.subtitle'))}
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={!user || syncing} onClick={handleImport}>
+            {syncing ? (lang === "es" ? "Sincronizando..." : "Synchronizing...") :
+              (lang === "es" ? "Importar inversiones de este navegador" : "Import deals from this browser")}
+          </Button>
         <Button className="gold-gradient text-primary-foreground" onClick={() => navigate("/calculator")}>
           <Calculator className="h-4 w-4 mr-2" />
           {t('dealsPage.new')}
         </Button>
+        </div>
       </div>
 
       <Card>
