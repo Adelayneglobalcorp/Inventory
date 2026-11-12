@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import i18n from '@/lib/i18n';
+import { pmDisplayArea, pmDisplayWork } from '@/fix-flip/pmDefaults';
 
 type TranslationTree = { [key: string]: TranslationTree | string };
 
@@ -63,4 +64,19 @@ describe('complete bilingual interface', () => {
     }
     expect(finance).not.toMatch(/defaultValue:\s*['"`](?:Select|Enter|Search|Choose|Inventory|Selecting)/);
   });
+  it('switches the document language alongside the chosen UI language', async () => {
+    await i18n.changeLanguage('es');
+    expect(document.documentElement.lang).toBe('es');
+    expect(i18n.t('financing.inventoryProperty')).toBe('Seleccionar del inventario');
+    await i18n.changeLanguage('en');
+    expect(document.documentElement.lang).toBe('en');
+    expect(i18n.t('financing.inventoryProperty')).toBe('Select from inventory');
+  });
+
+  it('displays legacy project labels without mixing English into Spanish', () => {
+    expect(pmDisplayArea('Entrada y driveway', false)).toBe('Entrada para vehículos');
+    expect(pmDisplayWork('Instalar countertop', false)).toBe('Instalar encimera');
+    expect(pmDisplayWork('Instalar countertop', true)).toBe('Install countertop');
+  });
+
 });
