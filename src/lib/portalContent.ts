@@ -41,7 +41,7 @@ export async function savePortalContent(
 ): Promise<void> {
   const allowed = PORTAL_FIELDS.filter(field => field.section === section);
   const rows = allowed
-    .filter(field => (values[field.key] ?? "").trim() !== field.fallback[lang])
+    .filter(field => (values[field.key] ?? "").trim() && (values[field.key] ?? "").trim() !== field.fallback[lang])
     .map(field => ({
       section, lang, field_key: field.key,
       value: (values[field.key] ?? "").trim(),
@@ -53,7 +53,7 @@ export async function savePortalContent(
     if (error) throw error;
   }
   const keysToReset = allowed
-    .filter(field => (values[field.key] ?? "").trim() === field.fallback[lang])
+    .filter(field => !(values[field.key] ?? "").trim() || (values[field.key] ?? "").trim() === field.fallback[lang])
     .map(field => field.key);
   if (keysToReset.length) {
     const { error } = await supabase.from("portal_content")
