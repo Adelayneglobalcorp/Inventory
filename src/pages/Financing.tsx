@@ -281,11 +281,11 @@ export default function Financing() {
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  {field('propertyAddress', t('financing.propertyAddress'), { required: true, readOnly: propertyMode === 'inventory' })}
+                  {field('propertyAddress', t('financing.propertyAddress'), { required: true })}
                 </div>
-                {field('propertyCity', t('financing.city'), { required: true, readOnly: propertyMode === 'inventory' })}
-                {field('propertyState', t('financing.state'), { required: true, readOnly: propertyMode === 'inventory' })}
-                {field('propertyZip', t('financing.zip'), { required: true, readOnly: propertyMode === 'inventory' })}
+                {field('propertyCity', t('financing.city'), { required: true })}
+                {field('propertyState', t('financing.state'), { required: true })}
+                {field('propertyZip', t('financing.zip'), { required: true })}
               </div>
             </section>
 
