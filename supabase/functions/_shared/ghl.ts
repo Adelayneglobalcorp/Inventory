@@ -68,9 +68,11 @@ export async function upsertContact(input: {
   lang?: Lang;
   tags?: string[];
   source?: string;
+  perfil?: string | null;
 }): Promise<string> {
   const customFields: { id: string; field_value: string }[] = [];
   if (input.lang) customFields.push({ id: GHL.fields.idioma, field_value: input.lang === "en" ? "English" : "Español" });
+  if (input.perfil) customFields.push({ id: GHL.fields.perfil, field_value: input.perfil });
   const body: Record<string, unknown> = {
     locationId: GHL.locationId,
     email: input.email,

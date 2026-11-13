@@ -65,11 +65,15 @@ async function onRegistration(userId: string) {
   const phone = profile?.phone ?? meta.phone ?? null;
   const lang = langOf(profile?.preferred_language, meta.language, meta.preferred_language);
   const fromLanding = meta.source === "landing";
+  // Registro directo en el sitio web (formulario propio con contraseña).
+  const fromWeb = meta.source === "web";
+  const PERFILES = ["Inversionista con capital", "Broker o agente inmobiliario", "Quiero empezar a invertir"];
+  const perfil = PERFILES.includes(meta.perfil) ? String(meta.perfil) : null;
 
   const contactId = await upsertContact({
-    email: user.email, fullName: name, phone, lang,
-    tags: ["inventory-registrado", fromLanding ? "inventory-origen-landing" : "inventory-origen-app"],
-    source: fromLanding ? "Global 360 · Landing" : "Global 360 · App",
+    email: user.email, fullName: name, phone, lang, perfil,
+    tags: ["inventory-registrado", fromLanding || fromWeb ? "inventory-origen-landing" : "inventory-origen-app"],
+    source: fromWeb ? "Global 360 · Sitio web" : fromLanding ? "Global 360 · Landing" : "Global 360 · App",
   });
   await advanceOpportunity(contactId, GHL.stages.registrado, `Global 360 · ${name || user.email}`);
 
@@ -84,7 +88,7 @@ async function onRegistration(userId: string) {
 
   const mail = registrationEmail(lang, name, setPasswordLink);
   await sendEmail(contactId, mail.subject, mail.html);
-  const adm = adminNewUser({ name, email: user.email, phone, lang, source: fromLanding ? "Landing (formulario)" : "Registro en la app" });
+  const adm = adminNewUser({ name, email: user.email, phone, lang, source: fromWeb ? `Sitio web${perfil ? " · " + perfil : ""}` : fromLanding ? "Landing (formulario)" : "Registro en la app" });
   await notifyAdmin(adm.subject, adm.html);
   return { contactId };
 }

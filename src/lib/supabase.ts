@@ -20,6 +20,15 @@ if (new URL(supabaseUrl).origin !== ADELAYNE_SUPABASE_ORIGIN) {
   throw new Error('Supabase configuration points to a different project. Verify the Adelayne project URL.');
 }
 
+// Inicio de sesión desde el sitio web oficial: llega con la sesión en el hash (#access_token=…&g360=1).
+// detectSessionInUrl la toma; aquí solo se marca como sesión recordada para que no se cierre al cargar.
+if (typeof window !== 'undefined' && window.location.hash.includes('g360=1') && window.location.hash.includes('access_token=')) {
+  try {
+    localStorage.setItem('g360_remember', '1');
+    sessionStorage.setItem('g360_session_alive', '1');
+  } catch { /* almacenamiento no disponible */ }
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
