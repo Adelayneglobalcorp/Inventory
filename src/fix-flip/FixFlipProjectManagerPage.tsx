@@ -758,7 +758,7 @@ function PmAddItemDialog({
           </div>
 
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
-            <div className="font-semibold text-emerald-200">Presupuesto estimado (ítem)</div>
+            <div className="font-semibold text-emerald-200">{pm("Presupuesto estimado (ítem)", "Estimated budget (item)")}</div>
             <div className="mt-1 text-lg font-bold tabular-nums">
               {formatCurrency(preview.totalEstimated)}
             </div>
