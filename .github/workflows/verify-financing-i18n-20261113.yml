@@ -1,0 +1,22 @@
+name: Validate bilingual app and financing form (no deployment)
+on:
+  push:
+    branches:
+      - fix/financing-complete-i18n-20261113
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Tests and production build (no publishing)
+        run: npm run validate
