@@ -132,12 +132,19 @@ async function onFinancing(requestId: string) {
   });
   await addNote(contactId, [
     "💰 Solicitud de financiamiento (Global 360)",
-    `Tipo: ${loanLabel(f.loan_type, "es")} · Monto solicitado: ${money(f.requested_amount)}`,
-    `Propiedad: ${[f.property_address, f.city, f.state, f.postal_code].filter(Boolean).join(", ")}`,
-    `Precio de compra: ${money(f.purchase_price)} · Reparación: ${money(f.rehab_budget)} · ARV: ${money(f.after_repair_value)} · Valor estimado: ${money(f.estimated_property_value)}`,
+    `Tipo: ${loanLabel(f.loan_type, "es")}`,
+    `Propiedad de inversión: ${[f.property_address, f.city, f.state, f.postal_code].filter(Boolean).join(", ")}`,
+    `Dirección residencial: ${[f.residential_address, f.residential_city, f.residential_state, f.residential_postal_code].filter(Boolean).join(", ") || "—"}`,
+    `Vivienda: ${f.housing_status === "own" ? "Propietario" : f.housing_status === "rent" ? "En alquiler" : "—"}`,
+    `Puntaje de crédito aproximado: ${f.credit_score ?? "No informado"}`,
+    `Propiedades de inversión anteriores: ${f.investment_properties_count ?? "—"}`,
+    `Precio de compra: ${money(f.purchase_price)} · Remodelación: ${money(f.rehab_budget)} · ARV: ${money(f.after_repair_value)}`,
+    `Dinero disponible para la inicial: ${money(f.down_payment_available)}`,
     `Notas: ${f.notes || "—"}`,
   ].join("\n"));
-  await advanceOpportunity(contactId, GHL.stages.financiamiento, `Global 360 · ${f.full_name}`, Number(f.requested_amount) || undefined);
+  // Loan amount is no longer asked. Do not substitute purchase price or down payment
+  // as an invented loan request in the CRM opportunity.
+  await advanceOpportunity(contactId, GHL.stages.financiamiento, `Global 360 · ${f.full_name}`);
 
   const mail = financingClientEmail(lang, f);
   await sendEmail(contactId, mail.subject, mail.html);
