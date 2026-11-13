@@ -155,9 +155,17 @@ export function authActionEmail(lang: Lang, action: string, link: string, name?:
 }
 
 export type Financing = {
-  loan_type: string; full_name: string; email: string; phone: string; property_address: string; city: string; state: string;
-  postal_code?: string | null; requested_amount: number; purchase_price?: number | null; rehab_budget?: number | null;
-  after_repair_value?: number | null; estimated_property_value?: number | null; notes?: string | null; created_at?: string;
+  loan_type: string; full_name: string; email: string; phone: string;
+  property_address: string; city: string; state: string; postal_code?: string | null;
+  requested_amount?: number | null; purchase_price?: number | null;
+  rehab_budget?: number | null; after_repair_value?: number | null;
+  estimated_property_value?: number | null;
+  residential_address?: string | null; residential_city?: string | null;
+  residential_state?: string | null; residential_postal_code?: string | null;
+  housing_status?: string | null; credit_score?: number | null;
+  down_payment_available?: number | null;
+  investment_properties_count?: string | null;
+  notes?: string | null; created_at?: string;
 };
 
 export function loanLabel(t: string, lang: Lang) {
@@ -166,16 +174,23 @@ export function loanLabel(t: string, lang: Lang) {
   return t || (lang === "en" ? "Not specified" : "Sin especificar");
 }
 
+function investmentHistoryLabel(value: string | null | undefined, lang: Lang): string {
+  if (value === "0") return lang === "en" ? "0 properties — first investment" : "0 propiedades — primera inversión";
+  if (value === "1-5") return lang === "en" ? "1 to 5 properties" : "1 a 5 propiedades";
+  if (value === "5+") return lang === "en" ? "More than 5 properties" : "Más de 5 propiedades";
+  return "—";
+}
 function financingRows(f: Financing, lang: Lang): [string, string][] {
   const en = lang === "en";
   return [
     [en ? "Loan type" : "Tipo de préstamo", loanLabel(f.loan_type, lang)],
-    [en ? "Requested amount" : "Monto solicitado", money(f.requested_amount, lang)],
-    [en ? "Property" : "Propiedad", [f.property_address, f.city, f.state, f.postal_code].filter(Boolean).join(", ")],
+    [en ? "Investment property" : "Propiedad de inversión",
+      [f.property_address, f.city, f.state, f.postal_code].filter(Boolean).join(", ")],
     [en ? "Purchase price" : "Precio de compra", money(f.purchase_price, lang)],
-    [en ? "Rehab budget" : "Presupuesto de reparación", money(f.rehab_budget, lang)],
+    [en ? "Renovation budget" : "Presupuesto de remodelación", money(f.rehab_budget, lang)],
     ["ARV", money(f.after_repair_value, lang)],
-    [en ? "Estimated value" : "Valor estimado", money(f.estimated_property_value, lang)],
+    [en ? "Available down payment" : "Dinero disponible para la inicial", money(f.down_payment_available, lang)],
+    [en ? "Investment property experience" : "Historial de propiedades de inversión", investmentHistoryLabel(f.investment_properties_count, lang)],
   ];
 }
 
@@ -232,11 +247,18 @@ export function adminInterest(i: { name: string; email: string; phone?: string |
 }
 
 export function adminFinancing(f: Financing, lang: Lang) {
+  const residence = [f.residential_address, f.residential_city, f.residential_state, f.residential_postal_code]
+    .filter(Boolean).join(", ") || "—";
+  const housing = f.housing_status === "own" ? "Propietario"
+    : f.housing_status === "rent" ? "En alquiler" : "—";
   return {
-    subject: `Nueva solicitud de financiamiento: ${f.full_name} — ${money(f.requested_amount)}`,
+    subject: `Nueva solicitud de financiamiento: ${f.full_name} — Global 360`,
     html: internal("Nueva solicitud de financiamiento", "Hay una persona interesada en financiamiento. Estos son todos los datos que envió:", [
       ["Nombre", f.full_name], ["Correo", f.email], ["Teléfono", f.phone],
       ["Idioma", lang === "en" ? "English" : "Español"],
+      ["Dirección de residencia", residence],
+      ["Vivienda", housing],
+      ["Puntaje de crédito aproximado", f.credit_score != null ? String(f.credit_score) : "No informado"],
       ...financingRows(f, "es"), ["Notas", f.notes || "—"],
     ], { label: "Ver solicitudes", href: `${SITE_URL}/admin` }),
   };
