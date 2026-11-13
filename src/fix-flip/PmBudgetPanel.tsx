@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "./calculations";
+import { pmDisplayArea, pmDisplayWork } from "./pmDefaults";
 import type { PMItem } from "./types";
 
 function num(n: number): number {
@@ -344,7 +345,7 @@ export function PmBudgetPanel({
                 const mid = percentComplete >= 50;
                 return (
                   <TableRow key={area}>
-                    <TableCell className="font-medium">{area}</TableCell>
+                    <TableCell className="font-medium">{pmDisplayArea(area, i18n.resolvedLanguage === "en")}</TableCell>
                     <TableCell className="text-center">{d.count}</TableCell>
                     <TableCell className="text-right tabular-nums text-primary">
                       {formatCurrency(d.estimated)}
@@ -379,7 +380,7 @@ export function PmBudgetPanel({
                           variant="ghost"
                           className="h-8 w-8 text-amber-500 hover:text-amber-400"
                           onClick={() => d.items[0] && onEditItem(d.items[0])}
-                          aria-label={`Editar ítem de ${area}`}
+                          aria-label={pm(`Editar ítem de ${pmDisplayArea(area, false)}`, `Edit item in ${pmDisplayArea(area, true)}`)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -391,7 +392,7 @@ export function PmBudgetPanel({
                               size="icon"
                               variant="ghost"
                               className="h-8 w-8 text-amber-500 hover:text-amber-400"
-                              aria-label={`Elegir ítem a editar de ${area}`}
+                              aria-label={pm(`Elegir ítem a editar de ${pmDisplayArea(area, false)}`, `Choose item to edit in ${pmDisplayArea(area, true)}`)}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -399,7 +400,7 @@ export function PmBudgetPanel({
                           <DropdownMenuContent align="end" className="max-w-[280px]">
                             {d.items.map((it) => (
                               <DropdownMenuItem key={it.id} onSelect={() => onEditItem(it)}>
-                                <span className="truncate">{it.description || it.workType || "—"}</span>
+                                <span className="truncate">{pmDisplayWork(it.description || it.workType || "—", i18n.resolvedLanguage === "en")}</span>
                               </DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
