@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "./calculations";
+import { pmDisplayArea, pmDisplayWork } from "./pmDefaults";
 import type {
   PMItem,
   PMPhaseMeta,
@@ -158,6 +159,7 @@ function PhaseAreaCard({
   end,
   dayCount,
   locale,
+  english,
   labels,
   phaseCategory,
   onReopenPhase,
@@ -178,6 +180,7 @@ function PhaseAreaCard({
   end: Date;
   dayCount: number;
   locale: typeof localeEs;
+  english: boolean;
   labels: PhaseLabels;
   phaseCategory: "INTERIOR" | "EXTERIOR";
   onReopenPhase: (category: "INTERIOR" | "EXTERIOR", area: string) => void;
@@ -207,7 +210,7 @@ function PhaseAreaCard({
   const endStr = format(end, "P", { locale });
   const notesLine =
     phaseMeta.notes.length > 0
-      ? `${phaseMeta.notes.length} nota(s): ${phaseMeta.notes[0].text}`
+      ? `${phaseMeta.notes.length} ${english ? "note(s)" : "nota(s)"}: ${phaseMeta.notes[0].text}`
       : firstNotesSnippet(items, 80);
   const phaseEstimatedDays = Math.max(
     1,
@@ -221,7 +224,7 @@ function PhaseAreaCard({
       <CardHeader className="space-y-3 pb-3 pt-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <CardTitle className="text-lg font-semibold tracking-tight text-zinc-50">
-            {areaName}
+            {pmDisplayArea(areaName, english)}
           </CardTitle>
           <div className="text-right text-xs leading-snug text-zinc-400">
             <div className="tabular-nums">
@@ -294,7 +297,7 @@ function PhaseAreaCard({
                 </div>
                 {incomplete.map((i) => (
                   <DropdownMenuItem key={i.id} onSelect={() => onRequestCompleteItem(i)}>
-                    <span className="truncate">{i.description || i.workType || "—"}</span>
+                    <span className="truncate">{pmDisplayWork(i.description || i.workType || "—", english)}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -327,7 +330,7 @@ function PhaseAreaCard({
               <DropdownMenuContent align="end" className="max-w-[280px]">
                 {items.map((i) => (
                   <DropdownMenuItem key={i.id} onSelect={() => onEditItem(i)}>
-                    <span className="truncate">{i.description || i.workType || "—"}</span>
+                    <span className="truncate">{pmDisplayWork(i.description || i.workType || "—", english)}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -354,7 +357,7 @@ function PhaseAreaCard({
                       : "border-zinc-600/50 bg-zinc-800/60 text-zinc-300",
                   )}
                 >
-                  <span className="truncate">{i.description || i.workType || "—"}</span>
+                  <span className="truncate">{pmDisplayWork(i.description || i.workType || "—", english)}</span>
                 </Badge>
               );
             })}
@@ -908,6 +911,7 @@ export function PmTimelinePanel({
                   end={end}
                   dayCount={dayCount}
                   locale={locale}
+                  english={!es}
                   labels={labels}
                   phaseCategory="INTERIOR"
                   onReopenPhase={onReopenPhase}
@@ -944,6 +948,7 @@ export function PmTimelinePanel({
                   end={end}
                   dayCount={dayCount}
                   locale={locale}
+                  english={!es}
                   labels={labels}
                   phaseCategory="EXTERIOR"
                   onReopenPhase={onReopenPhase}
@@ -996,7 +1001,7 @@ export function PmTimelinePanel({
         <PhaseProvidersDialog
           open={providerPhase != null}
           onOpenChange={(v) => !v && setProviderPhase(null)}
-          phaseLabel={providerPhase.area}
+          phaseLabel={pmDisplayArea(providerPhase.area, !es)}
           meta={getMeta(providerPhase.category, providerPhase.area)}
           onSave={(meta) => saveMeta(providerPhase.category, providerPhase.area, meta)}
           t={pm}
@@ -1007,7 +1012,7 @@ export function PmTimelinePanel({
         <PhaseNotesDialog
           open={notesPhase != null}
           onOpenChange={(v) => !v && setNotesPhase(null)}
-          phaseLabel={notesPhase.area}
+          phaseLabel={pmDisplayArea(notesPhase.area, !es)}
           meta={getMeta(notesPhase.category, notesPhase.area)}
           onSave={(meta) => saveMeta(notesPhase.category, notesPhase.area, meta)}
           t={pm}
