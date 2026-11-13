@@ -1194,7 +1194,7 @@ export default function FixFlipProjectManagerPage() {
         }}
         onConfirm={confirmCompleteWithCost}
         title={pm("Marcar como completado", "Mark as completed")}
-        taskLabel={completeTargetItem?.description || completeTargetItem?.workType || "—"}
+        taskLabel={pmDisplayWork(completeTargetItem?.description || completeTargetItem?.workType || "—", !es)}
         hint={pm(
           "El costo real es obligatorio y debe ser mayor que 0 para marcar el ítem como completado.",
           "Actual cost is required and must be greater than 0 to mark the item as completed.",
