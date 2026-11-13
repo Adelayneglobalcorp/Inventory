@@ -22,18 +22,22 @@ type FinancingForm = {
   city: string;
   state: string;
   postalCode: string;
-  amount: string;
+  residentialAddress: string;
+  housingStatus: 'owner' | 'renter';
+  creditScore: string;
+  flipsCompleted: '0' | '1-5' | '5+';
+  downPayment: string;
   purchasePrice: string;
   rehabBudget: string;
   arv: string;
-  estimatedValue: string;
   notes: string;
 };
 
 const initialValues = (email = ''): FinancingForm => ({
   loanType: 'hard_money', fullName: '', email, phone: '',
   address: '', city: '', state: '', postalCode: '',
-  amount: '', purchasePrice: '', rehabBudget: '', arv: '', estimatedValue: '', notes: '',
+  residentialAddress: '', housingStatus: 'owner', creditScore: '', flipsCompleted: '0',
+  downPayment: '', purchasePrice: '', rehabBudget: '', arv: '', notes: '',
 });
 
 const parseMoney = (value: string): number => {
@@ -84,7 +88,6 @@ export default function Financing() {
       purchasePrice: moneyText(property.price),
       arv: moneyText(property.arv),
       rehabBudget: moneyText(property.rehab_cost),
-      estimatedValue: moneyText(property.arv),
     }));
   };
 
@@ -96,16 +99,18 @@ export default function Financing() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user || submitting) return;
-    if (![form.fullName, form.email, form.phone, form.address, form.city, form.state].every((v) => v.trim())) {
+    if (![form.fullName, form.email, form.phone, form.residentialAddress, form.address, form.city, form.state, form.postalCode, form.creditScore].every((v) => v.trim()) || (propertyMode === 'inventory' && !selectedPropertyId)) {
       toast.error(t('financing.required'));
       return;
     }
-    const amount = parseMoney(form.amount);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      toast.error(t('financing.invalidAmount'));
+    const price = parseMoney(form.purchasePrice);
+    const downPayment = parseMoney(form.downPayment);
+    const creditScore = Number(form.creditScore);
+    if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(downPayment) || downPayment < 0 || downPayment > price || !Number.isInteger(creditScore) || creditScore < 300 || creditScore > 850) {
+      toast.error(t('financing.invalidDetails'));
       return;
     }
-    const otherAmounts = [form.purchasePrice, form.rehabBudget, form.arv, form.estimatedValue];
+    const otherAmounts = [form.rehabBudget, form.arv];
     if (otherAmounts.some((v) => v.trim() !== '' && (!Number.isFinite(parseMoney(v)) || parseMoney(v) < 0))) {
       toast.error(t('financing.invalidAmount'));
       return;
@@ -122,12 +127,20 @@ export default function Financing() {
       city: form.city.trim(),
       state: form.state.trim(),
       postal_code: form.postalCode.trim() || null,
-      requested_amount: amount,
+      requested_amount: price - downPayment,
       purchase_price: optionalAmount(form.purchasePrice),
       rehab_budget: optionalAmount(form.rehabBudget),
       after_repair_value: optionalAmount(form.arv),
-      estimated_property_value: optionalAmount(form.estimatedValue),
-      notes: [selectedPropertyId ? 'Inventory property ID: ' + selectedPropertyId : '', form.notes.trim()].filter(Boolean).join('\n') || null,
+      estimated_property_value: optionalAmount(form.arv),
+      notes: [
+        selectedPropertyId ? 'Inventory property ID: ' + selectedPropertyId : '',
+        'Residential address: ' + form.residentialAddress.trim(),
+        'Housing status: ' + form.housingStatus,
+        'Credit score: ' + form.creditScore,
+        'Completed investment properties: ' + form.flipsCompleted,
+        'Down payment (USD): ' + downPayment.toFixed(2),
+        form.notes.trim(),
+      ].filter(Boolean).join('\n') || null,
     });
     setSubmitting(false);
 
@@ -139,6 +152,7 @@ export default function Financing() {
     toast.success(t('financing.success'));
     setForm(initialValues(user.email ?? ''));
     setSelectedPropertyId('');
+    setPropertyMode('inventory');
   };
 
   const field = (
@@ -206,11 +220,11 @@ export default function Financing() {
               <p className="text-sm font-semibold">{t('financing.propertyAddress')}</p>
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center gap-2">
-                  <input type="radio" name="property-mode" checked={propertyMode === 'inventory'} onChange={() => setPropertyMode('inventory')}/>
+                  <input type="radio" name="property-mode" checked={propertyMode === 'inventory'} onChange={() => { setPropertyMode('inventory'); setSelectedPropertyId(''); setForm(prev => ({ ...prev, address: '', city: '', state: '', postalCode: '' })); }}/>
                   {t('financing.inventoryProperty')}
                 </label>
                 <label className="flex items-center gap-2">
-                  <input type="radio" name="property-mode" checked={propertyMode === 'manual'} onChange={() => { setPropertyMode('manual'); setSelectedPropertyId(''); }}/>
+                  <input type="radio" name="property-mode" checked={propertyMode === 'manual'} onChange={() => { setPropertyMode('manual'); setSelectedPropertyId(''); setForm(prev => ({ ...prev, address: '', city: '', state: '', postalCode: '', purchasePrice: '', rehabBudget: '', arv: '' })); }}/>
                   {t('financing.manualProperty')}
                 </label>
               </div>
@@ -231,18 +245,31 @@ export default function Financing() {
               )}
             </div>
             <div className="grid gap-5 rounded-2xl border border-border/70 bg-background/20 p-4 sm:grid-cols-2 sm:p-6">
-              {field('fullName', t('financing.name'), { required: true })}
-              {field('email', t('financing.email'), { type: 'email', required: true })}
-              {field('phone', t('financing.phone'), { type: 'tel', required: true })}
+              <h3 className="sm:col-span-2 text-base font-semibold">{t('financing.propertyDetails')}</h3>
               {field('address', t('financing.propertyAddress'), { required: true })}
               {field('city', t('financing.city'), { required: true })}
               {field('state', t('financing.state'), { required: true })}
-              {field('postalCode', t('financing.zip'))}
-              {money('amount', t('financing.amount'), true)}
-              {money('purchasePrice', t('financing.purchasePrice'))}
+              {field('postalCode', t('financing.zip'), { required: true })}
+              <h3 className="sm:col-span-2 mt-3 text-base font-semibold">{t('financing.applicantDetails')}</h3>
+              {field('fullName', t('financing.name'), { required: true })}
+              {field('email', t('financing.email'), { type: 'email', required: true })}
+              {field('phone', t('financing.phone'), { type: 'tel', required: true })}
+              {field('residentialAddress', t('financing.residentialAddress'), { required: true })}
+              <div className="space-y-2"><Label htmlFor="financing-housingStatus">{t('financing.housingStatus')}</Label>
+                <select id="financing-housingStatus" value={form.housingStatus} onChange={e => update('housingStatus', e.target.value)} className="flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm">
+                  <option value="owner">{t('financing.owner')}</option><option value="renter">{t('financing.renter')}</option>
+                </select></div>
+              {field('creditScore', t('financing.creditScore'), { type: 'number', required: true, min: '300', step: '1' })}
+              <h3 className="sm:col-span-2 mt-3 text-base font-semibold">{t('financing.experience')}</h3>
+              <div className="space-y-2 sm:col-span-2"><Label htmlFor="financing-flipsCompleted">{t('financing.flipsCompleted')}</Label>
+                <select id="financing-flipsCompleted" value={form.flipsCompleted} onChange={e => update('flipsCompleted', e.target.value)} className="flex h-11 w-full rounded-xl border border-border bg-background px-3 text-sm">
+                  <option value="0">{t('financing.flipsZero')}</option><option value="1-5">{t('financing.flipsOneFive')}</option><option value="5+">{t('financing.flipsMoreFive')}</option>
+                </select></div>
+              <h3 className="sm:col-span-2 mt-3 text-base font-semibold">{t('financing.financialDetails')}</h3>
+              {money('purchasePrice', t('financing.purchasePrice'), true)}
               {money('rehabBudget', t('financing.rehabBudget'))}
               {money('arv', t('financing.arv'))}
-              {money('estimatedValue', t('financing.estimatedValue'))}
+              {money('downPayment', t('financing.downPayment'), true)}
             </div>
             <div className="space-y-3 rounded-2xl border border-border/70 bg-background/20 p-4 sm:p-6">
               <Label htmlFor="financing-notes" className="text-sm font-semibold">{t('financing.notes')}</Label>
