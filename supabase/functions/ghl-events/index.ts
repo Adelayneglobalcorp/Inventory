@@ -4,8 +4,8 @@
 //   financing    → nota + etiqueta + pipeline + correo al cliente + aviso a Adelayne con todos los datos
 // Se protege con un secreto compartido guardado en Supabase Vault (no requiere JWT).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { addNote, advanceOpportunity, GHL, notifyAdmin, sendEmail, upsertContact, type Lang } from "../_shared/ghl.ts";
-import { adminFinancing, adminInterest, adminNewUser, financingClientEmail, money, registrationEmail, loanLabel, SITE_URL } from "../_shared/emails.ts";
+import { addNote, advanceOpportunity, GHL, notifyAdmin, notifyAdminSms, sendEmail, upsertContact, type Lang } from "../_shared/ghl.ts";
+import { adminFinancing, adminInterest, adminNewUser, adminVipNew, financingClientEmail, money, registrationEmail, loanLabel, SITE_URL, VIP, vipPaymentEmail } from "../_shared/emails.ts";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -44,9 +44,12 @@ async function ensureProfile(userId: string) {
   const user = au?.user;
   if (!profile && user) {
     const meta = user.user_metadata ?? {};
+    // Paquete VIP: queda pendiente hasta que se confirme el pago por Zelle.
+    const vip = meta.plan === "vip_495";
     const row = {
       id: user.id, email: user.email, full_name: meta.full_name ?? user.email?.split("@")[0],
-      phone: meta.phone ?? null, role: "usuario", is_approved: true, approved_at: new Date().toISOString(),
+      phone: meta.phone ?? null,
+      ...(vip ? { role: "pendiente", is_approved: false } : { role: "usuario", is_approved: true, approved_at: new Date().toISOString() }),
       preferred_language: langOf(meta.language, meta.preferred_language),
     };
     await admin.from("profiles").upsert(row, { onConflict: "id" });
@@ -70,11 +73,34 @@ async function onRegistration(userId: string) {
   const PERFILES = ["Inversionista con capital", "Broker o agente inmobiliario", "Quiero empezar a invertir"];
   const perfil = PERFILES.includes(meta.perfil) ? String(meta.perfil) : null;
 
+  const vip = meta.plan === "vip_495";
   const contactId = await upsertContact({
     email: user.email, fullName: name, phone, lang, perfil,
-    tags: ["inventory-registrado", fromLanding || fromWeb ? "inventory-origen-landing" : "inventory-origen-app"],
+    tags: ["inventory-registrado", fromLanding || fromWeb ? "inventory-origen-landing" : "inventory-origen-app", ...(vip ? ["vip-investor", "vip-pago-pendiente"] : [])],
     source: fromWeb ? "Global 360 · Sitio web" : fromLanding ? "Global 360 · Landing" : "Global 360 · App",
   });
+
+  // Paquete VIP (sitio web): orden pendiente + correo con el pago por Zelle + aviso a Adelayne con el enlace para aprobar.
+  if (vip) {
+    let { data: order } = await admin.from("vip_orders").select("*").eq("user_id", user.id).maybeSingle();
+    if (!order) {
+      const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+      const ins = await admin.from("vip_orders").insert({
+        user_id: user.id, email: user.email, full_name: name, phone, lang, amount: VIP.amount, approve_token: token, contact_id: contactId,
+      }).select("*").single();
+      if (ins.error) throw new Error("vip_orders: " + ins.error.message);
+      order = ins.data;
+    }
+    await advanceOpportunity(contactId, GHL.stages.revision, `Global 360 VIP · ${name || user.email}`, VIP.amount);
+    await addNote(contactId, `⭐ Registro VIP Investor Package ($${VIP.amount}) desde el sitio web. Pago por Zelle pendiente de confirmar.`);
+    const mail = vipPaymentEmail(lang, name, user.email);
+    await sendEmail(contactId, mail.subject, mail.html);
+    const approveUrl = `${VIP.approvePage}?t=${order.approve_token}`;
+    const adm = adminVipNew({ name, email: user.email, phone, lang, perfil, approveUrl });
+    await notifyAdmin(adm.subject, adm.html);
+    await notifyAdminSms(`Global 360 · Nuevo registro VIP $${VIP.amount}: ${name || user.email}${phone ? " (" + phone + ")" : ""}. Pago Zelle pendiente. Al ver su comprobante, aprueba aquí: ${approveUrl}`).catch((e) => console.warn("sms admin", String(e)));
+    return { contactId, vip: true };
+  }
   await advanceOpportunity(contactId, GHL.stages.registrado, `Global 360 · ${name || user.email}`);
 
   // Registro desde el landing: la persona aún no tiene contraseña → enlace seguro para crearla.
@@ -146,6 +172,29 @@ async function onFinancing(requestId: string) {
   return { contactId };
 }
 
+/** Recordatorios de pago VIP: a las 24 h y a las 72 h (este último también avisa a Adelayne). Lo llama pg_cron cada hora. */
+async function onVipReminders() {
+  const now = Date.now();
+  const { data: orders } = await admin.from("vip_orders").select("*").eq("status", "pendiente").lt("reminders_sent", 2);
+  let sent = 0;
+  for (const o of orders ?? []) {
+    const age = now - new Date(o.created_at).getTime();
+    const due = o.reminders_sent === 0 ? age >= 24 * 3600e3 : age >= 72 * 3600e3;
+    if (!due) continue;
+    const lang: Lang = o.lang === "en" ? "en" : "es";
+    const contactId = o.contact_id ?? await upsertContact({ email: o.email, fullName: o.full_name, phone: o.phone, lang });
+    const mail = vipPaymentEmail(lang, o.full_name ?? "", o.email, true);
+    await sendEmail(contactId, mail.subject, mail.html);
+    if (o.reminders_sent === 1) {
+      const adm = adminVipNew({ name: o.full_name ?? "", email: o.email, phone: o.phone, lang, approveUrl: `${VIP.approvePage}?t=${o.approve_token}`, reminder: true });
+      await notifyAdmin(adm.subject, adm.html);
+    }
+    await admin.from("vip_orders").update({ reminders_sent: o.reminders_sent + 1, contact_id: contactId }).eq("id", o.id);
+    sent++;
+  }
+  return { sent };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "method" });
   if (!(await secretOk(req))) return json(401, { error: "unauthorized" });
@@ -157,6 +206,7 @@ Deno.serve(async (req) => {
     const result = type === "registration" ? await onRegistration(id)
       : type === "interest" ? await onInterest(id)
       : type === "financing" ? await onFinancing(id)
+      : type === "vip_reminders" ? await onVipReminders()
       : { skipped: "tipo desconocido" };
     console.log("ghl-events ok", type, id, JSON.stringify(result));
     return json(200, { ok: true, result });

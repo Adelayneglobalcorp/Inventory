@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,13 @@ const Login = () => {
     email: string; password: string; fullName: string; phone: PhoneFieldValue | undefined; language: Lang | '';
   }>({ email: '', password: '', fullName: '', phone: undefined, language: '' });
   const [languageError, setLanguageError] = useState(false);
+
+  // Cuenta pendiente (p. ej. pago VIP por Zelle sin confirmar): se cerró la sesión y aquí se explica por qué.
+  useEffect(() => {
+    let pending = false;
+    try { pending = sessionStorage.getItem('g360_pending') === '1'; sessionStorage.removeItem('g360_pending'); } catch { /* noop */ }
+    if (pending) toast.error(t('authErrors.pending'), { duration: 12000 });
+  }, [t]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

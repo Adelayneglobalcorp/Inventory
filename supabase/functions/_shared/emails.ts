@@ -241,3 +241,173 @@ export function adminFinancing(f: Financing, lang: Lang) {
     ], { label: "Ver solicitudes", href: `${SITE_URL}/admin` }),
   };
 }
+
+// ---------- Paquete VIP pagado por Zelle ----------
+
+export const VIP = {
+  amount: 495,
+  zelleEmail: "coach@adelayneprieto.com",
+  zelleQr: "https://files.leadconnectorhq.com/file/6afce0b6fdf6b54fd7a58b94/zelle-adelayne-global-corp-1.png",
+  whatsapp: "19549070540",
+  whatsappLabel: "+1 (954) 907-0540",
+  approvePage: "https://global360.buycash2day.com/web-assets/aprobar-pago.html",
+};
+
+export function vipWhatsappLink(lang: Lang, email: string): string {
+  const text = lang === "en"
+    ? `Hi! I’m sending my Zelle payment receipt for the Global 360 VIP Investor Package ($${VIP.amount}). My account email: ${email}`
+    : `¡Hola! Envío mi comprobante de pago por Zelle del VIP Investor Package de Global 360 ($${VIP.amount}). Mi correo de registro: ${email}`;
+  return `https://wa.me/${VIP.whatsapp}?text=${encodeURIComponent(text)}`;
+}
+
+/** Bloque de pago: QR + correo de Zelle + monto (estilo de la línea gráfica). */
+function zelleBox(lang: Lang): string {
+  const en = lang === "en";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${C.navy};border-radius:14px;"><tr>
+<td width="170" valign="middle" align="center" style="padding:22px 0 22px 22px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#ffffff" style="background-color:#ffffff;border-radius:12px;padding:8px;"><img src="${VIP.zelleQr}" width="140" alt="${en ? "Zelle QR code" : "Código QR de Zelle"}" style="display:block;width:140px;height:auto;border:0;"></td></tr></table></td>
+<td valign="middle" style="padding:22px 24px;font-family:${FONT};">
+<p style="margin:0 0 4px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.gold};font-weight:bold;">${en ? "Amount to pay" : "Monto a pagar"}</p>
+<p style="margin:0 0 16px 0;font-size:30px;line-height:1.1;color:#f3d488;font-weight:bold;">$${VIP.amount} USD</p>
+<p style="margin:0 0 4px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.gold};font-weight:bold;">${en ? "Zelle email" : "Correo de Zelle"}</p>
+<p style="margin:0;font-size:16px;color:#ffffff;font-weight:bold;word-break:break-all;">${VIP.zelleEmail}</p>
+</td></tr></table>`;
+}
+
+function waButton(label: string, href: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>
+<td align="center" bgcolor="#25d366" style="background-color:#25d366;border-radius:8px;padding:15px 30px;">
+<a href="${esc(href)}" target="_blank" style="font-family:${FONT};font-size:14px;font-weight:bold;letter-spacing:.6px;color:#06240f;text-decoration:none;display:inline-block;"><span style="color:#06240f;text-decoration:none;">${esc(label)}</span></a>
+</td></tr></table>`;
+}
+
+const VIP_INCLUDES: Record<Lang, string[]> = {
+  es: ["Sesión estratégica privada 1 a 1 con Adelayne Prieto (60 min)", "Meditación de abundancia personalizada", "Acceso completo a Global 360 por 12 meses", "Bonus: reunión estratégica mensual"],
+  en: ["Private 1-on-1 Investment Strategy Session with Adelayne Prieto (60 min)", "Personalized Abundance Meditation", "Full Global 360 platform access for 12 months", "Bonus: monthly strategic meeting"],
+};
+
+/** Correo al registrarse con el paquete VIP (y recordatorios): instrucciones de pago por Zelle. */
+export function vipPaymentEmail(lang: Lang, name: string, email: string, reminder = false) {
+  const en = lang === "en";
+  const firstRaw = (name || "").split(" ")[0] || (en ? "investor" : "inversionista");
+  const first = esc(firstRaw);
+  const s = en
+    ? [
+      { title: "Open Zelle", text: "in your bank's app and scan the QR code, or send to the Zelle email." },
+      { title: `Send $${VIP.amount}.`, text: "One-time payment for the VIP Investor Package." },
+      { title: "Send us your receipt", text: `on WhatsApp to ${VIP.whatsappLabel}. As soon as we confirm it, your access arrives by email.` },
+    ]
+    : [
+      { title: "Abre Zelle", text: "en la app de tu banco y escanea el código QR, o envía al correo de Zelle." },
+      { title: `Envía $${VIP.amount}.`, text: "Pago único del VIP Investor Package." },
+      { title: "Envíanos tu comprobante", text: `por WhatsApp al ${VIP.whatsappLabel}. En cuanto lo confirmamos, te llega tu acceso por correo.` },
+    ];
+  const includes = VIP_INCLUDES[lang].map((t) => `<tr><td width="24" valign="top" style="padding:0 0 8px 0;color:${C.goldDark};font-family:${FONT};font-size:15px;font-weight:bold;">&#10003;</td><td style="padding:0 0 8px 0;font-family:${FONT};font-size:14px;line-height:1.5;color:${C.text};">${esc(t)}</td></tr>`).join("");
+  const subject = reminder
+    ? (en ? `${firstRaw}, your Global 360 VIP access is waiting for your payment` : `${firstRaw}, tu acceso VIP a Global 360 espera tu pago`)
+    : (en ? "Your Global 360 VIP account is created — last step: your Zelle payment" : "Tu cuenta VIP de Global 360 está creada — último paso: tu pago por Zelle");
+  const intro = reminder
+    ? (en ? "Your VIP Investor Package is reserved, but we haven't received your payment receipt yet. Complete it in two minutes:" : "Tu VIP Investor Package está reservado, pero aún no recibimos tu comprobante de pago. Complétalo en dos minutos:")
+    : (en ? "Your account is created. To activate your <strong style=\"color:#0b1730;\">VIP Investor Package</strong>, make your one-time Zelle payment:" : "Tu cuenta está creada. Para activar tu <strong style=\"color:#0b1730;\">VIP Investor Package</strong>, realiza tu pago único por Zelle:");
+  return {
+    subject,
+    html: layout({
+      lang,
+      preheader: en ? `Pay $${VIP.amount} with Zelle and send your receipt on WhatsApp to activate your access.` : `Paga $${VIP.amount} por Zelle y envía tu comprobante por WhatsApp para activar tu acceso.`,
+      eyebrow: reminder ? (en ? "Reminder · VIP Investor Package" : "Recordatorio · VIP Investor Package") : "VIP Investor Package",
+      title: reminder ? (en ? `${first}, you're one step away` : `${first}, estás a un paso`) : (en ? `Welcome, ${first}` : `Bienvenido, ${first}`),
+      body: p(intro) + zelleBox(lang) + spacer(22) + steps(s, en ? "How to pay" : "Cómo pagar") + spacer() +
+        waButton(en ? "Send my receipt on WhatsApp" : "Enviar mi comprobante por WhatsApp", vipWhatsappLink(lang, email)) + spacer(26) +
+        p(`<strong style="color:#0b1730;">${en ? "Your package includes" : "Tu paquete incluye"}</strong>`) +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${includes}</table>` + spacer(10) +
+        p(en ? "You'll sign in with this email and the password you created. If you have any questions, simply reply to this email." : "Ingresarás con este correo y la contraseña que creaste. Si tienes alguna pregunta, simplemente responde a este correo."),
+      footerNote: en ? "You are receiving this email because you registered for the Global 360 VIP Investor Package." : "Recibes este correo porque te registraste en el VIP Investor Package de Global 360.",
+    }),
+  };
+}
+
+/** Pago confirmado: acceso aprobado. */
+export function vipApprovedEmail(lang: Lang, name: string, accessUntil: Date) {
+  const en = lang === "en";
+  const first = esc((name || "").split(" ")[0] || (en ? "investor" : "inversionista"));
+  const until = accessUntil.toLocaleDateString(en ? "en-US" : "es-US", { year: "numeric", month: "long", day: "numeric", timeZone: "America/New_York" });
+  const s = en
+    ? [
+      { title: "Sign in to Global 360", text: "with your email and the password you created." },
+      { title: "Explore the off-market inventory,", text: "the calculators, the Project Manager and financing." },
+      { title: "Schedule your 1-on-1 session", text: `with Adelayne: reply to this email or write to us on WhatsApp at ${VIP.whatsappLabel}.` },
+    ]
+    : [
+      { title: "Ingresa a Global 360", text: "con tu correo y la contraseña que creaste." },
+      { title: "Explora el inventario off-market,", text: "las calculadoras, el Project Manager y el financiamiento." },
+      { title: "Agenda tu sesión 1 a 1", text: `con Adelayne: responde este correo o escríbenos por WhatsApp al ${VIP.whatsappLabel}.` },
+    ];
+  return {
+    subject: en ? "Payment confirmed: your Global 360 VIP access is active" : "Pago confirmado: tu acceso VIP a Global 360 está activo",
+    html: layout({
+      lang,
+      preheader: en ? "Your payment was confirmed. Sign in now." : "Confirmamos tu pago. Ingresa ahora.",
+      eyebrow: en ? "Access approved" : "Acceso aprobado",
+      title: en ? `Welcome to Global 360 VIP, ${first}` : `Bienvenido a Global 360 VIP, ${first}`,
+      body: p(en
+        ? `We confirmed your payment. Your <strong style="color:#0b1730;">VIP Investor Package</strong> is active until <strong style="color:#0b1730;">${esc(until)}</strong>.`
+        : `Confirmamos tu pago. Tu <strong style="color:#0b1730;">VIP Investor Package</strong> está activo hasta el <strong style="color:#0b1730;">${esc(until)}</strong>.`) +
+        spacer(8) + steps(s, en ? "Next steps" : "Próximos pasos") + spacer() +
+        button(en ? "Sign in to Global 360" : "Ingresar a Global 360", `${SITE_URL}/login`) + spacer(20) +
+        p(en ? "Forgot your password? Use “Forgot your password?” on the sign-in screen." : "¿Olvidaste tu contraseña? Usa «¿Olvidaste tu contraseña?» en la pantalla de ingreso."),
+      footerNote: en ? "You are receiving this email because your Global 360 VIP payment was confirmed." : "Recibes este correo porque se confirmó tu pago del VIP de Global 360.",
+    }),
+  };
+}
+
+/** Pago no confirmado. */
+export function vipRejectedEmail(lang: Lang, name: string, email: string) {
+  const en = lang === "en";
+  const first = esc((name || "").split(" ")[0] || (en ? "investor" : "inversionista"));
+  return {
+    subject: en ? "We couldn't confirm your Global 360 VIP payment" : "No pudimos confirmar tu pago del VIP de Global 360",
+    html: layout({
+      lang,
+      preheader: en ? "Write to us and we'll help you complete it." : "Escríbenos y te ayudamos a completarlo.",
+      eyebrow: "VIP Investor Package",
+      title: en ? `${first}, let's review your payment` : `${first}, revisemos tu pago`,
+      body: p(en
+        ? "We couldn't confirm your Zelle payment for the VIP Investor Package. It may be a mismatch in the amount or the receipt."
+        : "No pudimos confirmar tu pago por Zelle del VIP Investor Package. Puede ser una diferencia en el monto o en el comprobante.") +
+        p(en ? "Write to us on WhatsApp with your receipt and we'll help you complete it." : "Escríbenos por WhatsApp con tu comprobante y te ayudamos a completarlo.") + spacer(10) +
+        waButton(en ? "Write on WhatsApp" : "Escribir por WhatsApp", vipWhatsappLink(lang, email)) + spacer(20),
+      footerNote: en ? "You are receiving this email because you registered for the Global 360 VIP Investor Package." : "Recibes este correo porque te registraste en el VIP Investor Package de Global 360.",
+    }),
+  };
+}
+
+/** Aviso interno: nuevo registro VIP (o recordatorio) con el enlace para aprobar/rechazar. */
+export function adminVipNew(o: { name: string; email: string; phone?: string | null; lang: Lang; perfil?: string | null; approveUrl: string; reminder?: boolean }) {
+  return {
+    subject: o.reminder
+      ? `Pago VIP aún pendiente: ${o.name || o.email} — $${VIP.amount}`
+      : `Nuevo registro VIP (pago Zelle pendiente): ${o.name || o.email} — $${VIP.amount}`,
+    html: internal(
+      o.reminder ? "Pago VIP aún pendiente" : "Nuevo registro VIP · pago pendiente",
+      o.reminder
+        ? "Esta persona se registró hace más de 3 días y su pago sigue sin confirmar. Si ya te envió el comprobante por WhatsApp, revísalo y aprueba su acceso."
+        : `Se registró con el VIP Investor Package. Cuando recibas su comprobante por WhatsApp (${VIP.whatsappLabel}) y lo veas en tu Zelle, aprueba su acceso con el botón.`,
+      [
+        ["Nombre", o.name || "—"], ["Correo", o.email], ["Teléfono", o.phone || "—"],
+        ["Idioma", o.lang === "en" ? "English" : "Español"], ["Perfil", o.perfil || "—"],
+        ["Paquete", `VIP Investor Package · $${VIP.amount}`], ["Pago", "Zelle · pendiente de confirmar"],
+      ],
+      { label: "Revisar y aprobar el pago", href: o.approveUrl },
+    ),
+  };
+}
+
+export function adminVipDecision(o: { name: string; email: string; approved: boolean }) {
+  return {
+    subject: o.approved ? `✓ Acceso VIP aprobado: ${o.name || o.email}` : `Pago VIP rechazado: ${o.name || o.email}`,
+    html: internal(
+      o.approved ? "Acceso VIP aprobado" : "Pago VIP rechazado",
+      o.approved ? "Su cuenta quedó activa por 12 meses y ya recibió el correo con su acceso." : "Le enviamos un correo para que te escriba por WhatsApp y revisen el pago.",
+      [["Nombre", o.name || "—"], ["Correo", o.email]],
+    ),
+  };
+}

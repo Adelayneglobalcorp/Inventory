@@ -101,7 +101,7 @@ const resources = {
                 "rateLimited": "Too many attempts. Please try again later.",
                 "notFound": "User not found.",
                 "profileError": "We could not verify your user profile.",
-                "pending": "Your account is waiting for approval by an administrator.",
+                "pending": "Your access is being verified. If you already paid with Zelle, send your receipt on WhatsApp to +1 (954) 907-0540. We will email you as soon as your access is active.",
                 "signupError": "We could not complete registration."
             },
             "roles": { "admin": "Administrator", "usuario": "Investor", "investor": "Investor" },
@@ -606,7 +606,7 @@ const resources = {
                 "rateLimited": "Demasiados intentos. Inténtalo más tarde.",
                 "notFound": "No se encontró el usuario.",
                 "profileError": "No pudimos verificar tu perfil de usuario.",
-                "pending": "Tu cuenta está pendiente de aprobación por un administrador.",
+                "pending": "Tu acceso está en verificación. Si ya pagaste por Zelle, envía tu comprobante por WhatsApp al +1 (954) 907-0540. Te avisaremos por correo en cuanto tu acceso esté activo.",
                 "signupError": "No pudimos completar el registro."
             },
             "roles": { "admin": "Administrador", "usuario": "Inversionista", "investor": "Inversionista" },

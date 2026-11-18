@@ -23,6 +23,27 @@ async function applyProfileLanguage(userId: string) {
   }
 }
 
+/**
+ * Cuentas pendientes (p. ej. paquete VIP con pago por Zelle sin confirmar) no pueden usar la
+ * plataforma: se cierra la sesión y la pantalla de ingreso muestra el aviso.
+ * Si el perfil aún no existe (registro recién creado), no se bloquea.
+ */
+let signingIn = false;
+
+async function blockIfNotApproved(userId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase.from('profiles').select('role, is_approved').eq('id', userId).maybeSingle();
+    if (data && !data.is_approved && data.role !== 'admin') {
+      try { sessionStorage.setItem('g360_pending', '1'); } catch { /* noop */ }
+      await supabase.auth.signOut();
+      return true;
+    }
+  } catch {
+    /* sin conexión: no se bloquea por error de red */
+  }
+  return false;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -58,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await supabase.auth.signOut();
           return;
         }
+        if (currentSession?.user && await blockIfNotApproved(currentSession.user.id)) return;
         if (currentSession?.user) void applyProfileLanguage(currentSession.user.id);
 
         if (currentSession?.user) {
@@ -104,6 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔄 Auth state changed:', event);
 
         if (event === 'SIGNED_IN' && newSession?.user) {
+          // Fuera del callback (llamar a Supabase dentro de onAuthStateChange puede bloquearse).
+          // signIn() ya valida la aprobación por su cuenta.
+          const uid = newSession.user.id;
+          if (!signingIn) setTimeout(() => { void blockIfNotApproved(uid); }, 0);
           setSession(newSession);
           setUser(newSession.user);
 
@@ -134,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string): Promise<{ error: Error | null }> => {
     console.log('🔍 SignIn attempt:', { email });
 
+    signingIn = true;
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -166,6 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Si no está aprobado y no es admin, no permitir login
       if (!profile.is_approved && profile.role !== 'admin') {
         console.log('🚫 User not approved:', profile);
+        try { sessionStorage.removeItem('g360_pending'); } catch { /* noop */ }
+        await supabase.auth.signOut();
         return { error: new Error(i18n.t('authErrors.pending')) };
       }
 
@@ -196,6 +225,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       console.error('❌ SignIn exception:', err);
       return { error: err as Error };
+    } finally {
+      signingIn = false;
     }
   };
 

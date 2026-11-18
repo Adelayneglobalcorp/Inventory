@@ -150,3 +150,27 @@ export async function sendEmail(contactId: string, subject: string, html: string
 export async function notifyAdmin(subject: string, html: string): Promise<void> {
   await sendEmail(GHL.adminContactId, subject, html);
 }
+
+/** Aviso interno por SMS a Adelayne (si la subcuenta tiene número de SMS activo). */
+export async function notifyAdminSms(message: string): Promise<void> {
+  await ghl("/conversations/messages", {
+    method: "POST",
+    body: JSON.stringify({ type: "SMS", contactId: GHL.adminContactId, message }),
+  });
+}
+
+/** Mueve la oportunidad a una etapa concreta (también hacia atrás). */
+export async function setOpportunityStage(contactId: string, stageId: string, name: string, monetaryValue?: number): Promise<void> {
+  const search = await ghl(
+    `/opportunities/search?location_id=${GHL.locationId}&pipeline_id=${GHL.pipelineId}&contact_id=${contactId}&limit=1`,
+  ).catch(() => null);
+  const current = search?.opportunities?.[0];
+  if (current) {
+    await ghl(`/opportunities/${current.id}`, {
+      method: "PUT",
+      body: JSON.stringify({ pipelineId: GHL.pipelineId, pipelineStageId: stageId, ...(monetaryValue ? { monetaryValue } : {}) }),
+    });
+    return;
+  }
+  await advanceOpportunity(contactId, stageId, name, monetaryValue);
+}
