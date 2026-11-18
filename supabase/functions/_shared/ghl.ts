@@ -6,6 +6,8 @@ const GHL_BASE = "https://services.leadconnectorhq.com";
 export const GHL = {
   locationId: Deno.env.get("GHL_LOCATION_ID") ?? "d9ywc9jnJ91bEk3uYHfg",
   adminContactId: Deno.env.get("GHL_ADMIN_CONTACT_ID") ?? "muTjlvcnhpLsKwqz4poM",
+  // Contacto «Adelayne Prieto» con su celular (+1 305 967 9785) para los avisos por SMS.
+  adminSmsContactId: Deno.env.get("GHL_ADMIN_SMS_CONTACT_ID") ?? "6bMRzMzmxC7SDdqN1WJT",
   emailFrom: Deno.env.get("GHL_EMAIL_FROM") ?? "Global 360 · Adelayne Global Corp <Global360@info.buycash2day.com>",
   pipelineId: Deno.env.get("GHL_PIPELINE_ID") ?? "r6xWZWU7zBV9xvzexMCe",
   stages: {
@@ -151,12 +153,24 @@ export async function notifyAdmin(subject: string, html: string): Promise<void> 
   await sendEmail(GHL.adminContactId, subject, html);
 }
 
-/** Aviso interno por SMS a Adelayne (si la subcuenta tiene número de SMS activo). */
-export async function notifyAdminSms(message: string): Promise<void> {
-  await ghl("/conversations/messages", {
-    method: "POST",
-    body: JSON.stringify({ type: "SMS", contactId: GHL.adminContactId, message }),
-  });
+/**
+ * SMS desde el número de la subcuenta. Solo se envía si el secreto VIP_SMS_ENABLED = "true"
+ * (activar cuando el registro A2P esté aprobado). Nunca interrumpe el flujo: los errores se registran.
+ */
+export async function sendSms(contactId: string, message: string): Promise<boolean> {
+  if ((Deno.env.get("VIP_SMS_ENABLED") ?? "").toLowerCase() !== "true") return false;
+  try {
+    await ghl("/conversations/messages", { method: "POST", body: JSON.stringify({ type: "SMS", contactId, message }) });
+    return true;
+  } catch (e) {
+    console.warn("sms", contactId, String(e));
+    return false;
+  }
+}
+
+/** SMS interno a Adelayne (contacto «Adelayne Prieto» con su celular). */
+export async function notifyAdminSms(message: string): Promise<boolean> {
+  return await sendSms(GHL.adminSmsContactId, message);
 }
 
 /** Mueve la oportunidad a una etapa concreta (también hacia atrás). */

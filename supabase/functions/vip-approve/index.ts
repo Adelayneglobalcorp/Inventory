@@ -6,7 +6,8 @@
 //   POST { t, action: "reject" }    → marca el pago como no confirmado + correo a la persona
 // El token (64 caracteres aleatorios) es la autorización: solo lo tiene Adelayne y sirve una sola vez.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { addNote, addTags, GHL, notifyAdmin, removeTags, sendEmail, setOpportunityStage, upsertContact, type Lang } from "../_shared/ghl.ts";
+import { addNote, addTags, GHL, notifyAdmin, removeTags, sendEmail, sendSms, setOpportunityStage, upsertContact, type Lang } from "../_shared/ghl.ts";
+import { vipSms } from "../_shared/sms.ts";
 import { adminVipDecision, VIP, vipApprovedEmail, vipRejectedEmail } from "../_shared/emails.ts";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
         const contactId = o.contact_id ?? await upsertContact({ email: o.email, fullName: name, phone: o.phone, lang });
         const mail = vipApprovedEmail(lang, name, until);
         await sendEmail(contactId, mail.subject, mail.html);
+        if (o.phone) await sendSms(contactId, vipSms.approved(lang, name));
         await addTags(contactId, ["vip-pagado"]);
         await removeTags(contactId, ["vip-pago-pendiente"]).catch(() => undefined);
         await setOpportunityStage(contactId, GHL.stages.cerrado, `Global 360 VIP · ${name || o.email}`, Number(o.amount) || VIP.amount);
@@ -85,6 +87,7 @@ Deno.serve(async (req) => {
     await addNote(contactId, "❌ Pago VIP por Zelle no confirmado. Se le pidió escribir por WhatsApp con su comprobante.");
     const mail = vipRejectedEmail(lang, name, o.email);
     await sendEmail(contactId, mail.subject, mail.html);
+    if (o.phone) await sendSms(contactId, vipSms.rejected(lang));
     const adm = adminVipDecision({ name, email: o.email, approved: false });
     await notifyAdmin(adm.subject, adm.html).catch(() => undefined);
     return json(200, { ok: true, order: { ...info, status: "rechazado", decided_at: nowIso } });

@@ -4,7 +4,8 @@
 //   financing    → nota + etiqueta + pipeline + correo al cliente + aviso a Adelayne con todos los datos
 // Se protege con un secreto compartido guardado en Supabase Vault (no requiere JWT).
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { addNote, advanceOpportunity, GHL, notifyAdmin, notifyAdminSms, sendEmail, upsertContact, type Lang } from "../_shared/ghl.ts";
+import { addNote, advanceOpportunity, GHL, notifyAdmin, notifyAdminSms, sendEmail, sendSms, upsertContact, type Lang } from "../_shared/ghl.ts";
+import { vipSms } from "../_shared/sms.ts";
 import { adminFinancing, adminInterest, adminNewUser, adminVipNew, financingClientEmail, money, registrationEmail, loanLabel, SITE_URL, VIP, vipPaymentEmail } from "../_shared/emails.ts";
 
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -98,8 +99,10 @@ async function onRegistration(userId: string) {
     const approveUrl = `${VIP.approvePage}?t=${order.approve_token}`;
     const adm = adminVipNew({ name, email: user.email, phone, lang, perfil, approveUrl });
     await notifyAdmin(adm.subject, adm.html);
-    await notifyAdminSms(`Global 360 · Nuevo registro VIP $${VIP.amount}: ${name || user.email}${phone ? " (" + phone + ")" : ""}. Pago Zelle pendiente. Al ver su comprobante, aprueba aquí: ${approveUrl}`).catch((e) => console.warn("sms admin", String(e)));
-    return { contactId, vip: true };
+    // SMS (se envían solo cuando VIP_SMS_ENABLED = "true", tras aprobar A2P).
+    const smsClient = phone ? await sendSms(contactId, vipSms.payment(lang, name)) : false;
+    const smsAdmin = await notifyAdminSms(vipSms.admin({ name, email: user.email, phone, approveUrl }));
+    return { contactId, vip: true, smsClient, smsAdmin };
   }
   await advanceOpportunity(contactId, GHL.stages.registrado, `Global 360 · ${name || user.email}`);
 
@@ -185,9 +188,12 @@ async function onVipReminders() {
     const contactId = o.contact_id ?? await upsertContact({ email: o.email, fullName: o.full_name, phone: o.phone, lang });
     const mail = vipPaymentEmail(lang, o.full_name ?? "", o.email, true);
     await sendEmail(contactId, mail.subject, mail.html);
+    if (o.phone) await sendSms(contactId, vipSms.reminder(lang, o.full_name ?? ""));
     if (o.reminders_sent === 1) {
-      const adm = adminVipNew({ name: o.full_name ?? "", email: o.email, phone: o.phone, lang, approveUrl: `${VIP.approvePage}?t=${o.approve_token}`, reminder: true });
+      const approveUrl = `${VIP.approvePage}?t=${o.approve_token}`;
+      const adm = adminVipNew({ name: o.full_name ?? "", email: o.email, phone: o.phone, lang, approveUrl, reminder: true });
       await notifyAdmin(adm.subject, adm.html);
+      await notifyAdminSms(vipSms.admin({ name: o.full_name ?? "", email: o.email, phone: o.phone, approveUrl, reminder: true }));
     }
     await admin.from("vip_orders").update({ reminders_sent: o.reminders_sent + 1, contact_id: contactId }).eq("id", o.id);
     sent++;
