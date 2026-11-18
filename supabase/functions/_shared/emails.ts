@@ -326,7 +326,7 @@ export function vipPaymentEmail(lang: Lang, name: string, email: string, reminde
 }
 
 /** Pago confirmado: acceso aprobado. */
-export function vipApprovedEmail(lang: Lang, name: string, accessUntil: Date) {
+export function vipApprovedEmail(lang: Lang, name: string, accessUntil: Date, email: string) {
   const en = lang === "en";
   const first = esc((name || "").split(" ")[0] || (en ? "investor" : "inversionista"));
   const until = accessUntil.toLocaleDateString(en ? "en-US" : "es-US", { year: "numeric", month: "long", day: "numeric", timeZone: "America/New_York" });
@@ -351,9 +351,11 @@ export function vipApprovedEmail(lang: Lang, name: string, accessUntil: Date) {
       body: p(en
         ? `We confirmed your payment. Your <strong style="color:#0b1730;">VIP Investor Package</strong> is active until <strong style="color:#0b1730;">${esc(until)}</strong>.`
         : `Confirmamos tu pago. Tu <strong style="color:#0b1730;">VIP Investor Package</strong> está activo hasta el <strong style="color:#0b1730;">${esc(until)}</strong>.`) +
-        spacer(8) + steps(s, en ? "Next steps" : "Próximos pasos") + spacer() +
+        p(`<strong style="color:#0b1730;">${en ? "Your access details" : "Tus datos de acceso"}</strong>`) +
+        dataTable([[en ? "Sign-in page" : "Página de ingreso", `${SITE_URL.replace(/^https?:\/\//, "")}/login`], [en ? "User" : "Usuario", email], [en ? "Password" : "Contraseña", en ? "The one you created when you signed up" : "La que creaste al registrarte"]]) + spacer(22) +
+        steps(s, en ? "Next steps" : "Próximos pasos") + spacer() +
         button(en ? "Sign in to Global 360" : "Ingresar a Global 360", `${SITE_URL}/login`) + spacer(20) +
-        p(en ? "Forgot your password? Use “Forgot your password?” on the sign-in screen." : "¿Olvidaste tu contraseña? Usa «¿Olvidaste tu contraseña?» en la pantalla de ingreso."),
+        p(en ? `Forgot your password? <a href="${SITE_URL}/forgot-password" style="color:#b8862d;font-weight:bold;">Create a new one here</a>.` : `¿Olvidaste tu contraseña? <a href="${SITE_URL}/forgot-password" style="color:#b8862d;font-weight:bold;">Crea una nueva aquí</a>.`),
       footerNote: en ? "You are receiving this email because your Global 360 VIP payment was confirmed." : "Recibes este correo porque se confirmó tu pago del VIP de Global 360.",
     }),
   };

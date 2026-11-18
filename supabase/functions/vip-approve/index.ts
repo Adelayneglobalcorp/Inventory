@@ -62,9 +62,9 @@ Deno.serve(async (req) => {
       let warn: string | undefined;
       try {
         const contactId = o.contact_id ?? await upsertContact({ email: o.email, fullName: name, phone: o.phone, lang });
-        const mail = vipApprovedEmail(lang, name, until);
+        const mail = vipApprovedEmail(lang, name, until, o.email);
         await sendEmail(contactId, mail.subject, mail.html);
-        if (o.phone) await sendSms(contactId, vipSms.approved(lang, name));
+        if (o.phone) await sendSms(contactId, vipSms.approved(lang, name, o.email));
         await addTags(contactId, ["vip-pagado"]);
         await removeTags(contactId, ["vip-pago-pendiente"]).catch(() => undefined);
         await setOpportunityStage(contactId, GHL.stages.cerrado, `Global 360 VIP · ${name || o.email}`, Number(o.amount) || VIP.amount);

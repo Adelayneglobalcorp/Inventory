@@ -26,11 +26,11 @@ export const vipSms = {
       : `Global 360: ${n ? n + ", t" : "T"}u acceso VIP te espera. Completa tu pago de $${VIP.amount} por Zelle a ${VIP.zelleEmail} y envía el comprobante: ${WA}`;
   },
   /** Pago confirmado. */
-  approved(lang: Lang, name: string) {
+  approved(lang: Lang, name: string, email: string) {
     const n = first(name);
     return lang === "en"
-      ? `Global 360: Payment confirmed${n ? ", " + n : ""}! Your VIP access is active for 12 months. Sign in: ${SITE_URL}/login`
-      : `Global 360: ¡Pago confirmado${n ? ", " + n : ""}! Tu acceso VIP está activo por 12 meses. Ingresa: ${SITE_URL}/login`;
+      ? `Global 360: Payment confirmed${n ? ", " + n : ""}! Your VIP access is active for 12 months. Sign in at ${SITE_URL}/login · User: ${email} · Password: the one you created when you signed up. Forgot it? ${SITE_URL}/forgot-password`
+      : `Global 360: ¡Pago confirmado${n ? ", " + n : ""}! Tu acceso VIP está activo por 12 meses. Ingresa en ${SITE_URL}/login · Usuario: ${email} · Contraseña: la que creaste al registrarte. ¿La olvidaste? ${SITE_URL}/forgot-password`;
   },
   /** Pago no confirmado. */
   rejected(lang: Lang) {
