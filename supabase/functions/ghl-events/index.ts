@@ -75,9 +75,11 @@ async function onRegistration(userId: string) {
   const perfil = PERFILES.includes(meta.perfil) ? String(meta.perfil) : null;
 
   const vip = meta.plan === "vip_495";
+  // A2P: consentimiento explícito de SMS (casilla opcional del formulario, sin marcar por defecto).
+  const smsConsent = meta.sms_consent === true;
   const contactId = await upsertContact({
     email: user.email, fullName: name, phone, lang, perfil,
-    tags: ["inventory-registrado", fromLanding || fromWeb ? "inventory-origen-landing" : "inventory-origen-app", ...(vip ? ["vip-investor", "vip-pago-pendiente"] : [])],
+    tags: ["inventory-registrado", fromLanding || fromWeb ? "inventory-origen-landing" : "inventory-origen-app", ...(vip ? ["vip-investor", "vip-pago-pendiente"] : []), ...(smsConsent ? ["sms-consentimiento"] : [])],
     source: fromWeb ? "Global 360 · Sitio web" : fromLanding ? "Global 360 · Landing" : "Global 360 · App",
   });
 
@@ -88,19 +90,23 @@ async function onRegistration(userId: string) {
       const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
       const ins = await admin.from("vip_orders").insert({
         user_id: user.id, email: user.email, full_name: name, phone, lang, amount: VIP.amount, approve_token: token, contact_id: contactId,
+        sms_consent: smsConsent, sms_consent_at: smsConsent ? (meta.sms_consent_at ?? new Date().toISOString()) : null,
       }).select("*").single();
       if (ins.error) throw new Error("vip_orders: " + ins.error.message);
       order = ins.data;
     }
     await advanceOpportunity(contactId, GHL.stages.revision, `Global 360 VIP · ${name || user.email}`, VIP.amount);
-    await addNote(contactId, `⭐ Registro VIP Investor Package ($${VIP.amount}) desde el sitio web. Pago por Zelle pendiente de confirmar.`);
+    await addNote(contactId, `⭐ Registro VIP Investor Package ($${VIP.amount}) desde el sitio web. Pago por Zelle pendiente de confirmar.` +
+      (smsConsent
+        ? `\n📱 Consentimiento SMS: SÍ — casilla marcada en global.buycash2day.com (${meta.sms_consent_at ?? new Date().toISOString()}).`
+        : "\n📱 Consentimiento SMS: no (no se le envían SMS)."));
     const mail = vipPaymentEmail(lang, name, user.email);
     await sendEmail(contactId, mail.subject, mail.html);
     const approveUrl = `${VIP.approvePage}?t=${order.approve_token}`;
     const adm = adminVipNew({ name, email: user.email, phone, lang, perfil, approveUrl });
     await notifyAdmin(adm.subject, adm.html);
     // SMS (se envían solo cuando VIP_SMS_ENABLED = "true", tras aprobar A2P).
-    const smsClient = phone ? await sendSms(contactId, vipSms.payment(lang, name)) : false;
+    const smsClient = phone && smsConsent ? await sendSms(contactId, vipSms.payment(lang, name)) : false;
     const smsAdmin = await notifyAdminSms(vipSms.admin({ name, email: user.email, phone, approveUrl }));
     return { contactId, vip: true, smsClient, smsAdmin };
   }
@@ -188,7 +194,7 @@ async function onVipReminders() {
     const contactId = o.contact_id ?? await upsertContact({ email: o.email, fullName: o.full_name, phone: o.phone, lang });
     const mail = vipPaymentEmail(lang, o.full_name ?? "", o.email, true);
     await sendEmail(contactId, mail.subject, mail.html);
-    if (o.phone) await sendSms(contactId, vipSms.reminder(lang, o.full_name ?? ""));
+    if (o.phone && o.sms_consent) await sendSms(contactId, vipSms.reminder(lang, o.full_name ?? ""));
     if (o.reminders_sent === 1) {
       const approveUrl = `${VIP.approvePage}?t=${o.approve_token}`;
       const adm = adminVipNew({ name: o.full_name ?? "", email: o.email, phone: o.phone, lang, approveUrl, reminder: true });
